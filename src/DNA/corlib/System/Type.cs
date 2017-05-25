@@ -22,9 +22,12 @@
 
 using System.Runtime.CompilerServices;
 using System.Reflection;
+using System.Collections.Generic;
 
 namespace System {
 	public abstract class Type : MemberInfo {
+
+        private static IDictionary<string, Type> typesByNameCache = new Dictionary<string, Type>();
 
 		public static readonly Type[] EmptyTypes = new Type[0];
 
@@ -55,7 +58,11 @@ namespace System {
 
 		public abstract Type[] GetGenericArguments();
 
-		extern public bool IsValueType {
+        public abstract Type GetElementType();
+
+        public virtual bool IsArray => GetElementType() != null;
+
+        extern public bool IsValueType {
 			[MethodImpl(MethodImplOptions.InternalCall)]
 			get;
 		}
@@ -63,7 +70,68 @@ namespace System {
 		public override string ToString() {
 			return this.FullName;
 		}
-	}
+
+        public static Type GetType(string typeName)
+        {
+            lock (typesByNameCache)
+            {
+                Type cachedResult;
+                if (typesByNameCache.TryGetValue(typeName, out cachedResult))
+                {
+                    return cachedResult;
+                }
+            }
+
+            string assemblyName;
+            string namespaceQualifiedTypeName;
+
+            if (typeName.IndexOf(',') > 0)
+            {
+                // Assembly is specified
+                var parts = typeName.Split(',');
+                assemblyName = parts[1].Trim();
+                namespaceQualifiedTypeName = parts[0];
+            }
+            else
+            {
+                // No assembly specified
+                assemblyName = null;
+                namespaceQualifiedTypeName = typeName;
+            }
+
+            var namespaceSplitPoint = namespaceQualifiedTypeName.LastIndexOf('.');
+            var namespaceName = namespaceQualifiedTypeName.Substring(0, namespaceSplitPoint).Trim();
+            var className = namespaceQualifiedTypeName.Substring(namespaceSplitPoint + 1).Trim();
+            var result = GetType(assemblyName, namespaceName, className);
+
+            if (result != null)
+            {
+                lock (typesByNameCache)
+                {
+                    typesByNameCache[typeName] = result;
+                }
+            }
+
+            return result;
+        }
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        extern public PropertyInfo[] GetProperties();
+
+        public MethodInfo GetMethod(string name)
+        {
+            return (MethodInfo)GetMethodInternal(name);
+        }
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        extern public static void EnsureAssemblyLoaded(string assemblyName);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        extern private static Type GetType(string assemblyName, string namespaceName, string className);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        extern private object GetMethodInternal(string name);
+    }
 }
 
 #endif

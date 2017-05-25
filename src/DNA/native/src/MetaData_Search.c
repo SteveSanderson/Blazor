@@ -167,7 +167,7 @@ tMetaData* MetaData_GetResolutionScopeMetaData(tMetaData *pMetaData, IDX_TABLE r
 	}
 }
 
-tMD_TypeDef* MetaData_GetTypeDefFromName(tMetaData *pMetaData, STRING nameSpace, STRING name, tMD_TypeDef *pInNestedClass) {
+tMD_TypeDef* MetaData_GetTypeDefFromName(tMetaData *pMetaData, STRING nameSpace, STRING name, tMD_TypeDef *pInNestedClass, U8 assertExists) {
 	U32 i;
 
 	for (i=1; i<=pMetaData->tables.numRows[MD_TABLE_TYPEDEF]; i++) {
@@ -181,8 +181,12 @@ tMD_TypeDef* MetaData_GetTypeDefFromName(tMetaData *pMetaData, STRING nameSpace,
 		}
 	}
 
-	Crash("MetaData_GetTypeDefFromName(): Cannot find type %s.%s", nameSpace, name);
-	FAKE_RETURN;
+	if (assertExists) {
+		Crash("MetaData_GetTypeDefFromName(): Cannot find type %s.%s", nameSpace, name);
+		FAKE_RETURN;
+	} else {
+		return NULL;
+	}
 }
 
 tMD_TypeDef* MetaData_GetTypeDefFromFullName(STRING assemblyName, STRING nameSpace, STRING name) {
@@ -191,7 +195,7 @@ tMD_TypeDef* MetaData_GetTypeDefFromFullName(STRING assemblyName, STRING nameSpa
 	pTypeMetaData = CLIFile_GetMetaDataForAssembly(assemblyName);
 
 	// Note that this cannot get a nested class, as this final parameter is always NULL
-	return MetaData_GetTypeDefFromName(pTypeMetaData, nameSpace, name, NULL);
+	return MetaData_GetTypeDefFromName(pTypeMetaData, nameSpace, name, NULL, /* assertExists */ 1);
 }
 
 tMD_TypeDef* MetaData_GetTypeDefFromDefRefOrSpec(tMetaData *pMetaData, IDX_TABLE token, tMD_TypeDef **ppClassTypeArgs, tMD_TypeDef **ppMethodTypeArgs) {
@@ -218,7 +222,7 @@ tMD_TypeDef* MetaData_GetTypeDefFromDefRefOrSpec(tMetaData *pMetaData, IDX_TABLE
 
 				pTypeRef = (tMD_TypeRef*)pTableEntry;
 				pTypeDefMetaData = MetaData_GetResolutionScopeMetaData(pMetaData, pTypeRef->resolutionScope, &pInNestedClass);
-				pTypeDef = MetaData_GetTypeDefFromName(pTypeDefMetaData, pTypeRef->nameSpace, pTypeRef->name, pInNestedClass);
+				pTypeDef = MetaData_GetTypeDefFromName(pTypeDefMetaData, pTypeRef->nameSpace, pTypeRef->name, pInNestedClass, /* assertExists */ 1);
 				pTypeRef->pTypeDef = pTypeDef;
 				return pTypeDef;
 			}

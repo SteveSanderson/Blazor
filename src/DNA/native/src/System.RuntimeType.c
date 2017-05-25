@@ -149,3 +149,16 @@ tAsyncCall* System_RuntimeType_GetGenericArguments(PTR pThis_, PTR pParams, PTR 
 tMD_TypeDef* RuntimeType_DeRef(PTR type) {
 	return ((tRuntimeType*)type)->pTypeDef;
 }
+
+tAsyncCall* System_RuntimeType_GetElementType(PTR pThis_, PTR pParams, PTR pReturnValue) {
+	tMD_TypeDef *pType = ((tRuntimeType*)pThis_)->pTypeDef;
+	tMD_TypeDef *pElementTypeDef = pType->pArrayElementType;
+
+	if (pElementTypeDef != NULL) {
+		*(HEAP_PTR*)pReturnValue = Type_GetTypeObject(pElementTypeDef);
+	} else {
+		*(HEAP_PTR*)pReturnValue = NULL;
+	}
+
+	return NULL;
+}

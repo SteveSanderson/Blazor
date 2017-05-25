@@ -35,6 +35,7 @@
 
 #include "System.String.h"
 #include "System.Array.h"
+#include "System.Reflection.MethodBase.h"
 
 // Global array which stores the absolute addresses of the start and end of all JIT code
 // fragment machine code.
@@ -305,6 +306,8 @@ U32 JIT_Execute(tThread *pThread, U32 numInst) {
 		GET_LABELS(JIT_LOADFIELD);
 		GET_LABELS(JIT_LOADFUNCTION);
 		GET_LABELS(JIT_INVOKE_DELEGATE);
+		GET_LABELS(JIT_INVOKE_SYSTEM_REFLECTION_METHODBASE);
+		GET_LABELS(JIT_REFLECTION_DYNAMICALLY_BOX_RETURN_VALUE);
 		GET_LABELS(JIT_CALL_PINVOKE);
 		GET_LABELS_DYNAMIC(JIT_LOAD_I64, 8);
 		GET_LABELS(JIT_INIT_OBJECT);
@@ -959,7 +962,7 @@ JIT_CALL_PINVOKE_start:
 		U32 res;
 
 		pCallPInvoke = (tJITCallPInvoke*)(pCurOp - 1);
-		res = PInvoke_Call(pCallPInvoke, pParamsLocals, pCurrentMethodState->pEvalStack);
+		res = PInvoke_Call(pCallPInvoke, pParamsLocals, pCurrentMethodState->pEvalStack, pThread);
 		pCurrentMethodState->stackOfs = res;
 	}
 	goto JIT_RETURN_start;
@@ -1092,6 +1095,81 @@ JIT_INVOKE_DELEGATE_start:
 	}
 JIT_INVOKE_DELEGATE_end:
 	GO_NEXT();
+
+JIT_INVOKE_SYSTEM_REFLECTION_METHODBASE_start:
+	OPCODE_USE(JIT_INVOKE_SYSTEM_REFLECTION_METHODBASE);
+	{
+		// Get the reference to MethodBase.Invoke
+		tMD_MethodDef *pInvokeMethod = (tMD_MethodDef*)GET_OP();
+
+		// Take the MethodBase.Invoke params off the stack.
+		pCurEvalStack -= pInvokeMethod->parameterStackSize;
+
+		// Get a pointer to the MethodBase instance (e.g., a MethodInfo or ConstructorInfo),
+		// and from that, determine which method we're going to invoke
+		tMethodBase *pMethodBase = *(tMethodBase**)pCurEvalStack;
+		tMD_MethodDef *pCallMethod = pMethodBase->methodDef;
+
+		// Store the return type so that JIT_REFLECTION_DYNAMICALLY_BOX_RETURN_VALUE can
+		// interpret the stack after the invocation
+		pCurrentMethodState->pReflectionInvokeReturnType = pCallMethod->pReturnType;
+
+		// Get the 'this' pointer for the call and the params array
+		PTR invocationThis = *(tMethodBase**)(pCurEvalStack + sizeof(HEAP_PTR));
+		HEAP_PTR invocationParamsArray = *(HEAP_PTR*)(pCurEvalStack + sizeof(HEAP_PTR) + sizeof(PTR));		
+
+		// Put the new 'this' on the stack
+		PTR pPrevEvalStack = pCurEvalStack;
+		PUSH_PTR(invocationThis);
+
+		// Put any other params on the stack
+		if (invocationParamsArray != NULL) {
+			U32 invocationParamsArrayLength = SystemArray_GetLength(invocationParamsArray);
+			PTR invocationParamsArrayElements = SystemArray_GetElements(invocationParamsArray);
+			for (U32 paramIndex = 0; paramIndex < invocationParamsArrayLength; paramIndex++) {
+				HEAP_PTR currentParam = ((U32*)(invocationParamsArrayElements))[paramIndex];
+				if (currentParam == NULL) {
+					PUSH_O(NULL);
+				} else {
+					tMD_TypeDef *currentParamType = Heap_GetType(currentParam);
+
+					if (Type_IsValueType(currentParamType)) {
+						PUSH_VALUETYPE(currentParam, currentParamType->stackSize, currentParamType->stackSize);
+					} else {
+						PUSH_O(currentParam);
+					}
+				}
+			}
+		}
+		pCurEvalStack = pPrevEvalStack;
+
+		// Change interpreter state so we continue execution inside the method being invoked
+		tMethodState *pCallMethodState = MethodState_Direct(pThread, pCallMethod, pCurrentMethodState, 0);
+		memcpy(pCallMethodState->pParamsLocals, pCurEvalStack, pCallMethod->parameterStackSize);
+		CHANGE_METHOD_STATE(pCallMethodState);
+	}
+JIT_INVOKE_SYSTEM_REFLECTION_METHODBASE_end:
+	GO_NEXT();
+
+JIT_REFLECTION_DYNAMICALLY_BOX_RETURN_VALUE_start:
+	OPCODE_USE(JIT_REFLECTION_DYNAMICALLY_BOX_RETURN_VALUE);
+	{
+		tMD_TypeDef *pLastInvocationReturnType = pCurrentMethodState->pReflectionInvokeReturnType;
+		if (pLastInvocationReturnType == NULL) {
+			// It was a void method, so it won't have put anything on the stack. We need to put
+			// a null value there as a return value, because MethodBase.Invoke isn't void.
+			PUSH_O(NULL);
+		} else if (Type_IsValueType(pLastInvocationReturnType)) {
+			// For value types, remove the raw value data from the stack and replace it with a
+			// boxed copy, because MethodBase.Invoke returns object.
+			HEAP_PTR heapPtr = Heap_AllocType(pLastInvocationReturnType);
+			POP_VALUETYPE(heapPtr, pLastInvocationReturnType->stackSize, pLastInvocationReturnType->stackSize);
+			PUSH_O(heapPtr);
+		}
+	}
+
+JIT_REFLECTION_DYNAMICALLY_BOX_RETURN_VALUE_end:
+	GO_NEXT_CHECK();
 
 JIT_DEREF_CALLVIRT_start:
 	op = JIT_DEREF_CALLVIRT;
@@ -2714,7 +2792,15 @@ JIT_LOADFIELD_VALUETYPE_start:
 
 		u32Value = GET_OP(); // Get the size of the value-type on the eval stack
 		pFieldDef = (tMD_FieldDef*)GET_OP();
-		pCurrentMethodState->stackOfs -= u32Value;
+		
+		// [Steve edit] The following line used to be:
+		//     pCurrentMethodState->stackOfs -= u32Value;
+		// ... but this seems to result in calculating the wrong pMem value and getting garbage results.
+		// My guess is that at some point they refactored from using 'pEvalStack' to 'pCurEvalStack', but
+		// didn't update this method (because nothing in corlib reads fields from structs).
+		// I think the following line moves the stack pointer along correctly instead:
+		pCurEvalStack -= u32Value;
+		
 		//pMem = pEvalStack + pCurrentMethodState->stackOfs + pFieldDef->memOffset;
 		pMem = pCurEvalStack + pFieldDef->memOffset;
 		// It may not be a value-type, but this'll work anyway

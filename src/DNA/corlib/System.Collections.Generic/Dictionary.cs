@@ -413,8 +413,8 @@ namespace System.Collections.Generic {
 						}
 					}
 				}
-				// Reload these values, as they will have changed due to dictionary capacity resizing
-				slot = key.GetHashCode() % this.capacity;
+                // Reload these values, as they will have changed due to dictionary capacity resizing
+                slot = GetSlot(key);
 				keySlot = this.keys[slot];
 			}
 			List<TValue> valueSlot;

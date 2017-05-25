@@ -103,6 +103,9 @@ extern tMD_TypeDef **types;
 #define TYPE_SYSTEM_UINTPTR 45
 #define TYPE_SYSTEM_NULLABLE 46
 #define TYPE_SYSTEM_ARRAY_TYPE 47
+#define TYPE_SYSTEM_REFLECTION_PROPERTYINFO 48
+#define TYPE_SYSTEM_REFLECTION_METHODINFO 49
+#define TYPE_SYSTEM_REFLECTION_METHODBASE 50
 
 //U32 Type_IsMethod(tMD_MethodDef *pMethod, STRING name, tMD_TypeDef *pReturnType, U32 numParams, ...);
 U32 Type_IsMethod(tMD_MethodDef *pMethod, STRING name, tMD_TypeDef *pReturnType, U32 numParams, U8 *pParamTypeIndexs);

@@ -141,11 +141,19 @@ I32 Thread_Execute() {
 			Thread_Delete(pThread);
 			// If there are no more threads left running, then exit application (by returning)
 			// Threads that are unstarted or background do not stop the exit
+			// [Steve edit] Threads that are suspended also do not stop the exit. This is because you'd just
+			// wait forever for them if they did. Note that 'exit' doesn't mean tearing down the process
+			// like in a regular .NET runtime case. The application state is still there and we can make
+			// further calls into it to create new threads.
 			{
 				tThread *pThread = pAllThreads;
 				U32 canExit = 1;
 				while (pThread != NULL) {
-					if ((!(pThread->state & THREADSTATE_BACKGROUND)) && ((pThread->state & (~THREADSTATE_BACKGROUND)) != THREADSTATE_UNSTARTED)) {
+					if (
+						(!(pThread->state & THREADSTATE_BACKGROUND))
+						&& ((pThread->state & (~THREADSTATE_BACKGROUND)) != THREADSTATE_UNSTARTED)
+						&& ((pThread->state & (~THREADSTATE_BACKGROUND)) != THREADSTATE_SUSPENDED))
+					{
 						canExit = 0;
 						break;
 					}

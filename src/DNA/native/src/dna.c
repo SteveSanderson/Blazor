@@ -28,6 +28,7 @@
 #include "Finalizer.h"
 #include "System.Net.Sockets.Socket.h"
 #include "MethodState.h"
+#include "JSInterop.h"
 
 static void ShowUsage() {
 	printf("Usage:\n");
@@ -103,7 +104,12 @@ doneArgs:;
 	startTime = microTime();
 #endif
 
-	retValue = CLIFile_Execute(pCLIFile, argc - i, argp + i);
+	if (pCLIFile->entryPoint) {
+		retValue = CLIFile_Execute(pCLIFile, argc - i, argp + i);
+	} else {
+		printf("File %s has no entry point, skipping execution\n", pFileName);
+		retValue = 0;
+	}
 
 #ifdef DIAG_TOTAL_TIME
 	printf("Total execution time = %d ms\n", (int)((microTime() - startTime) / 1000));

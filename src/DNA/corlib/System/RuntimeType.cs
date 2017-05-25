@@ -93,7 +93,10 @@ namespace System {
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		extern public override Type[] GetGenericArguments();
 
-	}
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        extern public override Type GetElementType();
+
+    }
 
 }
 

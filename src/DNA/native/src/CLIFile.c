@@ -40,15 +40,55 @@ struct tFilesLoaded_ {
 	tFilesLoaded *pNext;
 };
 
+// In .NET Core, the core libraries are split over numerous assemblies. For simplicity,
+// the DNA corlib just puts them in one assembly
+static STRING assembliesMappedToDnaCorlib[] = {
+	"mscorlib",
+	"System.Collections",
+	"System.Console",
+	"System.IO",
+	"System.Linq",
+	"System.Private.CoreLib",
+	"System.Reflection",
+	"System.Reflection.Extensions",
+	"System.Runtime",
+	"System.Runtime.Extensions",
+	"System.Runtime.InteropServices",
+	"System.Threading",
+	"System.Threading.Tasks"
+};
+static int numAssembliesMappedToDnaCorlib = sizeof(assembliesMappedToDnaCorlib)/sizeof(STRING);
+
 // Keep track of all the files currently loaded
 static tFilesLoaded *pFilesLoaded = NULL;
+
+tMetaData* CLIFile_GetMetaDataForLoadedAssembly(unsigned char *pLoadedAssemblyName) {
+	tFilesLoaded *pFiles = pFilesLoaded;
+
+	while (pFiles != NULL) {
+		tCLIFile *pCLIFile = pFiles->pCLIFile;
+		tMD_Assembly *pThisAssembly = MetaData_GetTableRow(pCLIFile->pMetaData, MAKE_TABLE_INDEX(0x20, 1));
+		if (strcmp(pLoadedAssemblyName, pThisAssembly->name) == 0) {
+			// Found the correct assembly, so return its meta-data
+			return pCLIFile->pMetaData;
+		}
+		pFiles = pFiles->pNext;
+	}
+
+	Crash("Assembly %s is not loaded\n", pLoadedAssemblyName);
+	FAKE_RETURN;
+}
 
 tMetaData* CLIFile_GetMetaDataForAssembly(unsigned char *pAssemblyName) {
 	tFilesLoaded *pFiles;
 
-	// Convert "mscorlib" to "corlib"
-	if (strcmp(pAssemblyName, "mscorlib") == 0) {
-		pAssemblyName = "corlib";
+	// Where applicable, redirect this assembly lookup into DNA's corlib
+	// (e.g., mscorlib, System.Runtime, etc.)
+	for (int i = 0; i < numAssembliesMappedToDnaCorlib; i++) {
+		if (strcmp(pAssemblyName, assembliesMappedToDnaCorlib[i]) == 0) {
+			pAssemblyName = "corlib";
+			break;
+		}
 	}
 
 	// Look in already-loaded files first
@@ -78,6 +118,23 @@ tMetaData* CLIFile_GetMetaDataForAssembly(unsigned char *pAssemblyName) {
 		}
 		return pCLIFile->pMetaData;
 	}
+}
+
+tMD_TypeDef* CLIFile_FindTypeInAllLoadedAssemblies(STRING nameSpace, STRING name) {
+	tFilesLoaded *pFiles = pFilesLoaded;
+	while (pFiles != NULL) {
+		tCLIFile *pCLIFile = pFiles->pCLIFile;
+
+		tMD_TypeDef* typeDef = MetaData_GetTypeDefFromName(pCLIFile->pMetaData, nameSpace, name, NULL, /* assertExists */ 0);
+		if (typeDef != NULL) {
+			return typeDef;
+		}
+
+		pFiles = pFiles->pNext;
+	}
+
+	Crash("CLIFile_FindTypeInAllLoadedAssemblies(): Cannot find type %s.%s", nameSpace, name);
+	return NULL;
 }
 
 static void* LoadFileFromDisk(char *pFileName) {

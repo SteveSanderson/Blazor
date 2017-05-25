@@ -546,6 +546,7 @@ cilLdInd:
 					tMD_MethodDef *pCallMethod;
 					tMD_TypeDef *pBoxCallType;
 					U32 derefRefType;
+					U8 dynamicallyBoxReturnValue = 0;
 
 					u32Value2 = 0;
 
@@ -616,6 +617,9 @@ cilCallVirtConstrained:
 						PushOp(JIT_CALL_INTERFACE);
 					} else if (pCallMethod->pParentType->pParent == types[TYPE_SYSTEM_MULTICASTDELEGATE]) {
 						PushOp(JIT_INVOKE_DELEGATE);
+					} else if (pCallMethod->pParentType == types[TYPE_SYSTEM_REFLECTION_METHODBASE] && strcmp(pCallMethod->name, "Invoke") == 0) {
+						PushOp(JIT_INVOKE_SYSTEM_REFLECTION_METHODBASE);
+						dynamicallyBoxReturnValue = 1;
 					} else {
 						switch (pStackType->stackType)
 						{
@@ -651,6 +655,10 @@ cilCallVirtConstrained:
 
 					if (pCallMethod->pReturnType != NULL) {
 						PushStackType(pCallMethod->pReturnType);
+					}
+
+					if (dynamicallyBoxReturnValue) {
+						PushOp(JIT_REFLECTION_DYNAMICALLY_BOX_RETURN_VALUE);
 					}
 				}
 				break;

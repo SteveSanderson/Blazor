@@ -18,6 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#include <dlfcn.h>
+
 #include "Compat.h"
 #include "Sys.h"
 
@@ -64,7 +66,7 @@ static tLoadedLib* GetLib(STRING name) {
 #if WIN32
 	pNativeLib = LoadLibraryA(libName);
 #else
-	pNativeLib = dlopen(libName, DL_LAZY);
+	pNativeLib = dlopen(libName, RTLD_LAZY); //DL_LAZY);
 #endif
 	if (pNativeLib == NULL) {
 		// Failed to load library
@@ -88,12 +90,18 @@ static tLoadedLib* GetLib(STRING name) {
 	return pLib;
 }
 
+extern char* invokeJsFunc(STRING libName, STRING funcName, STRING arg0);
+
 fnPInvoke PInvoke_GetFunction(tMetaData *pMetaData, tMD_ImplMap *pImplMap) {
 	tLoadedLib *pLib;
 	STRING libName;
 	void *pProc;
 
 	libName = MetaData_GetModuleRefName(pMetaData, pImplMap->importScope);
+
+	return (fnPInvoke)invokeJsFunc;
+
+	/*
 	pLib = GetLib(libName);
 	if (pLib == NULL) {
 		// Library not found, so we can't find the function
@@ -106,6 +114,7 @@ fnPInvoke PInvoke_GetFunction(tMetaData *pMetaData, tMD_ImplMap *pImplMap) {
 	pProc = dlsym(pLib->pLib, pImplMap->importName);
 #endif
 	return pProc;
+	*/
 }
 
 static void* ConvertStringToANSI(HEAP_PTR pHeapEntry) {
@@ -158,7 +167,7 @@ typedef U64    (STDCALL *_uCuuuuuuuuuu)(U32 _0, U32 _1, U32 _2, U32 _3, U32 _4, 
 #define SET_ARG_TYPE(paramNum, type) funcParams |= (type << ((paramNum+1) << 1))
 
 #define MAX_ARGS 16
-U32 PInvoke_Call(tJITCallPInvoke *pCall, PTR pParams, PTR pReturnValue) {
+U32 PInvoke_Call(tJITCallPInvoke *pCall, PTR pParams, PTR pReturnValue, tThread *pCallingThread) {
 	U32 _args[MAX_ARGS];
 	double _argsd[MAX_ARGS];
 	void* _pTempMem[MAX_ARGS];
@@ -166,7 +175,7 @@ U32 PInvoke_Call(tJITCallPInvoke *pCall, PTR pParams, PTR pReturnValue) {
 	tMD_MethodDef *pMethod = pCall->pMethod;
 	tMD_TypeDef *pReturnType = pMethod->pReturnType;
 	tMD_ImplMap *pImplMap = pCall->pImplMap;
-	void *pFn = pCall->fn;
+	fnPInvoke pFn = pCall->fn;
 	U32 _argOfs = 0, _argdOfs = 0, paramOfs = 0;
 	U32 _tempMemOfs = 0;
 	U32 i;
@@ -175,6 +184,15 @@ U32 PInvoke_Call(tJITCallPInvoke *pCall, PTR pParams, PTR pReturnValue) {
 	float fRet;
 	double dRet;
 
+	// [Steve edit] Before we issue the call into JS code, we need to set the calling .NET thread's state
+	// to 'suspended' so that, if the JS code makes other calls into .NET, the DNA runtime doesn't try to
+	// resume this original thread automaticaly (its default behaviour in Thread.c is that, at the end of
+	// each thread's execution, it tries to resume any other nonbackground thread). If we don't do this,
+	// then you wouldn't be able to call back into .NET code while inside a pInvoke call because the calling
+	// thread would go into an infinite loop.
+	U32 originalCallingThreadState = pCallingThread->state;
+	pCallingThread->state |= THREADSTATE_SUSPENDED;
+
 	if (pReturnType != NULL) {
 		if (pReturnType == types[TYPE_SYSTEM_SINGLE]) {
 			funcParams = SINGLE;
@@ -182,6 +200,15 @@ U32 PInvoke_Call(tJITCallPInvoke *pCall, PTR pParams, PTR pReturnValue) {
 			funcParams = DOUBLE;
 		}
 	}
+
+	// Prepend the 'libName' and 'funcName' strings to the set of arguments
+	// NOTE: These aren't currently used in js-interop.js, but they would be if I found a way
+	// to pass an arbitrary set of args without declaring the C func type in advance
+	_args[0] = MetaData_GetModuleRefName(pCall->pMethod->pMetaData, pCall->pImplMap->importScope);
+	_args[1] = pCall->pMethod->name;
+	_argOfs += 2;
+	SET_ARG_TYPE(0, DEFAULT);
+	SET_ARG_TYPE(1, DEFAULT);
 
 	numParams = pMethod->numberOfParameters;
 	for (param = 0, paramTypeNum = 0; param<numParams; param++, paramTypeNum++) {
@@ -226,9 +253,19 @@ U32 PInvoke_Call(tJITCallPInvoke *pCall, PTR pParams, PTR pReturnValue) {
 		} else {
 			Crash("PInvoke_Call() Cannot handle parameter of type: %s", pParamType->name);
 		}
-		SET_ARG_TYPE(paramTypeNum, paramType);
+		SET_ARG_TYPE(paramTypeNum + 2, paramType);
 	}
-	
+
+	// [Steve edit] I'm hard-coding the pinvoke function pointer type here, as a workaround for
+	// Emscripten's function pointer limitations.
+	// See the longer comment in JIT.h for details.
+	if (funcParams != 255) {
+		Crash("PInvoke_Call() currently only supports calls of type 255; you tried to make a call of type %i.\n", funcParams);
+	}
+	int intRet = pFn(_args[0], _args[1], _args[2]);
+	u64Ret = (U64)intRet;
+
+	/*
 	switch (funcParams) {
 
 #include "PInvoke_CaseCode.h"
@@ -260,10 +297,14 @@ U32 PInvoke_Call(tJITCallPInvoke *pCall, PTR pParams, PTR pReturnValue) {
 	default:
 		Crash("PInvoke_Call() Cannot handle the function parameters: 0x%08x", funcParams);
 	}
-	
+	*/
+
 	for (i=0; i<_tempMemOfs; i++) {
 		free(_pTempMem[i]);
 	}
+
+	// [Steve edit] Restore previous thread state
+	pCallingThread->state = originalCallingThreadState;
 
 	if (pReturnType == NULL) {
 		return 0;

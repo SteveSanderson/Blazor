@@ -24,6 +24,18 @@
 typedef struct tJITted_ tJITted;
 typedef struct tExceptionHeader_ tExceptionHeader;
 
+// [Steve] This overly-specific-looking int-returning 3-STRING-arg signature is because it's difficult
+// to support arbitrary signatures given Emscripten's limitations around needing to know the original
+// type of a function pointer when invoking it: https://kripken.github.io/emscripten-site/docs/porting/guidelines/function_pointer_issues.html
+// My workaround is just to hard-code this as the only possible PInvoke method signature and then skip
+// the code in PInvoke.c that tries to dynamically select a function pointer type.
+//
+// With more work I'm sure it would be possible to figure out a mechanism for getting the original
+// Pinvoke.c logic to work. It might even just be as simple as changing the return type of fnPInvoke from int
+// to U64, since it looks like that's hardcoded as the return type in Pinvoke.c. But I don't need to deal
+// with that now.
+typedef int(*fnPInvoke)(STRING libName, STRING funcName, STRING arg0);
+
 #include "Types.h"
 
 #ifdef GEN_COMBINED_OPCODES
@@ -90,8 +102,8 @@ struct tJITCallNative_ {
 typedef struct tJITCallPInvoke_ tJITCallPInvoke;
 struct tJITCallPInvoke_ {
 	U32 opCode;
-	// The native function to call - type should be fnPInvoke, but there's a problem with #including PInvoke.h
-	void* fn;
+	// The native function to call
+	fnPInvoke fn;
 	// The method that is being called
 	tMD_MethodDef *pMethod;
 	// The ImplMap of the function that's being called

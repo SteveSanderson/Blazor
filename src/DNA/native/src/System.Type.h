@@ -26,5 +26,9 @@
 
 tAsyncCall* System_Type_GetTypeFromHandle(PTR pThis_, PTR pParams, PTR pReturnValue);
 tAsyncCall* System_Type_get_IsValueType(PTR pThis_, PTR pParams, PTR pReturnValue);
+tAsyncCall* System_Type_GetTypeFromName(PTR pThis_, PTR pParams, PTR pReturnValue);
+tAsyncCall* System_Type_EnsureAssemblyLoaded(PTR pThis_, PTR pParams, PTR pReturnValue);
+tAsyncCall* System_Type_GetProperties(PTR pThis_, PTR pParams, PTR pReturnValue);
+tAsyncCall* System_Type_GetMethod(PTR pThis_, PTR pParams, PTR pReturnValue);
 
 #endif

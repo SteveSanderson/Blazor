@@ -41,6 +41,8 @@ struct tCLIFile_ {
 
 // static methods
 tMetaData* CLIFile_GetMetaDataForAssembly(unsigned char *pAssemblyName);
+tMetaData* CLIFile_GetMetaDataForLoadedAssembly(unsigned char *pLoadedAssemblyName);
+tMD_TypeDef* CLIFile_FindTypeInAllLoadedAssemblies(STRING nameSpace, STRING name);
 void CLIFile_GetHeapRoots(tHeapRoots *pHeapRoots);
 
 // instance methods

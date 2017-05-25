@@ -328,6 +328,8 @@ namespace System {
 			return output;
 		}
 
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        extern public static Array CreateInstance(Type elementType, int length);
 
 		#region Interface Members
 

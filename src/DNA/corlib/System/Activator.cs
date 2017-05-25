@@ -20,14 +20,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Text;
 
-namespace corlib.System {
+namespace System {
 
 	public static class Activator {
-
-
-
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public extern static object CreateInstance(Type type);
 	}
 
 }

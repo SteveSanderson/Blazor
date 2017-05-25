@@ -20,7 +20,7 @@
 
 #if !defined (__COMPAT_H)
 #define __COMPAT_H
-
+#include <string.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <fcntl.h>
@@ -75,7 +75,7 @@
 #include <termios.h>
 #include <sys/ioctl.h>
 #include <sys/types.h>
-#include <dev/wscons/wsconsio.h>
+// #include <dev/wscons/wsconsio.h>
 #include <dlfcn.h>
 #include <glob.h>
 

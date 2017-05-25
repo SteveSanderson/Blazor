@@ -111,6 +111,14 @@ namespace System.Collections.Generic {
 				for (int i = index; i < this.size + count; i++) {
 					this.items[i] = this.items[i - count];
 				}
+
+                // [Steve note] The above logic isn't enough to release the remaining
+                // items for GC, e.g., when shifting the trailing items.
+                // So, clear out the now-unused trailing slots.
+                for (int i = this.size - 1; i >= this.size + count; i--)
+                {
+                    this.items[i] = default(T);
+                }
 			}
 			this.size += count;
 		}

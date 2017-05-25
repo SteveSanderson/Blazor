@@ -27,6 +27,9 @@
 #include "Types.h"
 #include "EvalStack.h"
 #include "Generics.h"
+#include "System.Reflection.MethodBase.h"
+#include "System.Reflection.MethodInfo.h"
+#include "System.Reflection.PropertyInfo.h"
 #include "System.RuntimeType.h"
 #include "Thread.h"
 
@@ -346,6 +349,7 @@ struct tTypeInit_ {
 static char mscorlib[] = "mscorlib";
 static char System[] = "System";
 static char SystemCollectionsGeneric[] = "System.Collections.Generic";
+static char SystemReflection[] = "System.Reflection";
 static char SystemThreading[] = "System.Threading";
 static char SystemIO[] = "System.IO";
 static char SystemGlobalization[] = "System.Globalization";
@@ -399,6 +403,9 @@ static tTypeInit typeInit[] = {
 	{mscorlib, System, "UIntPtr", EVALSTACK_PTR,		sizeof(void*), sizeof(void*), 0},
 	{mscorlib, System, "Nullable`1", EVALSTACK_VALUETYPE, 0, 0, 0},
 	{NULL, NULL, (char*)TYPE_SYSTEM_TYPE, 0, 0, 0, 0},
+	{mscorlib, SystemReflection, "PropertyInfo", EVALSTACK_O, 4, 4, sizeof(tPropertyInfo)},
+	{mscorlib, SystemReflection, "MethodInfo", EVALSTACK_O, 4, 4, sizeof(tMethodInfo)},
+	{mscorlib, SystemReflection, "MethodBase", EVALSTACK_O, 4, 4, sizeof(tMethodBase)},
 };
 
 int CorLibDone = 0;

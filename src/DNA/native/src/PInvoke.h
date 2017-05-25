@@ -24,9 +24,7 @@
 #include "MetaData.h"
 #include "JIT.h"
 
-typedef void* fnPInvoke;
-
 fnPInvoke PInvoke_GetFunction(tMetaData *pMetaData, tMD_ImplMap *pImplMap);
-U32 PInvoke_Call(tJITCallPInvoke *pCall, PTR pParams, PTR pReturnValue);
+U32 PInvoke_Call(tJITCallPInvoke *pCall, PTR pParams, PTR pReturnValue, tThread *pCallingThread);
 
 #endif

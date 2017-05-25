@@ -320,11 +320,24 @@ namespace System {
 			return (new string(this, 0, startIndex)) + (new string(this, pos2, this.length - pos2));
 		}
 
-		#endregion
+        public void CopyTo(
+            int sourceIndex,
+            char[] destination,
+            int destinationIndex,
+            int count
+        )
+        {
+            for (var i = 0; i < count; i++)
+            {
+                destination[destinationIndex + i] = this[sourceIndex + i];
+            }
+        }
 
-		#region Compare and CompareOrdinal Methods
+        #endregion
 
-		public static int Compare(string strA, string strB) {
+        #region Compare and CompareOrdinal Methods
+
+        public static int Compare(string strA, string strB) {
 			return CompareOrdinal(strA, strB);
 		}
 

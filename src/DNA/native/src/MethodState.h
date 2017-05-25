@@ -61,6 +61,11 @@ struct tMethodState_ {
 
 	// Link to caller methodstate
 	tMethodState *pCaller;
+
+	// In the case of a reflection-initiated invocation (i.e., someMethodBase.Invoke(...)),
+	// we need to track the target method's return type so we can interpret the stack when
+	// it's done.
+	tMD_TypeDef *pReflectionInvokeReturnType;
 };
 
 //void MethodState_Init();

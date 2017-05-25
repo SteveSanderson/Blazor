@@ -38,4 +38,5 @@ void SystemArray_LoadElement(HEAP_PTR pThis_, U32 index, PTR value);
 #define SystemArray_GetElements(pArray) ((PTR)(((PTR)pArray)+4))
 PTR SystemArray_LoadElementAddress(HEAP_PTR pThis_, U32 index);
 U32 SystemArray_GetNumBytes(HEAP_PTR pThis_, tMD_TypeDef *pElementType);
+tAsyncCall* System_Array_CreateInstance(PTR pThis_, PTR pParams, PTR pReturnValue);
 #endif

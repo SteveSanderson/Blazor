@@ -386,13 +386,14 @@ struct tMD_Event_ {
 typedef struct tMD_Event_ tMD_Event;
 
 // Table 0x15 - PropertyMap
+#define MD_TABLE_PROPERTYMAP 0x15
 struct tMD_PropertyMap_ {
 	// Parent - index into TypeDef table
 	IDX_TABLE parent;
 	// PropertyList - index into Property table
 	IDX_TABLE propertyList;
 };
-typedef struct tMD_PropertyMap tMD_PropertyMap;
+typedef struct tMD_PropertyMap_ tMD_PropertyMap;
 
 // Table 0x17 - Property
 struct tMD_Property_ {

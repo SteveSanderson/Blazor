@@ -5,7 +5,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>9.0.21022</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{6A77A7C0-FB66-4CAA-94EE-142DBA20655D}</ProjectGuid>
+    <ProjectGuid>{C8506C7D-2026-46A6-80CB-7AC11A19F053}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>corlib</RootNamespace>
@@ -79,6 +79,7 @@
     <Compile Include="System.Collections.Generic\Dictionary.cs" />
     <Compile Include="System.Collections.Generic\EqualityComparer.cs" />
     <Compile Include="System.Collections.Generic\GenericEqualityComparer.cs" />
+    <Compile Include="System.Collections.Generic\HashSet.cs" />
     <Compile Include="System.Collections.Generic\ICollection.cs" />
     <Compile Include="System.Collections.Generic\IComparer.cs" />
     <Compile Include="System.Collections.Generic\IDictionary.cs" />
@@ -133,17 +134,46 @@
     <Compile Include="System.IO\SeekOrigin.cs" />
     <Compile Include="System.IO\Stream.cs" />
     <Compile Include="System.IO\StreamReader.cs" />
+    <Compile Include="System.IO\StringReader.cs" />
     <Compile Include="System.IO\TextReader.cs" />
+    <Compile Include="System.Linq\Enumerable.cs" />
+    <Compile Include="System.Linq\Grouping.cs" />
+    <Compile Include="System.Linq\IGrouping.cs" />
+    <Compile Include="System.Linq\ILookup.cs" />
+    <Compile Include="System.Linq\IOrderedEnumerable.cs" />
+    <Compile Include="System.Linq\Lookup.cs" />
+    <Compile Include="System.Linq\OrderedEnumerable.cs" />
+    <Compile Include="System.Reflection\Assembly.cs" />
+    <Compile Include="System.Reflection\AssemblyName.cs" />
     <Compile Include="System.Reflection\DefaultMemberAttribute.cs" />
+    <Compile Include="System.Reflection\IntrospectionExtensions.cs" />
     <Compile Include="System.Reflection\MemberInfo.cs" />
+    <Compile Include="System.Reflection\MethodInfo.cs" />
+    <Compile Include="System.Reflection\PropertyInfo.cs" />
+    <Compile Include="System.Reflection\RuntimeReflectionExtensions.cs" />
+    <Compile Include="System.Reflection\TypeInfo.cs" />
+    <Compile Include="System.Runtime.CompilerServices\AsyncMethodBuilderCore.cs" />
+    <Compile Include="System.Runtime.CompilerServices\AsyncMethodTaskCacheOfTResult.cs" />
+    <Compile Include="System.Runtime.CompilerServices\AsyncServices.cs" />
+    <Compile Include="System.Runtime.CompilerServices\AsyncTaskMethodBuilder.cs" />
+    <Compile Include="System.Runtime.CompilerServices\AsyncTaskMethodBuilderOfTResult.cs" />
+    <Compile Include="System.Runtime.CompilerServices\AsyncVoidMethodBuilder.cs" />
+    <Compile Include="System.Runtime.CompilerServices\ExtensionAttribute.cs" />
+    <Compile Include="System.Runtime.CompilerServices\IAsyncMethodBuilder.cs" />
+    <Compile Include="System.Runtime.CompilerServices\IAsyncStateMachine.cs" />
+    <Compile Include="System.Runtime.CompilerServices\ICriticalNotifyCompletion.cs" />
     <Compile Include="System.Runtime.CompilerServices\IndexerNameAttribute.cs" />
+    <Compile Include="System.Runtime.CompilerServices\INotifyCompletion.cs" />
     <Compile Include="System.Runtime.CompilerServices\MethodImplAttribute.cs" />
     <Compile Include="System.Runtime.CompilerServices\MethodImplOptions.cs" />
     <Compile Include="System.Runtime.CompilerServices\RuntimeHelpers.cs" />
+    <Compile Include="System.Runtime.CompilerServices\TaskAwaiter.cs" />
+    <Compile Include="System.Runtime.CompilerServices\VoidTaskResult.cs" />
     <Compile Include="System.Runtime.InteropServices\CallingConvention.cs" />
     <Compile Include="System.Runtime.InteropServices\CharSet.cs" />
     <Compile Include="System.Runtime.InteropServices\DllImportAttribute.cs" />
     <Compile Include="System.Runtime.InteropServices\ExternalException.cs" />
+    <Compile Include="System.Runtime.InteropServices\GCHandle.cs" />
     <Compile Include="System.Runtime.InteropServices\InAttribute.cs" />
     <Compile Include="System.Runtime.InteropServices\OutAttribute.cs" />
     <Compile Include="System.Text\Decoder.cs" />
@@ -153,12 +183,15 @@
     <Compile Include="System.Threading\Interlocked.cs" />
     <Compile Include="System.Threading\Monitor.cs" />
     <Compile Include="System.Threading\ParameterizedThreadStart.cs" />
+    <Compile Include="System.Threading\Tasks\Task.cs" />
+    <Compile Include="System.Threading\Tasks\TaskCompletionSource.cs" />
     <Compile Include="System.Threading\Thread.cs" />
     <Compile Include="System.Threading\ThreadStart.cs" />
     <Compile Include="System.Threading\ThreadState.cs" />
     <Compile Include="System.Threading\WaitHandle.cs" />
     <Compile Include="System\Action.cs" />
     <Compile Include="System\Activator.cs" />
+    <Compile Include="System\AggregateException.cs" />
     <Compile Include="System\ArgumentException.cs" />
     <Compile Include="System\ArgumentNullException.cs" />
     <Compile Include="System\ArgumentOutOfRangeException.cs" />
@@ -190,6 +223,7 @@
     <Compile Include="System\Exception.cs" />
     <Compile Include="System\FlagsAttribute.cs" />
     <Compile Include="System\FormatException.cs" />
+    <Compile Include="System\Func.cs" />
     <Compile Include="System\GC.cs" />
     <Compile Include="System\IAsyncResult.cs" />
     <Compile Include="System\ICloneable.cs" />
@@ -218,6 +252,7 @@
     <Compile Include="System\Object.cs" />
     <Compile Include="System\ObjectDisposedException.cs" />
     <Compile Include="System\OperatingSystem.cs" />
+    <Compile Include="System\OperationCanceledException.cs" />
     <Compile Include="System\OverflowException.cs" />
     <Compile Include="System\ParamArrayAttribute.cs" />
     <Compile Include="System\ParseHelper.cs" />
@@ -282,7 +317,4 @@
   <Target Name="AfterBuild">
   </Target>
   -->
-  <PropertyGroup>
-    <PostBuildEvent>xcopy $(TargetPath) $(SolutionDir)Builds\$(ConfigurationName)\ /Y</PostBuildEvent>
-  </PropertyGroup>
 </Project>

@@ -47,7 +47,10 @@
 #include "System.Net.Dns.h"
 #include "System.DateTime.h"
 #include "System.Math.h"
+#include "System.Reflection.MethodInfo.h"
 #include "Delegate.h"
+
+#include "JSInterop.h"
 
 #define MAX_PARAMS 6
 
@@ -80,12 +83,15 @@ static tInternalCall internalCalls[] = {
 	{NULL, NULL,     "InternalIndexOf", System_String_InternalIndexOf, TYPE_SYSTEM_INT32, 4, {TYPE_SYSTEM_CHAR, TYPE_SYSTEM_INT32, TYPE_SYSTEM_INT32, TYPE_SYSTEM_BOOLEAN}},
 	{NULL, NULL,     "InternalIndexOfAny", System_String_InternalIndexOfAny, TYPE_SYSTEM_INT32, 4, {TYPE_SYSTEM_ARRAY_CHAR, TYPE_SYSTEM_INT32, TYPE_SYSTEM_INT32, TYPE_SYSTEM_BOOLEAN}},
 
+	{NULL, "Activator", "CreateInstance", Framework_JSInterop_Activator_CreateInstance, TYPE_SYSTEM_OBJECT, 1, {TYPE_SYSTEM_TYPE}},
+
 	{NULL, "Array", "Internal_GetValue", System_Array_Internal_GetValue, TYPE_SYSTEM_OBJECT, 1, {TYPE_SYSTEM_INT32}},
 	{NULL, NULL,    "Internal_SetValue", System_Array_Internal_SetValue, TYPE_SYSTEM_BOOLEAN, 2, {TYPE_SYSTEM_OBJECT, TYPE_SYSTEM_INT32}},
 	{NULL, NULL,    "Clear", System_Array_Clear, TYPE_SYSTEM_VOID, 3, {TYPE_SYSTEM_ARRAY_NO_TYPE, TYPE_SYSTEM_INT32, TYPE_SYSTEM_INT32}},
 	{NULL, NULL,    "Internal_Copy", System_Array_Internal_Copy, TYPE_SYSTEM_BOOLEAN, 5, {TYPE_SYSTEM_ARRAY_NO_TYPE, TYPE_SYSTEM_INT32, TYPE_SYSTEM_ARRAY_NO_TYPE, TYPE_SYSTEM_INT32, TYPE_SYSTEM_INT32}},
 	{NULL, NULL,    "Resize", System_Array_Resize, TYPE_SYSTEM_VOID, 2, {TYPE_SYSTEM_INTPTR, TYPE_SYSTEM_INT32}},
 	{NULL, NULL,    "Reverse", System_Array_Reverse, TYPE_SYSTEM_VOID, 3, {TYPE_SYSTEM_ARRAY_NO_TYPE, TYPE_SYSTEM_INT32, TYPE_SYSTEM_INT32}},
+	{NULL, NULL,    "CreateInstance", System_Array_CreateInstance, TYPE_SYSTEM_ARRAY_NO_TYPE, 2, {TYPE_SYSTEM_TYPE, TYPE_SYSTEM_INT32}},
 
 	{NULL, "Console", "Write", System_Console_Write, TYPE_SYSTEM_VOID, 1, {TYPE_SYSTEM_STRING}},
 	{NULL, NULL     , "Internal_ReadKey", System_Console_Internal_ReadKey, TYPE_SYSTEM_INT32, 0},
@@ -96,6 +102,10 @@ static tInternalCall internalCalls[] = {
 	{NULL, NULL         , "get_Platform", System_Environment_get_Platform, TYPE_SYSTEM_PLATFORMID, 0},
 
 	{NULL, "Type", "GetTypeFromHandle", System_Type_GetTypeFromHandle, TYPE_SYSTEM_TYPE, 1, {TYPE_SYSTEM_RUNTIMETYPEHANDLE}},
+	{NULL, NULL,   "EnsureAssemblyLoaded", System_Type_EnsureAssemblyLoaded, TYPE_SYSTEM_VOID, 1, {TYPE_SYSTEM_STRING}},
+	{NULL, NULL,   "GetMethodInternal", System_Type_GetMethod, TYPE_SYSTEM_OBJECT, 1, {TYPE_SYSTEM_STRING}},
+	{NULL, NULL,   "GetProperties", System_Type_GetProperties, TYPE_SYSTEM_ARRAY_NO_TYPE, 0},
+	{NULL, NULL,   "GetType", System_Type_GetTypeFromName, TYPE_SYSTEM_TYPE, 3, {TYPE_SYSTEM_STRING, TYPE_SYSTEM_STRING, TYPE_SYSTEM_STRING}},
 	{NULL, NULL,   "get_IsValueType", System_Type_get_IsValueType, TYPE_SYSTEM_BOOLEAN, 0},
 
 	{NULL, "RuntimeType", "get_Name", System_RuntimeType_get_Name, TYPE_SYSTEM_STRING, 0},
@@ -106,6 +116,7 @@ static tInternalCall internalCalls[] = {
 	{NULL, NULL,          "get_IsGenericType", System_RuntimeType_get_IsGenericType, TYPE_SYSTEM_BOOLEAN, 0},
 	{NULL, NULL,          "Internal_GetGenericTypeDefinition", System_RuntimeType_Internal_GetGenericTypeDefinition, TYPE_SYSTEM_RUNTIMETYPE, 0},
 	{NULL, NULL,          "GetGenericArguments", System_RuntimeType_GetGenericArguments, TYPE_SYSTEM_ARRAY_TYPE, 0},
+	{NULL, NULL,          "GetElementType", System_RuntimeType_GetElementType, TYPE_SYSTEM_TYPE, 0},
 
 	{NULL, "Char", "GetUnicodeCategory", System_Char_GetUnicodeCategory, TYPE_SYSTEM_GLOBALIZATION_UNICODECATEGORY, 1, {TYPE_SYSTEM_CHAR}},
 	{NULL, NULL  , "ToLowerInvariant", System_Char_ToLowerInvariant, TYPE_SYSTEM_CHAR, 1, {TYPE_SYSTEM_CHAR}},
@@ -169,6 +180,8 @@ static tInternalCall internalCalls[] = {
 	{NULL,                 NULL,     "Internal_Receive", System_Net_Sockets_Internal_Receive, TYPE_SYSTEM_INT32, 6, {TYPE_SYSTEM_INTPTR, TYPE_SYSTEM_ARRAY_BYTE, TYPE_SYSTEM_INT32, TYPE_SYSTEM_INT32, TYPE_SYSTEM_INT32, TYPE_SYSTEM_INTPTR}},
 	{NULL,                 NULL,     "Internal_Send", System_Net_Sockets_Internal_Send, TYPE_SYSTEM_INT32, 6, {TYPE_SYSTEM_INTPTR, TYPE_SYSTEM_ARRAY_BYTE, TYPE_SYSTEM_INT32, TYPE_SYSTEM_INT32, TYPE_SYSTEM_INT32, TYPE_SYSTEM_INTPTR}},
 
+	{"System.Runtime.InteropServices", 	"GCHandle", 	"ToHeapRef", Framework_JSInterop_ToHeapRef, TYPE_SYSTEM_INT32, 1, {TYPE_SYSTEM_OBJECT}}, 
+	{NULL, 								NULL, 			"FromHeapRef", Framework_JSInterop_FromHeapRefImpl, TYPE_SYSTEM_OBJECT, 1, {TYPE_SYSTEM_INT32}}, 
 	{NULL, NULL, NULL, NULL}
 };
 
