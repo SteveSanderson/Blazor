@@ -1,0 +1,43 @@
+WAYS TO ENABLE DEBUGGING
+========================
+
+1. Browser's native JS debugger
+   - Would need to change the JIT compilation so that it compiles to JS/WASM instead of an interpreted bytecode,
+     otherwise the JS debugger would be unable to step through the C# code, show proper call stacks, display
+     variable values, etc. Even with source maps, the JS debugger steps through one line of compiled code at
+     a time, not one line in the source map.
+   - Full AOT compilation would be good for prod usage, but less good for dev usage (unless it adds almost no
+     time to the build)
+   - PRO: Clean.
+   - PRO: Helps with production deployment.
+   - CON: Still doesn't support attaching VS.
+   - CON: Still need to figure out how to map CIL instructions to the original C# via PDB.
+   - CON: Involves rewriting the .NET runtime almost completely. Massive task.
+
+2. Connecting an external debugger to the DNA runtime
+   - Would need to:
+     * Figure out how to map CIL instructions to the original C# (parsing PDB, etc.)
+     * Extend DNA runtime to support being controlled by a debugger (stopping on breakpoints, stepping, supplying
+       call stack info, etc.)
+     * Implement some kind of proxy app that receives outbound connections from the client-side app, and from
+       the debugger UI, and passes calls between them (because the client-side app can't listen for TCP directly)
+   - For protocol, could either use GDB/MI or V8 debugger protocol.
+     - GDB/MI is natively supported in VS now, but is quite low-level and complex. Not sure about VS Code.
+     - V8 protocol is simpler. Chrome can natively act as a GUI for it. VS also supports it to some extent.
+   - PRO: Supports attaching VS/VSCode/Chrome to running processes.
+   - PRO: Can map DNA heap objects to whatever format the debugging protocol wants for visualisation.
+   - CON: Lots of throwaway work extending DNA, which itself is only a proof-of-concept runtime.
+   - CON: Unsure how cleanly I can use the PDB info, e.g., to show variable values.
+   - Overall, a very large block of work, without guarantee of success.
+
+3. Running the .NET code externally under .NET Core / .NET Framework
+   - Change the .NET/JS interop to an abstraction that allows the .NET side to be local or remote (e.g., in a web
+     worker, or on the other side of a websocket connection).
+   - When launching in debug mode, have the JS side send back and instruction to launch a .NET service, which
+     you then bring up as a regular native .NET Core/Framework process and connect to.
+   - Now you can debug the native .NET process normally.
+   - PRO: Simplest - could make this work in a couple of days or less.
+   - PRO: Most authentic debugging experience - it definitely works completely.
+   - CON: Can't debug problems that are specific to running under DNA.
+   - CON: Can't attach to already-running DNA processes (can only debug new processes).
+   - Overall: OK for a proof-of-concept, and better than nothing. But not what anyone truly wants.

@@ -1,0 +1,29 @@
+<VSTemplate Version="3.0.0" xmlns="http://schemas.microsoft.com/developer/vstemplate/2005" Type="Project">
+  <TemplateData>
+    <Name>Blazor application</Name>
+    <Description>A rich client-side application, with C# and Razor running in the browser.</Description>
+    <DefaultName>BlazorApplication</DefaultName>
+
+    <ProjectType>CSharp</ProjectType>
+    <ProjectSubType>Web</ProjectSubType>
+    <RequiredFrameworkVersion>4.5.1</RequiredFrameworkVersion>
+    <CreateInPlace>true</CreateInPlace>
+    <PromptForSaveOnCreation>true</PromptForSaveOnCreation>
+
+    <SortOrder>1001</SortOrder>
+    <CreateNewFolder>true</CreateNewFolder>
+    <ProvideDefaultName>true</ProvideDefaultName>
+    <LocationField>Enabled</LocationField>
+    <EnableLocationBrowseButton>true</EnableLocationBrowseButton>
+    <Icon>sw-file-icon.png</Icon>
+    <!-- Note you need to add a new sw-file-previewimage.png file here. -->
+    <PreviewImage>sw-file-previewimage.png</PreviewImage>
+    <TemplateID>62EF55B0-F28D-404A-8592-D21CF48527EF</TemplateID>
+    <!-- Indicates how many parent folders this item template should appear in -->
+    <NumberOfParentCategoriesToRollUp>1</NumberOfParentCategoriesToRollUp>
+  </TemplateData>
+  <TemplateContent>
+    <Project File="MyApplication.csproj" ReplaceParameters="true">
+    </Project>
+  </TemplateContent>
+</VSTemplate>

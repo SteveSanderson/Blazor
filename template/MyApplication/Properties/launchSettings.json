@@ -1,0 +1,25 @@
+{
+  "iisSettings": {
+    "windowsAuthentication": false,
+    "anonymousAuthentication": true,
+    "iisExpress": {
+      "applicationUrl": "http://localhost:59429/",
+      "sslPort": 0
+    }
+  },
+  "profiles": {
+    "IIS Express": {
+      "commandName": "IISExpress",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "LAUNCHER_ARGS": "blazor serve",
+        "LAUNCHER_PATH": "dotnet"
+      }
+    },
+    "MyApplication": {
+      "commandName": "Executable",
+      "executablePath": "dotnet",
+      "commandLineArgs": "blazor serve"
+    }
+  }
+}

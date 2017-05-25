@@ -1,0 +1,8 @@
+bin
+obj
+*.suo
+*.user
+*.nupkg
+.vs/
+/packages/
+/artifacts/

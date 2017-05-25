@@ -1,0 +1,16 @@
+﻿<h1>Counter</h1>
+
+<p>This is a simple example of a component.</p>
+
+<p>Current count: <strong>@currentCount</strong></p>
+
+<button @onclick(IncrementCount)>Increment</button>
+
+@functions {
+    int currentCount;
+
+    void IncrementCount()
+    {
+        currentCount++;
+    }
+}

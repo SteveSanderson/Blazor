@@ -1,0 +1,40 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <_RazorCompilationBinaryPath>$(MSBuildThisFileDirectory)..\lib\netcoreapp1.0\$(MSBuildThisFileName).dll</_RazorCompilationBinaryPath>
+  </PropertyGroup>
+
+  <!-- TODO: Run this automatically in production builds -->
+  <!-- TODO: Instead of invoking the compiler as an out-of-process exe, consider just invoking its .NET code -->
+  <Target Name="BlazorPrecompileRazorViews">
+    <PropertyGroup>
+      <!-- runtimeconfig -->
+      <ExecArgs>--runtimeconfig &quot;$(ProjectRuntimeConfigFilePath)&quot;</ExecArgs>
+      
+      <!-- depsfile -->
+      <ExecArgs>$(ExecArgs) --depsfile &quot;$(ProjectDepsFilePath)&quot;</ExecArgs>
+      
+      <!-- compiler exe/dll -->
+      <ExecArgs>$(ExecArgs) &quot;$(_RazorCompilationBinaryPath)&quot;</ExecArgs>
+      
+      <!-- arg0: compilation root dir -->
+      <ExecArgs>$(ExecArgs) &quot;$(MSBuildProjectDirectory)&quot;</ExecArgs>
+      
+      <!-- arg1: ignored - todo: remove this param -->
+      <ExecArgs>$(ExecArgs) &quot;ignored&quot;</ExecArgs>
+      
+      <!-- arg2: assembly to reference - todo: reference all the project's referenced assemblies -->
+      <ExecArgs>$(ExecArgs) &quot;$(TargetPath)&quot;</ExecArgs>
+      
+      <!-- arg3: output path -->
+      <ExecArgs>$(ExecArgs) &quot;$(TargetDir)$(TargetName).Views.dll&quot;</ExecArgs>
+    </PropertyGroup>
+
+    <Message
+      Text="Executing Razor view precompilation."
+      Importance="low" />
+
+    <Exec
+      Command="dotnet exec $(ExecArgs)"
+      WorkingDirectory="$(MSBuildProjectDirectory)" />
+  </Target>
+</Project>

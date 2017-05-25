@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netcoreapp1.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <StartupObject>Blazor.Sdk.Program</StartupObject>
+    <AssemblyName>dotnet-blazor</AssemblyName>
+    <PackageType>DotnetCliTool</PackageType>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageOutputPath>$(MSBuildThisFileDirectory)..\..\artifacts\</PackageOutputPath>
+    <PackageId>Blazor.Host</PackageId>
+    <VersionPrefix>0.1.0</VersionPrefix>
+    <VersionSuffix>build$([System.DateTime]::Now.ToString('yyyyMMdd-HHmmss'))</VersionSuffix>
+  </PropertyGroup>
+  <!-- Stuff needed for 'host' command -->
+  <ItemGroup>
+    <EmbeddedResource Include="wwwroot\_framework\**\*.*" />
+    <EmbeddedResource Include="..\DNA\corlib\bin\Debug\corlib.dll">
+      <LogicalName>$(ProjectName).wwwroot._framework.corlib.dll</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\Blazor.Runtime\bin\Debug\netstandard1.3\Blazor.Runtime.dll">
+      <LogicalName>$(ProjectName).wwwroot._framework.Blazor.Runtime.dll</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore" Version="1.1.1" />
+    <PackageReference Include="Microsoft.AspNetCore.ResponseCompression" Version="1.0.1" />
+    <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="1.1.1" />
+    <PackageReference Include="Blazor.Compiler" Version="0.1.0-*" />
+    <PackageReference Include="System.IO.FileSystem.Watcher" Version="4.3.0" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,17 @@
+{
+  "profiles": {
+    "IIS Express": {
+      "commandName": "IISExpress",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "LAUNCHER_PATH": "dotnet",
+        "LAUNCHER_ARGS": "blazor serve"
+      }
+    },
+    "MyApplication": {
+      "commandName": "Executable",
+      "executablePath": "dotnet",
+      "commandLineArgs": "blazor serve"
+    }
+  }
+}
