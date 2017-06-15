@@ -16,7 +16,7 @@ The programming model will be familiar to anyone who's worked with Razor (the C#
 
 ### Could something like this really be practical? How big would the apps be to download?
 
-Yes, it could be practical. A "hello world" app that runs Razor in the brower with this template is around 300KB, which is smaller than typical apps from some other single-page-app (SPA) frameworks. That 300KB includes everything: the small .NET runtime, core libraries, application code, and wrapper libraries needed to bootstrap and interop with the WebAssembly code.
+Yes, it could be practical. A "hello world" app that runs Razor in the browser with this template is around 300KB, which is smaller than typical apps from some other single-page-app (SPA) frameworks. That 300KB includes everything: the small .NET runtime, core libraries, application code, and wrapper libraries needed to bootstrap and interop with the WebAssembly code.
 
 That's before any real optimisation attempt. If there was a proper attempt at code stripping to remove all non-called corlib code, it could get smaller.
 
