@@ -1,11 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\version.props" />
+
   <PropertyGroup>
     <OutputType>Library</OutputType>
     <TargetFramework>netstandard1.3</TargetFramework>
 
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageOutputPath>$(MSBuildThisFileDirectory)..\..\artifacts\</PackageOutputPath>
-    <VersionPrefix>0.1.0</VersionPrefix>
-    <VersionSuffix>build$([System.DateTime]::Now.ToString('yyyyMMdd-HHmmss'))</VersionSuffix>
   </PropertyGroup>
 </Project>

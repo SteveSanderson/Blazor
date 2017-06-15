@@ -1,4 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\version.props" />
+
   <PropertyGroup>
     <TargetFramework>netcoreapp1.0</TargetFramework>
     <OutputType>Exe</OutputType>
@@ -8,8 +10,6 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageOutputPath>$(MSBuildThisFileDirectory)..\..\artifacts\</PackageOutputPath>
     <PackageId>Blazor.Host</PackageId>
-    <VersionPrefix>0.1.0</VersionPrefix>
-    <VersionSuffix>build$([System.DateTime]::Now.ToString('yyyyMMdd-HHmmss'))</VersionSuffix>
   </PropertyGroup>
   <!-- Stuff needed for 'host' command -->
   <ItemGroup>
