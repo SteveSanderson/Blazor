@@ -1,13 +1,14 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26403.7
+VisualStudioVersion = 15.0.26430.6
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{202CAAE3-4937-4BE3-96E8-C16BF9C216F6}"
 	ProjectSection(SolutionItems) = preProject
 		build-packages.cmd = build-packages.cmd
 		build-vsextension.cmd = build-vsextension.cmd
 		NuGet.config = NuGet.config
+		version.props = version.props
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{2FB55188-2625-4A89-8642-83C18FA2A362}"
