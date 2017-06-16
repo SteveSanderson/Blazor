@@ -6,8 +6,8 @@
   </PropertyGroup>
   
   <ItemGroup>
-    <PackageReference Include="Blazor.Compiler" Version="0.1.0-*" />
-    <PackageReference Include="Blazor.Runtime" Version="0.1.0-*" />
-    <DotNetCliToolReference Include="Blazor.Host" Version="0.1.0-*" />
+    <PackageReference Include="Blazor.Compiler" Version="0.2.0-*" />
+    <PackageReference Include="Blazor.Runtime" Version="0.2.0-*" />
+    <DotNetCliToolReference Include="Blazor.Host" Version="0.2.0-*" />
   </ItemGroup>
 </Project>
