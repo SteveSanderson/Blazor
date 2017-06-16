@@ -11,7 +11,7 @@ rem Note that file whose name starts "sw-" are automatically omitted from the pr
 copy /y .\template\MyApplication\Properties\sw-launchSettings.json .\template\MyApplication\Properties\launchSettings.json
 
 rem Actually build the VSIX
-SET msbuildExePath="C:\Program Files (x86)\Microsoft Visual Studio\2017\Professional\MSBuild\15.0\Bin\MSBuild.exe"
+SET msbuildExePath="C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\MSBuild\15.0\Bin\MSBuild.exe"
 %msbuildExePath% src\Blazor.VSExtension\Blazor.VSExtension.csproj
 
 rem Move launchSettings.json back to clean state
