@@ -17,7 +17,7 @@
       <!-- unfortunately this does not work atm, so DNA/corlib needs to be restored/built first -->
       <!-- https://github.com/Microsoft/msbuild/issues/2065 -->
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference >
+    </ProjectReference>
   </ItemGroup>
   <!-- Stuff needed for 'host' command -->
   <ItemGroup>
@@ -33,7 +33,7 @@
     <PackageReference Include="Microsoft.AspNetCore" Version="1.1.1" />
     <PackageReference Include="Microsoft.AspNetCore.ResponseCompression" Version="1.0.1" />
     <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="1.1.1" />
-    <PackageReference Include="Blazor.Compiler" Version="0.2.0-*" />
+    <PackageReference Include="Blazor.Compiler" Version="0.2.1-*" />
     <PackageReference Include="System.IO.FileSystem.Watcher" Version="4.3.0" />
   </ItemGroup>
 </Project>
