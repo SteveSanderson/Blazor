@@ -1,10 +1,7 @@
 @echo off
 
-@rem -- Building corlib using .NETFramework/mono tools (not .NET Core) because it needs to use NoStdLib option, and
-@rem -- I haven't figured out how to configure the equivalent to that with .NET Core build tools.
-SET msbuildExePath="C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\MSBuild\15.0\Bin\MSBuild.exe"
-%msbuildExePath% src\DNA\corlib\corlib.csproj
-
+@rem -- Restoring/building corlib first because of this issue: https://github.com/Microsoft/msbuild/issues/2065
+@rem --
 @rem -- Other projects have to be built in a specific order, because they mostly consume each other via package
 @rem -- references rather than project references. This is necessary because regular project references aren't
 @rem -- included transitively for things shipped as packages (i.e., it's not clear what the .NET Core MSBuild
@@ -14,6 +11,7 @@ SET msbuildExePath="C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterpri
 @rem -- Unfortunately this also means that whenever you edit and rebuild a framework project, you have to manually
 @rem -- "dotnet restore" in any other projects that consume it.
 for %%s in (
+    "src\DNA\corlib"
     "src\AngleSharp"
     "src\Blazor.Runtime"
     "src\Blazor.Compiler"

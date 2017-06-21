@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "",
+  "classifications": [ "Blazor" ], 
+  "name": "Blazor Sample Application",
+  "identity": "Blazor.Sample.CSharp",
+  "groupIdentity":"Blazor.Sample",
+  "shortName": "blazor",
+  "tags": {
+    "language": "C#"
+  },
+  "sourceName": "MyApplication",
+  "preferNameDirectory": true
+}

@@ -8,16 +8,24 @@
     <AssemblyName>dotnet-blazor</AssemblyName>
     <PackageType>DotnetCliTool</PackageType>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <PackageOutputPath>$(MSBuildThisFileDirectory)..\..\artifacts\</PackageOutputPath>
+    <PackageOutputPath>$(MSBuildThisFileDirectory)../../artifacts/</PackageOutputPath>
     <PackageId>Blazor.Host</PackageId>
   </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Blazor.Compiler/Blazor.Compiler.csproj" />
+    <ProjectReference Include="../DNA/corlib/corlib.csproj">
+      <!-- unfortunately this does not work atm, so DNA/corlib needs to be restored/built first -->
+      <!-- https://github.com/Microsoft/msbuild/issues/2065 -->
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference >
+  </ItemGroup>
   <!-- Stuff needed for 'host' command -->
   <ItemGroup>
-    <EmbeddedResource Include="wwwroot\_framework\**\*.*" />
-    <EmbeddedResource Include="..\DNA\corlib\bin\Debug\corlib.dll">
+    <EmbeddedResource Include="wwwroot/_framework/**/*.*" />
+    <EmbeddedResource Include="../DNA/corlib/bin/Debug/netstandard1.3/corlib.dll">
       <LogicalName>$(ProjectName).wwwroot._framework.corlib.dll</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="..\Blazor.Runtime\bin\Debug\netstandard1.3\Blazor.Runtime.dll">
+    <EmbeddedResource Include="../Blazor.Runtime/bin/Debug/netstandard1.3/Blazor.Runtime.dll">
       <LogicalName>$(ProjectName).wwwroot._framework.Blazor.Runtime.dll</LogicalName>
     </EmbeddedResource>
   </ItemGroup>

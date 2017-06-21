@@ -5,11 +5,15 @@
     <OutputType>exe</OutputType>
     <TargetFramework>netcoreapp1.0</TargetFramework>
     <PreserveCompilationContext>true</PreserveCompilationContext>
-
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <PackageOutputPath>$(MSBuildThisFileDirectory)..\..\artifacts\</PackageOutputPath>
+    <PackageOutputPath>$(MSBuildThisFileDirectory)../../artifacts/</PackageOutputPath>
   </PropertyGroup>
   
+  <ItemGroup>
+    <ProjectReference Include="../AngleSharp/AngleSharp.Core.csproj" />
+    <ProjectReference Include="../Blazor.Runtime/Blazor.Runtime.csproj" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Razor" Version="2.0.0-preview1-final" />
     <PackageReference Include="Microsoft.AspNetCore.Razor.Language" Version="2.0.0-preview1-final" />
