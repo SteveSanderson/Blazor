@@ -10,6 +10,8 @@ The programming model will be familiar to anyone who's worked with Razor (the C#
 
 **VS2017 users**: Install [the VS extension](https://github.com/SteveSanderson/Blazor/releases/download/v0.1.0/Blazor.VSExtension.vsix), then use *File->New project*, and choose *Blazor Application* from the *Web* category.
 
+Host the application by using the command `dotnet blazor serve`.
+
 **Cross-platform CLI users**: I haven't yet published a template package for CLI, so you'd have to clone this repo and run the *MyApplication* template app directly. But it would be easier for you to use VS2017 if you can.
 
 ## Questions
