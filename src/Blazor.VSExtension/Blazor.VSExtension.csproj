@@ -76,6 +76,9 @@
   <Target Name="BeforeBuild">
     <ItemGroup>
       <ls-ProjectTemplateFilesToRemoveOnCopy Include="MyApplication.csproj" />
+
+      <!-- Also exclude the "dotnet new" template config from the VS template output -->
+      <ls-ProjectTemplateFilesToRemoveOnCopy Include=".template.config\template.json" />
     </ItemGroup>
   </Target>
 </Project>
