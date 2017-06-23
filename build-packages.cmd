@@ -17,6 +17,9 @@ for %%s in (
     "src\Blazor.Compiler"
     "src\Blazor.Host"
     "template\MyApplication"
+	"samples\ClientServerApp\ClientServerApp.Shared"
+	"samples\ClientServerApp\ClientServerApp.Client"
+	"samples\ClientServerApp\ClientServerApp.Server"
 ) do (
     dotnet restore %%s
     if ERRORLEVEL 1 goto :fail
