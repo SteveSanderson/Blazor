@@ -32,14 +32,14 @@ else
 }
 
 @functions {
-    ClientServerApp.Shared.WeatherForecast[] forecasts;
+    WeatherForecast[] forecasts;
 
     override protected async Task InitAsync()
     {
         using (var client = new HttpClient())
         {
             var json = await client.GetStringAsync("/api/SampleData/WeatherForecasts");
-            forecasts = JsonUtil.Deserialize<ClientServerApp.Shared.WeatherForecast[]>(json);
+            forecasts = JsonUtil.Deserialize<WeatherForecast[]>(json);
         }
     }
 }

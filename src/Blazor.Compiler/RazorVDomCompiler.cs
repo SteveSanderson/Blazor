@@ -152,10 +152,21 @@ namespace RazorRenderer
             {
                 var csharpDocument = codeDoc.GetCSharpDocument();
                 var generatedCode = csharpDocument.GeneratedCode;
+                var usingNamespaces = (IEnumerable<string>)codeDoc.Items["UsingNamespaces"];
+                var allNamespaces = new List<string>
+                {
+                    "System",
+                    "System.Collections.Generic",
+                    "System.Linq",
+                    "System.Net.Http",
+                    "System.Threading.Tasks",
+                    "Blazor.Util",
+                };
+                allNamespaces.AddRange(usingNamespaces);
 
                 // If there's a better way to do this, it's not clear what it is. Don't see any public extension points
                 // for this.
-                generatedCode = "using System;using System.Collections.Generic;using System.Linq;using System.Net.Http;using Blazor.Util;using System.Threading.Tasks;\n" + generatedCode;
+                generatedCode = string.Join(string.Empty, allNamespaces.Select(ns => $"using {ns};{Environment.NewLine}")) + generatedCode;
                 generatedCode = generatedCode.Replace(
                     "public async override global::System.Threading.Tasks.Task ExecuteAsync()",
                     "protected override void RenderVirtualDom()");
@@ -220,6 +231,7 @@ namespace RazorRenderer
                         .Concat(new[] { sourceFileName });
                     var sourceLines = filesToIncludeInOrder.SelectMany(file => File.ReadAllLines(file)).ToList();
                     string lastInheritsLine = null;
+                    var usingNamespaces = new List<string>();
                     foreach (var line in sourceLines)
                     {
                         const string inheritsLinePrefix = "@inherits ";
@@ -233,6 +245,13 @@ namespace RazorRenderer
                         if (line.StartsWith(layoutLinePrefix))
                         {
                             detectedLayout = line.Substring(layoutLinePrefix.Length);
+                            continue;
+                        }
+
+                        const string usingLinePrefix = "@using ";
+                        if (line.StartsWith(usingLinePrefix))
+                        {
+                            usingNamespaces.Add(line.Substring(usingLinePrefix.Length));
                             continue;
                         }
 
@@ -254,6 +273,7 @@ namespace RazorRenderer
                     codeDoc.Items["DetectedLayout"] = detectedLayout;
                     codeDoc.Items["DetectedTagName"] = detectedTagName;
                     codeDoc.Items["DetectedBaseClass"] = lastInheritsLine;
+                    codeDoc.Items["UsingNamespaces"] = usingNamespaces;
 
                     return codeDoc;
                 }
