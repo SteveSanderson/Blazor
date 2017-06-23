@@ -155,7 +155,7 @@ namespace RazorRenderer
 
                 // If there's a better way to do this, it's not clear what it is. Don't see any public extension points
                 // for this.
-                generatedCode = "using System;using System.Collections.Generic;using System.Linq;using Blazor.Http;using Blazor.Util;using System.Threading.Tasks;\n" + generatedCode;
+                generatedCode = "using System;using System.Collections.Generic;using System.Linq;using System.Net.Http;using Blazor.Util;using System.Threading.Tasks;\n" + generatedCode;
                 generatedCode = generatedCode.Replace(
                     "public async override global::System.Threading.Tasks.Task ExecuteAsync()",
                     "protected override void RenderVirtualDom()");
@@ -308,6 +308,8 @@ namespace RazorRenderer
                 AssemblyLocation("System.Linq"),
                 AssemblyLocation("System.Runtime"),
                 AssemblyLocation("System.Threading.Tasks"),
+                AssemblyLocation("System.Net.Http"),
+                AssemblyLocation("System.Private.Uri"),
                 AssemblyLocation(typeof(RazorComponent)) // Blazor
             };
             var allReferences = assemblyReferences

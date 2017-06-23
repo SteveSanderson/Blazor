@@ -71,7 +71,7 @@
             xhr.open("GET", url);
             xhr.onreadystatechange = function xhrOnReadyStateChange (evt) {
                 if (xhr.readyState === 4) {
-                    InvokeStatic('Blazor.Runtime', 'Blazor.Http', 'HttpClient', 'OnFetchCompleted', JSON.stringify({
+                    InvokeStatic('corlib', 'System.Net.Http', 'HttpClient', 'OnFetchCompleted', JSON.stringify({
                         asyncResultAddress: parsed.asyncResultAddress,
                         response: { statusCode: xhr.status, bodyText: xhr.response }
                     }));

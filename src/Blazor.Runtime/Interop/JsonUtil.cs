@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Blazor.Util
 {
-    public static class Json
+    public static class JsonUtil
     {
         public static string Serialize(object value)
         {

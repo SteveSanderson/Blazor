@@ -36,8 +36,11 @@ else
 
     override protected async Task InitAsync()
     {
-        var response = await HttpClient.FetchAsync<WeatherForecast[]>("/sample-data/weather.json");
-        forecasts = response.BodyJson;
+        using (var client = new HttpClient())
+        {
+            var json = await client.GetStringAsync("/sample-data/weather.json");
+            forecasts = JsonUtil.Deserialize<WeatherForecast[]>(json);
+        }
     }
 
     class WeatherForecast

@@ -2,7 +2,7 @@
   "profiles": {
     "RazorRenderer": {
       "commandName": "Project",
-      "commandLineArgs": "..\\MyApplication\\ MyApp.MyNamespace ..\\MyApplication\\bin\\Debug\\netcoreapp1.0\\MyApplication.dll testviews.dll"
+      "commandLineArgs": "..\\..\\template\\MyApplication\\ MyApp.MyNamespace ..\\..\\template\\MyApplication\\bin\\Debug\\netcoreapp1.0\\MyApplication.dll testviews.dll"
     }
   }
 }
