@@ -15,9 +15,8 @@ namespace Blazor.Sdk.Host
         static object cachedCompilationResultsLock = new object();
         static FileSystemWatcher activeFileSystemWatcher; // If we don't hold a reference to this, it gets disposed automatically on Linux (though not on Windows)
 
-        public static void UseRazorCompilation(this IApplicationBuilder builder)
+        public static void UseRazorCompilation(this IApplicationBuilder builder, string rootDir)
         {
-            var rootDir = Directory.GetCurrentDirectory();
             BeginFileSystemWatcher(rootDir);
 
             builder.Use(async (context, next) =>
@@ -70,6 +69,7 @@ namespace Blazor.Sdk.Host
             // Determine the desired views assembly name based on the URL
             var requestPath = context.Request.Path.Value;
             var assemblyFilename = requestPath.Substring(requestPath.LastIndexOf('/') + 1);
+            var references = context.Request.Query["reference"];
 
             // Get or create cached compilation result. Doesn't really matter that we might be blocking
             // other request threads with this lock, as this is a development-time feature only.
@@ -79,7 +79,7 @@ namespace Blazor.Sdk.Host
                 var cacheKey = assemblyFilename;
                 if (!cachedCompilationResults.ContainsKey(cacheKey))
                 {
-                    cachedCompilationResults[cacheKey] = PerformCompilation(assemblyFilename, rootDir);
+                    cachedCompilationResults[cacheKey] = PerformCompilation(assemblyFilename, rootDir, references);
                 }
 
                 compiledAssembly = cachedCompilationResults[cacheKey];
@@ -90,26 +90,23 @@ namespace Blazor.Sdk.Host
             await context.Response.Body.WriteAsync(compiledAssembly, 0, compiledAssembly.Length);
         }
 
-        private static byte[] PerformCompilation(string assemblyFilename, string rootDir)
+        private static byte[] PerformCompilation(string assemblyFilename, string rootDir, IEnumerable<string> additionalReferenceAssemblies)
         {
-            // Get the list of assembly paths to reference during compilation. Currently this
-            // is just the main app assembly, so that you can have code-behind classes.
-            // TODO: Reference all the same assemblies that the main app assembly does. Not
-            // certain how to get that info. Might be enough to have the client pass through
-            // via querystring the list of referenced assemblies declared on the <script> tag.
+            // Get the total list of assembly paths to reference during compilation
             var inferredMainAssemblyFilename = InferMainAssemblyFilename(assemblyFilename);
             var referenceAssemblyFilenames = new List<string>();
             if (!string.IsNullOrEmpty(inferredMainAssemblyFilename))
             {
                 referenceAssemblyFilenames.Add(inferredMainAssemblyFilename);
             }
+            referenceAssemblyFilenames.AddRange(additionalReferenceAssemblies);
 
             using (var ms = new MemoryStream())
             {
                 RazorVDomCompiler.CompileToStream(
                     enableLogging: false,
                     rootDir: rootDir,
-                    referenceAssemblies: referenceAssemblyFilenames.Select(filename => Path.Combine("bin", "Debug", "netcoreapp1.0", filename)).ToArray(),
+                    referenceAssemblies: referenceAssemblyFilenames.Select(filename => Path.Combine(rootDir, "bin", "Debug", "netcoreapp1.0", filename)).ToArray(),
                     outputAssemblyName: Path.GetFileNameWithoutExtension(assemblyFilename),
                     outputStream: ms);
 

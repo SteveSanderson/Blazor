@@ -725,7 +725,11 @@ window.addEventListener('popstate', function(evt) {
         // value with this so that the dev-time host app knows to compile the Razor files dynamically. In a production
         // build, the actual views assembly file would be on disk and the querystring would be ignored.
         var viewsAssemblyFilename = entryPoint.replace(/\.dll$/, '.Views.dll');
-        preloadAssemblies.push({ assemblyName: viewsAssemblyFilename, url: '/_bin/' + viewsAssemblyFilename + '?type=razorviews' });
+        var referencesQueryStringSegments = referenceAssemblies.map(function (r) { return "reference=" + encodeURIComponent(r); }).join('&');
+        preloadAssemblies.push({
+            assemblyName: viewsAssemblyFilename,
+            url: '/_bin/' + viewsAssemblyFilename + '?type=razorviews&' + referencesQueryStringSegments
+        });
 
         window.Module = {
             wasmBinaryFile: '/_framework/wasm/dna.wasm',
