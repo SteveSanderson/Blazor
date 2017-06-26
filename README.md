@@ -8,7 +8,7 @@ The programming model will be familiar to anyone who's worked with Razor (the C#
 
 ## Getting started
 
-**VS2017 users**: Install [the VS extension](https://github.com/SteveSanderson/Blazor/releases/download/v0.1.0/Blazor.VSExtension.vsix), then use *File->New project*, and choose *Blazor Application* from the *Web* category.
+**VS2017 users**: Install [the VS extension](https://github.com/SteveSanderson/Blazor/releases/download/v0.2.0/Blazor.VSExtension.vsix), then use *File->New project*, and choose *Blazor Application* from the *Web* category.
 
 To start the application in VS, just press F5 or Ctrl+F5 as usual.
 
