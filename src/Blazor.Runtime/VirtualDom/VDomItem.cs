@@ -4,7 +4,7 @@ using Blazor.Components;
 
 namespace Blazor.VirtualDom
 {
-    internal struct VDomItem
+    public struct VDomItem
     {
         public VDomItemType ItemType;
         public int SourceSequence;

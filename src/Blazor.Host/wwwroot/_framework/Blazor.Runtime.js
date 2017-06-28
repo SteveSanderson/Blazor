@@ -8,7 +8,13 @@
 
 		Alert: function(message) {
 			alert(message);
-		},
+        },
+
+        ResolveRelativeUrl: function (url) {
+            var a = document.createElement('a');
+            a.href = url;
+            return a.cloneNode(false).href;
+        },
 
 		RenderComponent: function(descriptor) {
 			var item = JSON.parse(descriptor);
@@ -632,7 +638,8 @@ function DispatchEvent(evt, componentRef, vdomItemIndex) {
 
 function OnLocationChanged(pathAndQuery) {
     InvokeStatic('Blazor.Runtime', 'Blazor.Routing', 'Router', 'OnNavigation', JSON.stringify({
-		url: pathAndQuery
+        url: pathAndQuery,
+        absoluteUrl: location.href
     }));
 
     // Highlight links to this location

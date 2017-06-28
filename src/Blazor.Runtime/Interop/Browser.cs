@@ -12,5 +12,8 @@ namespace Blazor.Interop
 
         [DllImport(@"browser.js", CharSet = CharSet.Ansi)]
         public static extern void Alert(string message);
+
+        [DllImport(@"browser.js", CharSet = CharSet.Ansi)]
+        public static extern string ResolveRelativeUrl(string url);
     }
 }

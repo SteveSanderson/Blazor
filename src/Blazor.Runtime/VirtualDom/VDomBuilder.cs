@@ -16,17 +16,19 @@ namespace Blazor.VirtualDom
 
         internal VDomItem[] PrevItems => prevItems;
         internal VDomItem[] Items => items;
-        
-        internal void SwapBuffersAndClear()
+
+        internal void Clear()
         {
-            // Swap
+            itemsInUse = 0;
+            openElementIndices.Clear();
+        }
+
+
+        internal void SwapBuffers()
+        {
             var otherBuffer = prevItems;
             prevItems = items;
             items = otherBuffer;
-
-            // Clear
-            itemsInUse = 0;
-            openElementIndices.Clear();
         }
 
         public void OpenElement(int sourceSeq, string tagName)

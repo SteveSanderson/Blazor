@@ -3,24 +3,43 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Linq;
+using Blazor.Routing;
+using Blazor.Runtime.Components;
 
 namespace Blazor.Components
 {
     public abstract class RazorComponent : Component
     {
-        public static Component Instantiate(string cshtmlFileName)
+        public static Component Instantiate(string cshtmlFileName, BlazorContext context)
         {
             var razorViewClassName = GetViewClassName(".", cshtmlFileName);
-            var type = Type.GetType($"Views.{razorViewClassName}");
+            var viewTypeName = $"Views.{razorViewClassName}";
+            Type viewType;
+
+            if (Router.ViewAssemblies == null)
+            {
+                // In DNA, we can search across all loaded assemblies
+                viewType = Type.GetType(viewTypeName);
+            }
+            else
+            {
+                // On the server, need to explicitly walk through the supplied list of assemblies
+                viewType = Router.ViewAssemblies.Select(a => a.GetType(viewTypeName)).Where(t => t != null).FirstOrDefault();
+            }
 
             // To ensure that the constructor actually runs, use Instantiate from the IComponentRazorViewFactory interface.
             // For more info on why this is needed, see the comments about it in AddIComponentRazorViewFactoryImplementation
             // in the RazorRenderer project.
-            return ((IRazorComponentFactory)Activator.CreateInstance(type)).Instantiate();
+            var instance = ((IRazorComponentFactory)Activator.CreateInstance(viewType)).Instantiate();
+            instance.Context = context;
+            return instance;
         }
 
         public static string GetViewClassName(string rootDir, string cshtmlFilename)
         {
+            cshtmlFilename = cshtmlFilename.Replace('/', Path.DirectorySeparatorChar);
+
             if (!rootDir.EndsWith(Path.DirectorySeparatorChar.ToString()))
             {
                 rootDir += Path.DirectorySeparatorChar;
@@ -36,7 +55,7 @@ namespace Blazor.Components
             // times they are based on type names. It's all very delicate right now.
 
             var relativePath = cshtmlFilename.Substring(rootDir.Length);
-            return relativePath.Replace(Path.DirectorySeparatorChar, '_').Replace('.', '_');
+            return relativePath.Replace(Path.DirectorySeparatorChar, '_').Replace('.', '_').ToLowerInvariant();
         }
 
         protected override void RenderVirtualDom()

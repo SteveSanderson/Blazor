@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Blazor.Runtime;
+using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
@@ -33,7 +34,14 @@ namespace Blazor.Interop
         public ManagedGCHandle(T value)
         {
             _value = value;
-            _gcHandle = GCHandle.Alloc(this, GCHandleType.Pinned);
+
+            // Note that on the real .NET (non-DNA) runtimes we can't really pin some of the things we
+            // want to pin for JS interop, because they they are "non-primitive" types (i.e., hold references
+            // to things that themselves would still be unpinned). During server-side execution we don't
+            // actually need to pin anything, because there's no interop outside .NET. During client-side
+            // execution, everything is (in effect) pinned regardless, because DNA's GC only does mark-sweep
+            // - it doesn't have any compaction phase.
+            _gcHandle = GCHandle.Alloc(this, Env.IsServer ? GCHandleType.Normal : GCHandleType.Pinned);
         }
 
         public static ManagedGCHandle<T> FromAddress(int address)
@@ -44,7 +52,9 @@ namespace Blazor.Interop
 
         public T Value => _value;
 
-        public int Address => _gcHandle.AddrOfPinnedObject().ToInt32();
+        // As per comment above, we don't really need real pointers when executing on the server.
+        // Nor can we even obtain one safely.
+        public int Address => Env.IsServer ? 0 : _gcHandle.AddrOfPinnedObject().ToInt32();
 
         public void Dispose()
         {

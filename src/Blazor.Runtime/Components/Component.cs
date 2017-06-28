@@ -4,6 +4,8 @@ using System;
 using Blazor.VirtualDom;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Blazor.Runtime;
+using Blazor.Runtime.Components;
 
 namespace Blazor.Components
 {
@@ -17,6 +19,9 @@ namespace Blazor.Components
         protected virtual string Layout => null;
         internal Component BodyComponent { get; set; }
 
+        private Task _firstRenderCompletedTask;
+        internal Task FirstRenderCompletedTask => _firstRenderCompletedTask;
+
         // Try to find ways of encapsulating this better. Currently, derived components can interfere with this directly.
         protected readonly VDomBuilder builder = new VDomBuilder();
 
@@ -27,6 +32,8 @@ namespace Blazor.Components
         private int _parentId;
         private Dictionary<int, Component> _children = new Dictionary<int, Component>();
         private bool _isDisposed;
+
+        public BlazorContext Context { get; internal set; }
 
         internal static Component FindById(int id)
         {
@@ -61,9 +68,10 @@ namespace Blazor.Components
 
             if (enableLayouts && !string.IsNullOrEmpty(Layout))
             {
-                var layoutComponent = RazorComponent.Instantiate(Layout);
+                var layoutComponent = RazorComponent.Instantiate(Layout, Context);
                 layoutComponent.BodyComponent = this;
                 layoutComponent.MountAsPage(elementRef);
+                return layoutComponent;
             }
             else
             {
@@ -74,18 +82,23 @@ namespace Blazor.Components
                 Init();
                 var initAsyncTask = InitAsync();
                 Render();
-                initAsyncTask?.ContinueWith(_ => Render());
+                _firstRenderCompletedTask = initAsyncTask?.ContinueWith(_ => {
+                    Render();
+                });
+                return this;
             }
-            
-            return this;
         }
 
         public void Render()
         {
+            builder.Clear();
             RenderVirtualDom();
 
-            Element.UpdateContents(_id, builder.PrevItems, builder.Items, _replaceElement);
-            builder.SwapBuffersAndClear();
+            if (Env.IsClient)
+            {
+                Element.UpdateContents(_id, builder.PrevItems, builder.Items, _replaceElement);
+                builder.SwapBuffers();
+            }
         }
 
         public virtual void Dispose()
@@ -121,7 +134,7 @@ namespace Blazor.Components
             }
             else
             {
-                childComponent = RazorComponent.Instantiate(vdomItem.ComponentName);
+                childComponent = RazorComponent.Instantiate(vdomItem.ComponentName, Context);
                 childComponent.ReceiveParameters(builder.ReadAttributes(vdomItemIndex));
             }
 
@@ -194,6 +207,23 @@ namespace Blazor.Components
             // Always re-render after an event handler completes synchronously. Could make this controlled by
             // a flag on the EventInfo so you could do @onclick(..., AutoRender: false).
             Render();
+        }
+
+        public string AbsoluteUrl(string relativeUrl)
+        {
+            if (Env.IsServer)
+            {
+                return ServerAbsoluteUrl(relativeUrl);
+            }
+            else
+            {
+                return Browser.ResolveRelativeUrl(relativeUrl);
+            }
+        }
+
+        private string ServerAbsoluteUrl(string relativeUrl)
+        {
+            return new Uri(new Uri(Context.AbsoluteUrl), relativeUrl).ToString();
         }
     }
 }

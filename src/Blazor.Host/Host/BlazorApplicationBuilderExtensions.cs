@@ -6,18 +6,32 @@ using Microsoft.Extensions.FileProviders;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
+using System.Runtime.Loader;
 using System.Text;
 
 namespace Blazor.Host
 {
+    public class BlazorUIOptions
+    {
+        public bool EnableServerSidePrerendering { get; set; }
+        public string ClientAssemblyName { get; set; }
+    }
+
     public static class BlazorApplicationBuilderExtensions
     {
         private readonly static Assembly _hostAssembly = typeof(BlazorApplicationBuilderExtensions).GetTypeInfo().Assembly;
         private readonly static string _embeddedResourceProjectName = "Blazor.Host"; // Note: Not the same as _hostAssembly.Name
 
-        public static IApplicationBuilder UseBlazorUI(this IApplicationBuilder app, string rootPath)
+        public static IApplicationBuilder UseBlazorUI(this IApplicationBuilder app, string rootPath, Action<BlazorUIOptions> configure = null)
         {
+            var options = new BlazorUIOptions();
+            if (configure != null)
+            {
+                configure(options);
+            }
+
             var staticFilesRoot = Path.GetFullPath(Path.Combine(rootPath, "wwwroot"));
             var fileProvider = new PhysicalFileProvider(staticFilesRoot);
 
@@ -25,12 +39,6 @@ namespace Blazor.Host
             contentTypeProvider.Mappings.Add(".dll", "application/octet-stream");
             contentTypeProvider.Mappings.Add(".exe", "application/octet-stream");
             contentTypeProvider.Mappings.Add(".wasm", "application/octet-stream");
-
-            app.UseDefaultFiles(new DefaultFilesOptions
-            {
-                FileProvider = fileProvider,
-                // RequestPath = requestPath, // TODO: Allow mounting in subdir of URL space
-            });
 
             app.UseStaticFiles(new StaticFileOptions
             {
@@ -76,6 +84,15 @@ namespace Blazor.Host
 
             app.UseLiveReloading();
 
+            if (options.EnableServerSidePrerendering)
+            {
+                if (string.IsNullOrEmpty(options.ClientAssemblyName))
+                {
+                    throw new ArgumentException($"If {nameof(options.EnableServerSidePrerendering)} is true, then you must specify a value for {nameof(options.ClientAssemblyName)}.");
+                }
+                Prerendering.EnablePrerendering(clientBinDir, options.ClientAssemblyName);
+            }
+
             // SPA fallback routing - for requests that don't match physical files, and don't appear
             // to be attempts to fetch static files, map them all to /index.html
             app.Use(async (context, next) =>
@@ -83,9 +100,18 @@ namespace Blazor.Host
                 var requestPath = context.Request.Path;
                 if (!IsStaticFileRequest(requestPath.Value))
                 {
-                    // TODO: There's probably a better way to return this file using the static files middleware
-                    context.Response.ContentType = "text/html";
-                    await context.Response.SendFileAsync(Path.Combine(rootPath, "wwwroot", "index.html"));
+                    if (options.EnableServerSidePrerendering)
+                    {
+                        var html = await Prerendering.PrerenderPage(rootPath, options.ClientAssemblyName, context);
+                        context.Response.ContentType = "text/html";
+                        await context.Response.WriteAsync(html);
+                    }
+                    else
+                    {
+                        // TODO: There's probably a better way to return this file using the static files middleware
+                        context.Response.ContentType = "text/html";
+                        await context.Response.SendFileAsync(Path.Combine(rootPath, "wwwroot", "index.html"));
+                    }
                 }
                 else
                 {

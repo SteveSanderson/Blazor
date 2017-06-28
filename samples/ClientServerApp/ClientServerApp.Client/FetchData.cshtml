@@ -38,7 +38,7 @@ else
     {
         using (var client = new HttpClient())
         {
-            var json = await client.GetStringAsync("/api/SampleData/WeatherForecasts");
+            var json = await client.GetStringAsync(AbsoluteUrl("/api/SampleData/WeatherForecasts"));
             forecasts = JsonUtil.Deserialize<WeatherForecast[]>(json);
         }
     }

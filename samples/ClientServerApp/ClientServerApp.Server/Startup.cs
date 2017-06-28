@@ -65,7 +65,11 @@ namespace ClientServerApp.Server
             });
 
             // All other requests handled by serving the SPA
-            app.UseBlazorUI(Path.Combine("..", "ClientServerApp.Client"));
+            app.UseBlazorUI(Path.Combine("..", "ClientServerApp.Client"), opts =>
+            {
+                opts.EnableServerSidePrerendering = true;
+                opts.ClientAssemblyName = "ClientServerApp.Client.dll";
+            });
         }
     }
 }

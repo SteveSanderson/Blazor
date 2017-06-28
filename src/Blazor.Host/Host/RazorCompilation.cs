@@ -5,6 +5,8 @@ using RazorRenderer;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Extensions.Primitives;
+using System.Text.RegularExpressions;
 
 namespace Blazor.Sdk.Host
 {
@@ -71,6 +73,14 @@ namespace Blazor.Sdk.Host
             var assemblyFilename = requestPath.Substring(requestPath.LastIndexOf('/') + 1);
             var references = context.Request.Query["reference"];
 
+            // Serve the assembly
+            context.Response.ContentType = "application/octet-steam";
+            var compiledAssembly = GetCompiledViewsAssembly(rootDir, assemblyFilename, references);
+            await context.Response.Body.WriteAsync(compiledAssembly, 0, compiledAssembly.Length);
+        }
+
+        internal static byte[] GetCompiledViewsAssembly(string rootDir, string assemblyFilename, IEnumerable<string> references)
+        {
             // Get or create cached compilation result. Doesn't really matter that we might be blocking
             // other request threads with this lock, as this is a development-time feature only.
             byte[] compiledAssembly;
@@ -85,9 +95,7 @@ namespace Blazor.Sdk.Host
                 compiledAssembly = cachedCompilationResults[cacheKey];
             }
 
-            // Actually serve it
-            context.Response.ContentType = "application/octet-steam";
-            await context.Response.Body.WriteAsync(compiledAssembly, 0, compiledAssembly.Length);
+            return compiledAssembly;
         }
 
         private static byte[] PerformCompilation(string assemblyFilename, string rootDir, IEnumerable<string> additionalReferenceAssemblies)
@@ -116,11 +124,10 @@ namespace Blazor.Sdk.Host
 
         private static string InferMainAssemblyFilename(string viewsAssemblyFilename)
         {
-            const string viewsAssemblySuffix = ".Views.dll";
-            if (viewsAssemblyFilename.EndsWith(viewsAssemblySuffix))
+            var partBeforeSuffix = Regex.Match(viewsAssemblyFilename, "(.*)(\\.\\d+)\\.Views\\.dll$");
+            if (partBeforeSuffix.Success)
             {
-                var partBeforeSuffix = viewsAssemblyFilename.Substring(0, viewsAssemblyFilename.Length - viewsAssemblySuffix.Length);
-                return $"{partBeforeSuffix}.dll";
+                return $"{partBeforeSuffix.Groups[1].Value}.dll";
             }
 
             return null;
