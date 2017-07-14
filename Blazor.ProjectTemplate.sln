@@ -1,0 +1,36 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.26711.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Blazor.VSExtension", "template\Blazor.VSExtension\Blazor.VSExtension.csproj", "{315CDAF0-09E2-46B6-BF9A-600E9E987F05}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyApplication", "template\MyApplication\MyApplication.csproj", "{49C6A338-C946-42D1-A2C7-A1436679313E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionItems", "{B84AADE3-D82B-4E03-9C39-6D882E59D69D}"
+	ProjectSection(SolutionItems) = preProject
+		build-vsextension.cmd = build-vsextension.cmd
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{315CDAF0-09E2-46B6-BF9A-600E9E987F05}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{315CDAF0-09E2-46B6-BF9A-600E9E987F05}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{315CDAF0-09E2-46B6-BF9A-600E9E987F05}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{315CDAF0-09E2-46B6-BF9A-600E9E987F05}.Release|Any CPU.Build.0 = Release|Any CPU
+		{49C6A338-C946-42D1-A2C7-A1436679313E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{49C6A338-C946-42D1-A2C7-A1436679313E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{49C6A338-C946-42D1-A2C7-A1436679313E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{49C6A338-C946-42D1-A2C7-A1436679313E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {58DF0713-610A-47A0-951A-C8D9C24722A8}
+	EndGlobalSection
+EndGlobal

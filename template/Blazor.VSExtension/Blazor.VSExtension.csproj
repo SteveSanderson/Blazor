@@ -58,7 +58,7 @@
   </ItemGroup>
   <ItemGroup>
     <TemplateReference Include="MyApplication.csproj">
-      <PathToProject>../../template/MyApplication/MyApplication.csproj</PathToProject>
+      <PathToProject>../MyApplication/MyApplication.csproj</PathToProject>
     </TemplateReference>
   </ItemGroup>
   <ItemGroup>

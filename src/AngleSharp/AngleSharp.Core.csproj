@@ -7,9 +7,7 @@
     <RootNamespace>AngleSharp</RootNamespace>
     <AssemblyName>AngleSharp</AssemblyName>
     <TargetFramework>netstandard1.3</TargetFramework>
-
     <AssemblyName>Blazor.AngleSharp</AssemblyName>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageOutputPath>$(MSBuildThisFileDirectory)../../artifacts/</PackageOutputPath>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

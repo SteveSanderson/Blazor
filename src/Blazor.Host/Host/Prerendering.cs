@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Blazor.Components;
 using Blazor.Routing;
 using Blazor.VirtualDom;
-using MiniJSON;
 using System.Collections.Generic;
 using System;
 using System.Runtime.Loader;
@@ -13,7 +12,6 @@ using System.Linq;
 using Blazor.Sdk.Host;
 using Blazor.Runtime.Components;
 using Microsoft.AspNetCore.Http;
-using System.Diagnostics;
 
 namespace Blazor.Host
 {
@@ -28,7 +26,7 @@ namespace Blazor.Host
         internal static void EnablePrerendering(string clientBinDir, string assemblyName)
         {
             var clientAppAssemblyPath = Path.Combine(clientBinDir, assemblyName);
-            var entrypointAssembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(clientAppAssemblyPath);
+            var entrypointAssembly = LoadAssemblyFromPath(clientAppAssemblyPath);
             var entrypoint = entrypointAssembly.EntryPoint;
             entrypoint.Invoke(null, new[] { new string[0] });
             var envField = typeof(Blazor.Runtime.Env)
@@ -209,6 +207,16 @@ namespace Blazor.Host
             using (var ms = new MemoryStream(viewAssemblyBytes))
             {
                 return AssemblyLoadContext.Default.LoadFromStream(ms);
+            }
+        }
+
+        private static Assembly LoadAssemblyFromPath(string path)
+        {
+            // Load from stream to avoid locking the file on disk
+            // Unfortunately that also prevents debugging into this assembly
+            using (var fs = File.OpenRead(path))
+            {
+                return AssemblyLoadContext.Default.LoadFromStream(fs);
             }
         }
     }

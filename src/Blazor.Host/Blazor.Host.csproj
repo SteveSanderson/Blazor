@@ -2,23 +2,14 @@
   <Import Project="..\..\version.props" />
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp1.0</TargetFramework>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
     <OutputType>Exe</OutputType>
     <StartupObject>Blazor.Sdk.Program</StartupObject>
     <AssemblyName>dotnet-blazor</AssemblyName>
     <PackageType>DotnetCliTool</PackageType>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <PackageOutputPath>$(MSBuildThisFileDirectory)../../artifacts/</PackageOutputPath>
     <PackageId>Blazor.Host</PackageId>
+    <PackageOutputPath>$(MSBuildThisFileDirectory)../../artifacts/</PackageOutputPath>
   </PropertyGroup>
-  <ItemGroup>
-    <ProjectReference Include="../Blazor.Compiler/Blazor.Compiler.csproj" />
-    <ProjectReference Include="../DNA/corlib/corlib.csproj">
-      <!-- unfortunately this does not work atm, so DNA/corlib needs to be restored/built first -->
-      <!-- https://github.com/Microsoft/msbuild/issues/2065 -->
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
-  </ItemGroup>
   <!-- Stuff needed for 'host' command -->
   <ItemGroup>
     <EmbeddedResource Include="wwwroot/_framework/**/*.*" />
@@ -30,10 +21,14 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore" Version="1.1.1" />
-    <PackageReference Include="Microsoft.AspNetCore.ResponseCompression" Version="1.0.1" />
-    <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="1.1.1" />
-    <PackageReference Include="Blazor.Compiler" Version="0.2.1-*" />
+    <PackageReference Include="Microsoft.AspNetCore" Version="2.0.0-preview2-final" />
+    <PackageReference Include="Microsoft.AspNetCore.ResponseCompression" Version="2.0.0-preview2-final" />
+    <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="2.0.0-preview2-final" />
     <PackageReference Include="System.IO.FileSystem.Watcher" Version="4.3.0" />
+
+    <ProjectReference Include="../DNA/corlib/corlib.csproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="../Blazor.Compiler/Blazor.Compiler.csproj" />
   </ItemGroup>
 </Project>

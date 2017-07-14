@@ -324,6 +324,7 @@ namespace RazorRenderer
             {
                 AssemblyLocation("mscorlib"),
                 AssemblyLocation(typeof(object)), // CoreLib
+                AssemblyLocation("System.Console"),
                 AssemblyLocation("System.Collections"),
                 AssemblyLocation("System.Linq"),
                 AssemblyLocation("System.Runtime"),

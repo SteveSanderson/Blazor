@@ -2,9 +2,11 @@
 {
     public abstract class PropertyInfo : MemberInfo
     {
+#pragma warning disable 0649
         private readonly Type _ownerType;
         private readonly string _name;
         private readonly Type _propertyType;
+#pragma warning restore 0649
 
         public override string Name => _name;
 

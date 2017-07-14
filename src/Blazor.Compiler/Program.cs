@@ -10,7 +10,7 @@ namespace RazorRenderer
 
         static int Main(string[] args)
         {
-            if (args.Length < 4)
+            if (args.Length < 3)
             {
                 ShowUsage();
                 return 1;
@@ -29,9 +29,8 @@ namespace RazorRenderer
                 return 1;
             }
 
-            var applicationAssembly = args[2];
-            var outputFilename = args[3];
-            RazorVDomCompiler.CompileToFile(EnableLogging, rootDir, new[] { applicationAssembly }, outputFilename);
+            var referenceAssemblies = args.Skip(2).ToArray();
+            RazorVDomCompiler.CompileToFile(EnableLogging, rootDir, referenceAssemblies, "testviews.dll");
             return 0;
         }
 

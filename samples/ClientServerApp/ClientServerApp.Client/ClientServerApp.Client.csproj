@@ -4,9 +4,7 @@
     <OutputType>exe</OutputType>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Blazor.Runtime" Version="0.2.1-*" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\ClientServerApp.Shared\ClientServerApp.Shared.csproj" />
+    <ProjectReference Include="..\..\..\src\Blazor.Runtime\Blazor.Runtime.csproj" />
   </ItemGroup>
 </Project>
