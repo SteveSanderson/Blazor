@@ -326,7 +326,12 @@ namespace System {
 			}
 
 			return output;
-		}
+		} 
+
+        public static T[] Empty<T>()
+        {
+            return (T[])CreateInstance(typeof(T), 0);
+        }
 
         [MethodImpl(MethodImplOptions.InternalCall)]
         extern public static Array CreateInstance(Type elementType, int length);

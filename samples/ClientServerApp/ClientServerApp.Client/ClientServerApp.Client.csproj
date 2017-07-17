@@ -4,6 +4,7 @@
     <OutputType>exe</OutputType>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\JSLibs\JSLibs.csproj" />
     <ProjectReference Include="..\ClientServerApp.Shared\ClientServerApp.Shared.csproj" />
     <ProjectReference Include="..\..\..\src\Blazor.Runtime\Blazor.Runtime.csproj" />
   </ItemGroup>
