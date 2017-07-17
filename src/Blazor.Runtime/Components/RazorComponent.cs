@@ -86,7 +86,7 @@ namespace Blazor.Components
             return new VDomAttribute
             {
                 Name = "onclick",
-                Value = new VEventHandler(callback)
+                Value = new VEventHandler(evtInfo => callback(evtInfo))
             };
         }
 
@@ -104,7 +104,7 @@ namespace Blazor.Components
             return new VDomAttribute
             {
                 Name = "onclick",
-                Value = new VEventAsyncHandler(callback)
+                Value = new VEventAsyncHandler(evtInfo => callback(evtInfo))
             };
         }
 
@@ -113,7 +113,16 @@ namespace Blazor.Components
             return new VDomAttribute
             {
                 Name = "onchange",
-                Value = new VEventHandler(callback)
+                Value = new VEventHandler(evtInfo => callback(evtInfo))
+            };
+        }
+
+        protected VDomAttribute onchange(Action callback)
+        {
+            return new VDomAttribute
+            {
+                Name = "onchange",
+                Value = new VEventHandler(_ => { callback(); })
             };
         }
 
