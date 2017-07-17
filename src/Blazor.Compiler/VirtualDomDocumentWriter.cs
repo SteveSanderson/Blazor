@@ -329,6 +329,10 @@ namespace RazorRenderer
                 {
                     WriteCSharpExpression((CSharpExpressionIRNode)value);
                 }
+                else if ((value is RazorIRToken razorIRToken) && razorIRToken.IsCSharp)
+                {
+                    Context.Writer.Write(razorIRToken.Content);
+                }
                 else
                 {
                     throw new ArgumentException("value parameter is of unexpected type " + value.GetType().FullName);
