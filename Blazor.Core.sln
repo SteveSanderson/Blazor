@@ -35,6 +35,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ClientServerApp.Server", "s
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ClientServerApp.Shared", "samples\ClientServerApp\ClientServerApp.Shared\ClientServerApp.Shared.csproj", "{AAC0A945-F535-4716-AB73-4D193FA08844}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JSLibs", "samples\JSLibs\JSLibs.csproj", "{DF54FA42-70C0-435A-A3A6-43D3905D85F5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -90,6 +92,12 @@ Global
 		{AAC0A945-F535-4716-AB73-4D193FA08844}.LocalTest|Any CPU.Build.0 = Debug|Any CPU
 		{AAC0A945-F535-4716-AB73-4D193FA08844}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AAC0A945-F535-4716-AB73-4D193FA08844}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DF54FA42-70C0-435A-A3A6-43D3905D85F5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DF54FA42-70C0-435A-A3A6-43D3905D85F5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DF54FA42-70C0-435A-A3A6-43D3905D85F5}.LocalTest|Any CPU.ActiveCfg = Debug|Any CPU
+		{DF54FA42-70C0-435A-A3A6-43D3905D85F5}.LocalTest|Any CPU.Build.0 = Debug|Any CPU
+		{DF54FA42-70C0-435A-A3A6-43D3905D85F5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DF54FA42-70C0-435A-A3A6-43D3905D85F5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -105,6 +113,7 @@ Global
 		{110A0EC6-44C1-4C73-BE9C-E2E7EDE6611A} = {D3E21340-9A52-4849-915D-3E04891C3C53}
 		{DA6D77C9-F101-45C0-A4CD-634F87D3A1DF} = {D3E21340-9A52-4849-915D-3E04891C3C53}
 		{AAC0A945-F535-4716-AB73-4D193FA08844} = {D3E21340-9A52-4849-915D-3E04891C3C53}
+		{DF54FA42-70C0-435A-A3A6-43D3905D85F5} = {B5DFF11D-B4B8-4727-90C8-66F5B6C9574B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {70729D6F-492C-4E7C-8C0F-D3D0EA7544AB}
