@@ -1,8 +1,3 @@
-/**
-Walking the DOM model starting with [IWindow]
-Mapped [51] types
-**/
-
 using System;
 using Blazor.Runtime.Interop;
 
