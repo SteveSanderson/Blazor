@@ -14,18 +14,20 @@ namespace Blazor.Tools.DomBuilder
         private Dictionary<Type, IdlTypeInfo> _typeIdlMap = new Dictionary<Type, IdlTypeInfo>()
         {
             [typeof(void)] = new IdlTypeInfo(typeof(void), "void"),
-            [typeof(object)] = new IdlTypeInfo(typeof(object), "object"),
-            [typeof(bool)] = new IdlTypeInfo(typeof(bool), "boolean"),
+            
+            [typeof(bool)] = new IdlTypeInfo(typeof(bool), "bool"),
             [typeof(int)] = new IdlTypeInfo(typeof(int), "int"),
-            [typeof(string)] = new IdlTypeInfo(typeof(string), "string"),
-            [typeof(DateTime)] = new IdlTypeInfo(typeof(DateTime), "datetime"),
+            [typeof(DateTime)] = new IdlTypeInfo(typeof(DateTime), "DateTime"),
 
-            [typeof(AngleSharp.Dom.DomEventHandler)] = new IdlTypeInfo(typeof(AngleSharp.Dom.DomEventHandler), "DomEventHandler"),
-            [typeof(AngleSharp.Dom.DocumentReadyState)] = new IdlTypeInfo(typeof(AngleSharp.Dom.DocumentReadyState), "DocumentReadyState"),
-            [typeof(AngleSharp.Dom.NodeFilter)] = new IdlTypeInfo(typeof(AngleSharp.Dom.NodeFilter), "NodeFilter"),
-            [typeof(AngleSharp.Dom.RangePosition)] = new IdlTypeInfo(typeof(AngleSharp.Dom.RangePosition), "RangePosition"),
+            [typeof(object)] = new IdlTypeInfo(typeof(object), "object") { IsNative = true },
+            [typeof(string)] = new IdlTypeInfo(typeof(string), "string") { IsNative = true },
 
-            [typeof(Task<AngleSharp.Dom.IDocument>)] = new IdlTypeInfo(typeof(AngleSharp.Dom.IDocument), "Task<IDocument>"),
+            [typeof(AngleSharp.Dom.DomEventHandler)] = new IdlTypeInfo(typeof(AngleSharp.Dom.DomEventHandler), "AngleSharp.Dom.DomEventHandler"),
+            [typeof(AngleSharp.Dom.DocumentReadyState)] = new IdlTypeInfo(typeof(AngleSharp.Dom.DocumentReadyState), "AngleSharp.Dom.DocumentReadyState"),
+            [typeof(AngleSharp.Dom.NodeFilter)] = new IdlTypeInfo(typeof(AngleSharp.Dom.NodeFilter), "AngleSharp.Dom.NodeFilter"),
+            [typeof(AngleSharp.Dom.RangePosition)] = new IdlTypeInfo(typeof(AngleSharp.Dom.RangePosition), "AngleSharp.Dom.RangePosition") { IsNative = true },
+
+            [typeof(Task<AngleSharp.Dom.IDocument>)] = new IdlTypeInfo(typeof(AngleSharp.Dom.IDocument), "Document"),
         };
 
         private Dictionary<Type, string> _typeClassMap;
@@ -64,20 +66,19 @@ namespace Blazor.Tools.DomBuilder
 
                 if (ti.IsGenericType)
                 {
-                    var gtd = ti.GetGenericTypeDefinition();
-                    iti.ModelTypeBareName = gtd.Name;
+                    iti.GenericBaseType = ti.GetGenericTypeDefinition();
 
                     var genericTypeArgs = $@"<{string.Join(",",
                             ti.GenericTypeArguments.Select((_, num) => $"T{num}"))}>";
                     var genericTypeNames = $@"<{string.Join(",",
-                            ti.GenericTypeArguments.Select(x => $"T{GetIdlTypeInfo(x).ModelTypeName}"))}>";
+                            ti.GenericTypeArguments.Select(x => $"{GetIdlTypeInfo(x).ModelTypeName}"))}>";
 
                     iti.ModelTypeName = $"{iti.ModelTypeBareName}{genericTypeNames}";
                     iti.ModelTypeClassName = $"{iti.ModelTypeBareName}{genericTypeArgs}";
 
-                    _typeIdlMap[gtd] = new IdlTypeInfo
+                    _typeIdlMap[iti.GenericBaseType] = new IdlTypeInfo
                     {
-                        IdlType = gtd,
+                        IdlType = iti.GenericBaseType,
                         DomName = iti.DomName,
                         ModelTypeBareName = iti.ModelTypeBareName,
                     };
@@ -99,10 +100,35 @@ namespace Blazor.Tools.DomBuilder
             }
 
             Out($"  Walking [{domType.Name}]:");
-            EmitLn($"public partial class {iti.ModelTypeClassName} : JSObject {{");
-            _domTypeMap[iti.DomName] = domType;
+
+            if (_domTypeMap.ContainsKey(iti.DomName))
+            {
+                Err($"WARN:  duplicate DOM name {iti.DomName} with class {domType.FullName}");
+                var oldBareName = iti.ModelTypeBareName;
+                var newBareName = string.Empty;
+                int i = 1;
+                do {
+                    newBareName = $"{oldBareName}_{++i}";
+                } while (_domTypeMap.ContainsKey(newBareName));
+
+                iti.ModelTypeName = iti.ModelTypeName.Replace(oldBareName, newBareName);
+                iti.ModelTypeClassName = iti.ModelTypeClassName.Replace(oldBareName, newBareName);
+                iti.ModelTypeBareName = newBareName;
+                EmitLn("/** WARNING:  Duplicate DOM name -- class name incremented **/");
+                _domTypeMap[newBareName] = domType;
+            }
+            else
+            {
+                _domTypeMap[iti.DomName] = domType;
+            }
+
             _typeClassMap[domType] = iti.DomName;
+            if (iti.GenericBaseType != null)
+                _typeClassMap[iti.GenericBaseType] = iti.DomName;
+
+            EmitLn($"public partial class {iti.ModelTypeClassName} : JSObject {{");
             Out($"    DOM Type Name:  [{iti.DomName}]");
+            EmitLn($"  // AngSharp Type: {iti.IdlType.FullName}");
             EmitLn($"  // DOM IDL Type: {iti.DomName}");
             EmitLn();
             EmitLn($"  internal {iti.ModelTypeBareName}(JSObjectHandle handle) : base(handle) {{ }}");
@@ -144,23 +170,48 @@ namespace Blazor.Tools.DomBuilder
                     }
 
                     var memDomName = ma[0].OfficialName;
-                    Out($"    DOM Member {m.MemberType}:  {m.Name} : {memDomName} : {retType?.Name} : {memberAttributes}");
+                    var memModelName = memDomName;
+                    // We do some very basic name cleansing
+                    if (char.IsLower(memModelName[0]))
+                        memModelName = memModelName.Substring(0, 1).ToUpper()
+                                + memModelName.Substring(1);
+
+                    Out($"    DOM Member {m.MemberType}:  {m.Name} : {memDomName} : {memModelName} : {retType?.Name} : {memberAttributes}");
                     foreach (var memDomAttr in ma)
                     {
                         Out($"      -> {memDomAttr.OfficialName}");
                     }
                     
                     if (retType != null && !_typeIdlMap.ContainsKey(retType))
+                    {
                         unkType.Add(retType);
+                    }
+                    var retTypeInfo = retType.GetTypeInfo();
+                    if (retTypeInfo.IsGenericType)
+                    {
+                        foreach (var retGenericArgType in retTypeInfo.GenericTypeArguments)
+                            // ASSUME that param types are not generic themselves
+                            if (!_typeIdlMap.ContainsKey(retGenericArgType))
+                                unkType.Add(retGenericArgType);
+                    }
 
                     switch (m.MemberType)
                     {
                         case MemberTypes.Property when m is PropertyInfo pi:
+                            if (memModelName == iti.ModelTypeClassName)
+                                // member names cannot be the same as their enclosing type
+                                memModelName += "Property";
+
                             var propTypeName = GetIdlTypeInfo(retType).ModelTypeName;
-                            EmitLn($"  public {propTypeName} {m.Name} => ({propTypeName})GetProperty(\"{memDomName}\");");
+                            EmitLn($"  public {propTypeName} {memModelName} => ({propTypeName})GetProperty(\"{memDomName}\");");
                             break;
                         case MemberTypes.Method when m is MethodInfo mi:
-                            var methTypeName = GetIdlTypeInfo(retType).ModelTypeName;
+                            if (memModelName == iti.ModelTypeClassName)
+                                // member names cannot be the same as their enclosing type
+                                memModelName += "Method";
+
+                            var methTypeInfo = GetIdlTypeInfo(retType);
+                            var methTypeName = methTypeInfo.ModelTypeName;
                             var methParams = mi.GetParameters();
                             if (methParams.Any(x => !_typeIdlMap.ContainsKey(x.ParameterType)))
                             {
@@ -176,15 +227,24 @@ namespace Blazor.Tools.DomBuilder
                                 var callParams = string.Join(", ", methParams.Select(x =>
                                         $"{x.Name}").Prepend($"\"{memDomName}\""));
 
-                                EmitLn($"  public {methTypeName} {m.Name}({methSig}) {{");
+                                EmitLn($"  public {methTypeName} {memModelName}({methSig}) {{");
                                 if (retType == typeof(void))
                                 {
                                     EmitLn($"    Call({callParams});");
                                 }
                                 else
                                 {
-                                    EmitLn($"    var ret = (JSObjectHandle)Call({callParams});");
-                                    EmitLn($"    return ret == null ? null : new {methTypeName}(ret);");
+                                    if (methTypeInfo.IsNative
+                                        || methTypeInfo.IdlType.GetTypeInfo().IsPrimitive)
+                                    {
+                                        EmitLn($"    var ret = ({methTypeName})Call({callParams});");
+                                        EmitLn($"    return ret;");
+                                    }
+                                    else
+                                    {
+                                        EmitLn($"    var ret = (JSObjectHandle)Call({callParams});");
+                                        EmitLn($"    return ret == null ? default({methTypeName}) : new {methTypeName}(ret);");
+                                    }
                                 }
                                 EmitLn($"  }}");
                             }
@@ -205,7 +265,13 @@ namespace Blazor.Tools.DomBuilder
                     // We have to check a second time in case this
                     // was already handled earlier in this iterator
                     if (!_typeClassMap.ContainsKey(ut))
-                        Walk(ut, maxDepth - 1);
+                    {
+                        var uiti = GetIdlTypeInfo(ut);
+                        if (!_typeClassMap.ContainsKey(uiti.GenericBaseType ?? uiti.IdlType))
+                        {
+                            Walk(ut, maxDepth - 1);
+                        }
+                    }
             }
         }
 
@@ -277,6 +343,9 @@ namespace Blazor.Tools.DomBuilder
             public Type IdlType
             { get; set; }
 
+            public Type GenericBaseType
+            { get; set; }
+
             public string DomName
             { get; set; }
 
@@ -288,7 +357,9 @@ namespace Blazor.Tools.DomBuilder
 
             public string ModelTypeClassName
             { get; set; }
-        }
 
+            public bool IsNative
+            { get; set; }
+        }
     }
 }
