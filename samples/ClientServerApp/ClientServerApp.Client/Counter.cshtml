@@ -2,9 +2,15 @@
 
 <p>This is a simple example of a component.</p>
 
-<p>Current count: <strong>@currentCount</strong></p>
+<p>
+    Current count: <strong>@currentCount</strong> &nbsp;
+    <button @onclick(IncrementCount)>Increment</button>
+</p>
 
-<button @onclick(IncrementCount)>Increment</button>
+<p>It's also possible to include child components, pass data to them, and receive callbacks from them:</p>
+
+<counter-display current-count=@currentCount
+                 on-reset=@((Action)OnResetCounter) />
 
 @functions {
     int currentCount;
@@ -12,5 +18,11 @@
     void IncrementCount()
     {
         currentCount++;
+    }
+
+    void OnResetCounter()
+    {
+        currentCount = 0;
+        Render();
     }
 }

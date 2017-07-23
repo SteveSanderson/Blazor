@@ -1,0 +1,19 @@
+﻿@TagName("counter-display")
+
+<div class="well well-sm">
+    Current count is: <span class="badge badge-success">@currentCount</span>
+    <button @onclick(resetCounterCallback)>Reset</button>
+</div>
+
+@functions {
+    // It would be cleaner if we could mark properties with [FromAttribute] or similar,
+    // instead of having to extract them from a dictionary manually.
+    private int currentCount;
+    private Action resetCounterCallback;
+
+    protected override void ReceiveParameters(IDictionary<string, object> parameters)
+    {
+        currentCount = (int)parameters["current-count"];
+        resetCounterCallback = (Action)parameters["on-reset"];
+    }
+}

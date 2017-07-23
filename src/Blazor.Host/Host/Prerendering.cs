@@ -103,7 +103,7 @@ namespace Blazor.Host
                         await AppendVDom(sb, ownerComponent, vdom, childIndex);
 
                         // Skip descendants of children
-                        if (childItem.ItemType == VDomItemType.Element)
+                        if (childItem.ItemType == VDomItemType.Element || childItem.ItemType == VDomItemType.Component)
                         {
                             childIndex = childItem.DescendantsEndIndex;
                         }
