@@ -4,12 +4,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using ConferenceDTO;
-using FrontEnd.Services;
+using ConferencePlanner.ConferenceDTO;
+using ConferencePlanner.FrontEnd.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 
-namespace FrontEnd.Pages
+namespace ConferencePlanner.FrontEnd.Pages
 {
     public class IndexModel : PageModel
     {

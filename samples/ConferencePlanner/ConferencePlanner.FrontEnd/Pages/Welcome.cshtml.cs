@@ -1,10 +1,10 @@
 using System.Threading.Tasks;
-using FrontEnd.Services;
+using ConferencePlanner.FrontEnd.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using FrontEnd.Pages.Models;
+using ConferencePlanner.FrontEnd.Pages.Models;
 
-namespace FrontEnd.Pages
+namespace ConferencePlanner.FrontEnd.Pages
 {
     public class WelcomeModel : PageModel
     {

@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using BackEnd.Data;
+using ConferencePlanner.BackEnd.Data;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace BackEnd
+namespace ConferencePlanner.BackEnd
 {
     public static class NDCOsloData
     {

@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
-namespace FrontEnd.TagHelpers
+namespace ConferencePlanner.FrontEnd.TagHelpers
 {
     [HtmlTargetElement("*", Attributes = "authz")]
     [HtmlTargetElement("*", Attributes = "authz-policy")]

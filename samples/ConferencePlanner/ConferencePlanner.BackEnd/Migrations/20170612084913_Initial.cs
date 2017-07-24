@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 using System;
 using System.Collections.Generic;
 
-namespace BackEnd.Migrations
+namespace ConferencePlanner.BackEnd.Migrations
 {
     public partial class Initial : Migration
     {

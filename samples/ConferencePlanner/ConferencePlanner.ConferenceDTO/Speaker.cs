@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace ConferenceDTO
+namespace ConferencePlanner.ConferenceDTO
 {
     public class Speaker
     {

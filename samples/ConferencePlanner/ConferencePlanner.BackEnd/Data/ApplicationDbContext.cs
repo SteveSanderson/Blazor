@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore.Design;
 
-namespace BackEnd.Data
+namespace ConferencePlanner.BackEnd.Data
 {
     public class ApplicationDbContext : DbContext
     {

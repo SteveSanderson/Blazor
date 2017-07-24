@@ -5,9 +5,9 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using BackEnd.Data;
+using ConferencePlanner.BackEnd.Data;
 
-namespace BackEnd.Controllers
+namespace ConferencePlanner.BackEnd.Controllers
 {
     [Route("api/[controller]")]
     public class SpeakersController : Controller

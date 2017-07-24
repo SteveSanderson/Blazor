@@ -9,11 +9,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Net.Http;
-using FrontEnd.Services;
+using ConferencePlanner.FrontEnd.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using FrontEnd.Filters;
+using ConferencePlanner.FrontEnd.Filters;
 
-namespace FrontEnd
+namespace ConferencePlanner.FrontEnd
 {
     public class Startup
     {

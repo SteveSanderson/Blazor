@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace BackEnd.Data
+namespace ConferencePlanner.BackEnd.Data
 {
     public class Session : ConferenceDTO.Session
     {

@@ -4,10 +4,10 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
-using ConferenceDTO;
-using FrontEnd.Infrastructure;
+using ConferencePlanner.ConferenceDTO;
+using ConferencePlanner.FrontEnd.Infrastructure;
 
-namespace FrontEnd.Services
+namespace ConferencePlanner.FrontEnd.Services
 {
     public class ApiClient : IApiClient
     {

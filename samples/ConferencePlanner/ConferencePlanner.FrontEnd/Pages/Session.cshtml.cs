@@ -4,10 +4,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using ConferenceDTO;
+using ConferencePlanner.ConferenceDTO;
 using System.Text.Encodings.Web;
 
-namespace FrontEnd.Pages
+namespace ConferencePlanner.FrontEnd.Pages
 {
     public class SessionModel : PageModel
     {

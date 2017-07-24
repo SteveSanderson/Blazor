@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace BackEnd.Data
+namespace ConferencePlanner.BackEnd.Data
 {
     public class Tag : ConferenceDTO.Tag
     {

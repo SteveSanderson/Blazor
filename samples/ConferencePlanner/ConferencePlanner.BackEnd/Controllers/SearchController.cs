@@ -1,12 +1,12 @@
 using System.Linq;
 using System.Threading.Tasks;
-using BackEnd.Data;
-using ConferenceDTO;
+using ConferencePlanner.BackEnd.Data;
+using ConferencePlanner.ConferenceDTO;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json.Linq;
 
-namespace BackEnd
+namespace ConferencePlanner.BackEnd
 {
     [Route("api/[controller]")]
     public class SearchController : Controller

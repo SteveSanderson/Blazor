@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
 
-namespace ConferenceDTO
+namespace ConferencePlanner.ConferenceDTO
 {
     public class Conference
     {

@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Authentication;
 
-namespace FrontEnd.Pages
+namespace ConferencePlanner.FrontEnd.Pages
 {
     public class LoginModel : PageModel
     {

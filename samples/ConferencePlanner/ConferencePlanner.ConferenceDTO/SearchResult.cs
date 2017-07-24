@@ -1,6 +1,6 @@
 using Newtonsoft.Json.Linq;
 
-namespace ConferenceDTO
+namespace ConferencePlanner.ConferenceDTO
 {
     public class SearchResult
     {

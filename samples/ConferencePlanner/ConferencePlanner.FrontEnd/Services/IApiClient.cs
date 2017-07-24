@@ -1,4 +1,4 @@
-﻿using ConferenceDTO;
+﻿using ConferencePlanner.ConferenceDTO;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 

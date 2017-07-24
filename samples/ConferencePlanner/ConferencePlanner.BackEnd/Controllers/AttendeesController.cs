@@ -1,10 +1,10 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using BackEnd.Data;
+using ConferencePlanner.BackEnd.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace BackEnd
+namespace ConferencePlanner.BackEnd
 {
     [Route("/api/[controller]")]
     public class AttendeesController : Controller

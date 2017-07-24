@@ -1,4 +1,4 @@
-namespace ConferenceDTO
+namespace ConferencePlanner.ConferenceDTO
 {
     public class SearchTerm
     {

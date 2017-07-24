@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace BackEnd.Data
+namespace ConferencePlanner.BackEnd.Data
 {
     public class Attendee : ConferenceDTO.Attendee
     {

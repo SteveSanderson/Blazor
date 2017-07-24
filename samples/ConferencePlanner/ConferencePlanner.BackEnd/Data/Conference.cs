@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace BackEnd.Data
+namespace ConferencePlanner.BackEnd.Data
 {
     public class Conference : ConferenceDTO.Conference
     {

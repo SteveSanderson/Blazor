@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace ConferenceDTO
+namespace ConferencePlanner.ConferenceDTO
 {
     public class SessionResponse : Session
     {
