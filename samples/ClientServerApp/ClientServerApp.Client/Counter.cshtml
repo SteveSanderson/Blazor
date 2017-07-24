@@ -17,12 +17,18 @@
 
     void IncrementCount()
     {
-        currentCount++;
+        object val;
+        if (!ViewData.TryGetValue("hello", out val))
+        {
+            ViewData["hello"] = 0;
+        }
+        ViewData["hello"] = (int) ViewData["hello"] + 1;
     }
 
     void OnResetCounter()
     {
-        currentCount = 0;
+        currentCount = (int)ViewData["hello"];
+
         Render();
     }
 }

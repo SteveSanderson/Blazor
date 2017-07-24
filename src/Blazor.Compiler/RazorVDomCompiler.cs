@@ -121,6 +121,7 @@ namespace RazorRenderer
             classNode.Interfaces.Add(typeof(IRazorComponentFactory).FullName);
             var methodStatement = new CSharpStatementIRNode { Parent = classNode, Source = null };
             classNode.Children.Add(methodStatement);
+
             methodStatement.Children.Add(new RazorIRToken
             {
                 Kind = RazorIRToken.TokenKind.CSharp,

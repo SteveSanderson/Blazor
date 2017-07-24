@@ -11,12 +11,13 @@ namespace Blazor.Components
 {
     public abstract class RazorComponent : Component
     {
+        public static IDictionary<string, object> ViewData { get; } = new Dictionary<string, object>();
+
         public static Component Instantiate(string cshtmlFileName, BlazorContext context)
         {
             var razorViewClassName = GetViewClassName(".", cshtmlFileName);
             var viewTypeName = $"Views.{razorViewClassName}";
             Type viewType;
-
             if (Router.ViewAssemblies == null)
             {
                 // In DNA, we can search across all loaded assemblies

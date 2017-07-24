@@ -124,7 +124,8 @@
 			attributeItems.forEach(function(attributeItem) {
                 var attribName = attributeItem.attributeName;
                 attributesToRemove[attribName] = false; // Mark this as retained
-				switch (attribName) {
+                switch (attribName) {
+                    // TODO add more function handlers
 					case 'onchange':
 					case 'onclick':
 					case 'onsubmit':
