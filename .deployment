@@ -1,2 +1,2 @@
 [config]
-project = samples\ClientServerApp\ClientServerApp.Server\ClientServerApp.Server.csproj
+command = deploy.cmd
