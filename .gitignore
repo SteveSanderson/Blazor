@@ -6,3 +6,4 @@ obj
 .vs/
 /packages/
 /artifacts/
+.emsdk/
