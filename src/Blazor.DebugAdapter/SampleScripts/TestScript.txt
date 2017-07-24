@@ -1,0 +1,38 @@
+#
+# Sample script to show off the various directives
+#
+
+# Disable usage of separate scopes for globals and args
+$SetProperty UseGlobalsScope false
+$SetProperty UseArgsScope false
+
+# Create a few modules
+$LoadModule -id 1 -name "d:\\foo\\foo.dll" -version 1.2 -symbolstatus "Loaded :)" -symbolfile "d:\\foo\\symbols\\foo.pdb" -loadaddress 0x50000000 -size 0x100000 -optimized -is64bit -usercode -timestamp "04/02/1988 7:30pm"
+$LoadModule -id 2 -name "bar.dll" -version 3.0
+
+# Add a stack frame in the first module
+$PushStackFrame -name "test1" -argname arg1 -argtype int -argvalue 3 -argname arg2 -argtype string -argvalue "Hello World!" -moduleid 1
+
+# Define a local in the stack frame
+$DefineVariable -name foo -type int -value 3
+
+# Create a few more scopes
+$DefineScope -name Scope1
+$DefineScope -name Scope2
+
+# Define variables in the new scopes
+$DefineVariable -scope Scope1 bar string "Hello World!"
+$DefineVariable -scope Scope2 baz bool false
+
+# Enable usage of separate scopes for globals and args
+$SetProperty UseGlobalsScope true
+$SetProperty UseArgsScope true
+
+# Add a stack frame in the second module
+$PushStackFrame -name "test2" -moduleid 2
+
+# Back to first module
+$PopStackFrame
+
+# Back to main
+$PopStackFrame
