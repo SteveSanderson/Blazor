@@ -1,0 +1,2 @@
+[config]
+project = samples\ClientServerApp\ClientServerApp.Server\ClientServerApp.Server.csproj
