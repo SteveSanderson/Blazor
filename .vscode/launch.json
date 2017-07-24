@@ -2,7 +2,7 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Launch Blazor.Host",
+      "name": "Launch Blazor.Host on ClientServerApp",
       "type": "coreclr",
       "request": "launch",
       "preLaunchTask": "Build Host",
@@ -10,7 +10,7 @@
       "args": [
         "serve"
       ],
-      "cwd": "${workspaceRoot}/src/Blazor.Host/",
+      "cwd": "${workspaceRoot}/samples/ClientServerApp/ClientServerApp.Client/",
       "stopAtEntry": false,
       "launchBrowser": {
         "enabled": true,
