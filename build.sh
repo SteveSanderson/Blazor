@@ -20,6 +20,7 @@ __fatal() {
 
 if ! __machine_has 'curl'; then __fatal 'Missing required command: curl'; fi
 if ! __machine_has 'cmake'; then __fatal 'Missing required command: cmake'; fi
+if ! __machine_has 'dotnet'; then __fatal 'Missing required command: dotnet'; fi
 
 if [ ! -d "$DIR/.emsdk/" ]; then
     mkdir -p "$DIR/.emsdk/"
@@ -45,3 +46,6 @@ pushd "$DIR/src/DNA/obj/"
 cmake ../native
 make
 popd
+
+dotnet build $DIR/Blazor.Core.sln
+

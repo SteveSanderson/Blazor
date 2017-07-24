@@ -1,0 +1,13 @@
+root = true
+indent_style = space
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+[*.{js,json}]
+indent_size = 2
+
+[*.{sh,ps1}]
+indent_size = 4
+
+[*.cs]
+indent_size = 4
