@@ -64,8 +64,14 @@ namespace ClientServerApp.Server
                     template: "{controller=Home}/{action=Index}/{id?}");
             });
 
+            var clientDirectory = Path.Combine("..", "ClientServerApp.Client");
+            if (!Directory.Exists(clientDirectory))
+            {
+                clientDirectory = Directory.GetCurrentDirectory();
+            }
+
             // All other requests handled by serving the SPA
-            app.UseBlazorUI(Path.Combine("..", "ClientServerApp.Client"), opts =>
+            app.UseBlazorUI(clientDirectory, opts =>
             {
                 opts.EnableServerSidePrerendering = true;
                 opts.ClientAssemblyName = "ClientServerApp.Client.dll";

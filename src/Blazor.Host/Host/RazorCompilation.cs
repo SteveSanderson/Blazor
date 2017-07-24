@@ -114,7 +114,17 @@ namespace Blazor.Sdk.Host
                 RazorVDomCompiler.CompileToStream(
                     enableLogging: false,
                     rootDir: rootDir,
-                    referenceAssemblies: referenceAssemblyFilenames.Select(filename => Path.Combine(rootDir, "bin", "Debug", "netcoreapp1.0", filename)).ToArray(),
+                    referenceAssemblies: referenceAssemblyFilenames.Select(filename =>
+                    {
+                        var path = Path.Combine(rootDir, "bin", "Debug", "netcoreapp1.0", filename);
+
+                        if (!File.Exists(path))
+                        {
+                            path = Path.Combine(rootDir, filename);
+                        }
+
+                        return path;
+                    }).ToArray(),
                     outputAssemblyName: Path.GetFileNameWithoutExtension(assemblyFilename),
                     outputStream: ms);
 
