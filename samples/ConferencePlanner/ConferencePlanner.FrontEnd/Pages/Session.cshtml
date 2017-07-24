@@ -1,0 +1,33 @@
+﻿@page "{id}"
+@model SessionModel
+
+    <ol class="breadcrumb">
+        <li><a asp-page="/Index">Agenda</a></li>
+        <li><a asp-page="/Index" asp-route-day="@Model.DayOffset">Day @(Model.DayOffset + 1)</a></li>
+        <li class="active">@Model.Session.Title</li>
+    </ol>
+
+    <h1>@Model.Session.Title</h1>
+    <span class="label label-default">@Model.Session.Track?.Name</span>
+
+    @foreach (var speaker in Model.Session.Speakers)
+    {
+        <em><a asp-page="Speaker" asp-route-id="@speaker.ID">@speaker.Name</a></em>
+    }
+
+   <p>@Html.Raw(Model.Session.Abstract)</p>  
+
+<form method="post">
+    <input type="hidden" name="sessionId" value="@Model.Session.ID" />
+    <p>
+        <a authz-policy="Admin" asp-page="/Admin/EditSession" asp-route-id="@Model.Session.ID" class="btn btn-default btn-sm">Edit</a>
+        @if (Model.IsInPersonalAgenda)
+        {
+            <button authz="true" type="submit" asp-page-handler="Remove" class="btn btn-primary">Remove from My Agenda</button>
+        }
+        else
+        {
+            <button authz="true" type="submit" class="btn btn-primary">Add to My Agenda</button>
+        }
+    </p>
+</form>

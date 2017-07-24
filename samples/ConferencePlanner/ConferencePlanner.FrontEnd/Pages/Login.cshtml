@@ -1,0 +1,11 @@
+﻿@page
+@model LoginModel
+
+<h1>Login</h1>
+
+<form method="post">
+    @foreach (var scheme in Model.AuthSchemes)
+    {
+        <button class="btn btn-default" type="submit" name="scheme" value="@scheme.Name">@scheme.DisplayName</button>
+    }
+</form>

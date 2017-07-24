@@ -1,0 +1,61 @@
+@page
+@using ConferenceDTO
+@model SearchModel
+
+<div class="row">
+    <h1>Search</h1>
+    <form method="get">
+        <div class="input-group">
+            <input asp-for="Term" class="form-control" />
+            <span class="input-group-btn">
+                <button class="btn btn-default" type="submit">Go!</button>
+            </span>
+        </div>
+    </form>
+</div>
+<br />
+<div class="row">
+    @foreach (var result in Model.SearchResults)
+    {
+        <div>
+            @switch (result)
+            {
+                case SpeakerResponse speaker:
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">Speaker: <a asp-page="Speaker" asp-route-id="@speaker.ID">@speaker.Name</a></h3>
+                        </div>
+                        <div class="panel-body">
+                            <p>
+                                @foreach (var session in speaker.Sessions)
+                                {
+                                    <a asp-page="/Session" asp-route-id="@session.ID"><em>@session.Title</em></a>
+                                }
+                            </p>
+                            <p>
+                                @speaker.Bio
+                            </p>
+                        </div>
+                    </div>
+                    break;
+
+                case SessionResponse session:
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">Session: <a asp-page="Session" asp-route-id="@session.ID">@session.Title</a></h3>
+                            @foreach (var speaker in session.Speakers)
+                            {
+                                <a asp-page="/Speaker" asp-route-id="@speaker.ID"><em>@speaker.Name</em></a>
+                            }
+                        </div>
+                        <div class="panel-body">
+                            <p>
+                                @session.Abstract
+                            </p>
+                        </div>
+                    </div>
+                    break;
+            }
+        </div>
+    }
+</div>
