@@ -58,13 +58,13 @@ namespace ConferencePlanner.FrontEnd.Services
             return await response.Content.ReadAsJsonAsync<SessionResponse>();
         }
 
-        public async Task<List<SessionResponse>> GetSessionsAsync()
+        public async Task<SessionResponse[]> GetSessionsAsync()
         {
             var response = await _httpClient.GetAsync("/api/sessions");
 
             response.EnsureSuccessStatusCode();
 
-            return await response.Content.ReadAsJsonAsync<List<SessionResponse>>();
+            return await response.Content.ReadAsJsonAsync<SessionResponse[]>();
         }
 
         public async Task DeleteSessionAsync(int id)
@@ -156,9 +156,9 @@ namespace ConferencePlanner.FrontEnd.Services
 
             var sessionIds = attendee.Sessions.Select(s => s.ID);
 
-            sessions.RemoveAll(s => !sessionIds.Contains(s.ID));
+            //sessions.RemoveAll(s => !sessionIds.Contains(s.ID));
 
-            return sessions;
+            return sessions.ToList();
         }
     }
 }

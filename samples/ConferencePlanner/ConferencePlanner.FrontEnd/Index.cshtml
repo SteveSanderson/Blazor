@@ -1,30 +1,16 @@
-﻿@page
-@model IndexModel
-@{
-ViewData["Title"] = "Home Page";
-}
-
-@if (Model.ShowMessage)
-{
-    <div class="alert alert-success alert-dismissible" role="alert">
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span>   </button>
-        @Model.Message
-    </div>
-}
-
-<div class="agenda">
+﻿<div class="agenda">
     <h1>NDC Oslo 2017</h1>
 
-    <ul class="nav nav-pills">
-        @foreach (var day in Model.DayOffsets)
+    @*<ul class="nav nav-pills">
+        @foreach (var day in DayOffsets)
         {
-            <li role="presentation" class="@(Model.CurrentDayOffset == day.Offset ? "active" : null)">
+            <li role="presentation" class="@(CurrentDayOffset == day.Offset ? "active" : null)">
                 <a asp-route-day="@day.Offset">@day.DayofWeek?.ToString()</a>
             </li>
         }
-    </ul>
+    </ul>*@
 
-    @foreach (var timeSlot in Model.Sessions)
+    @foreach (var timeSlot in Sessions)
     {
         <h4>@timeSlot.Key?.ToString("HH:mm")</h4>
         <div class="row">
@@ -45,7 +31,7 @@ ViewData["Title"] = "Home Page";
                                 <input type="hidden" name="sessionId" value="@session.ID" />
                                 <p>
                                     <a authz-policy="Admin" asp-page="/Admin/EditSession" asp-route-id="@session.ID" class="btn btn-default btn-sm">Edit</a>
-                                    @if (Model.UserSessions.Contains(session.ID))
+                                    @if (UserSessions.Contains(session.ID))
                                     {
                                         <button authz="true" type="submit" asp-page-handler="Remove" class="btn btn-default btn-sm"><span class="glyphicon glyphicon-star" aria-hidden="true"></span></button>
                                     }
@@ -62,3 +48,31 @@ ViewData["Title"] = "Home Page";
         </div>
     }
 </div>
+
+@functions {
+    public IEnumerable<IGrouping<DateTimeOffset?, SessionResponse>> Sessions { get; set; }
+       = Enumerable.Empty<IGrouping<DateTimeOffset?, SessionResponse>>();
+
+    public List<int> UserSessions { get; set; } = new List<int>();
+
+    protected readonly IApiClient _apiClient =
+        new ApiClient(new HttpClient { BaseAddress = new Uri("http://localhost:56009") });
+
+    override protected async Task InitAsync()
+    {
+        var sessions = await  _apiClient.GetSessionsAsync();
+
+        var startDate = sessions.Min(s => s.StartTime?.Date);
+        var endDate = sessions.Max(s => s.EndTime?.Date);
+
+        var numberOfDays = ((endDate - startDate)?.Days) + 1;
+
+        var day = 0;
+        var filterDate = startDate?.AddDays(day);
+
+        Sessions = sessions.Where(s => s.StartTime?.Date == filterDate)
+                           .OrderBy(s => s.TrackId)
+                           .GroupBy(s => s.StartTime)
+                           .OrderBy(g => g.Key);
+    }
+}

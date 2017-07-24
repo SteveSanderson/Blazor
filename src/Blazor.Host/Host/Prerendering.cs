@@ -200,13 +200,14 @@ namespace Blazor.Host
         private static Assembly GetCompiledViewsAssembly(string rootPath, string appAssemblyName, string[] referenceAssemblies)
         {
             var viewsAssemblyName = appAssemblyName.Replace(".dll", $".{ ++viewAssemblyCount }.Views.dll");
-            var viewAssemblyBytes = RazorCompilation.GetCompiledViewsAssembly(
+            var (viewAssemblyBytes, viewSymbolBytes) = RazorCompilation.GetCompiledViewsAssembly(
                 rootPath,
                 viewsAssemblyName,
                 referenceAssemblies);
             using (var ms = new MemoryStream(viewAssemblyBytes))
+            using (var symbols = new MemoryStream(viewSymbolBytes))
             {
-                return AssemblyLoadContext.Default.LoadFromStream(ms);
+                return AssemblyLoadContext.Default.LoadFromStream(ms, symbols);
             }
         }
 
@@ -215,8 +216,9 @@ namespace Blazor.Host
             // Load from stream to avoid locking the file on disk
             // Unfortunately that also prevents debugging into this assembly
             using (var fs = File.OpenRead(path))
+            using (var symbols = File.OpenRead(Path.ChangeExtension(path, ".pdb")))
             {
-                return AssemblyLoadContext.Default.LoadFromStream(fs);
+                return AssemblyLoadContext.Default.LoadFromStream(fs, symbols);
             }
         }
     }
