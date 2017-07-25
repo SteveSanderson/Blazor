@@ -4,9 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Diagnostics;
 using System.IO;
-
+using System.Linq;
 
 namespace VSCodeDebug
 {
@@ -215,6 +215,7 @@ namespace VSCodeDebug
         public bool supportsFunctionBreakpoints;
         public bool supportsConditionalBreakpoints;
         public bool supportsEvaluateForHovers;
+        public bool supportsStepBack;
         public dynamic[] exceptionBreakpointFilters;
     }
 
@@ -335,6 +336,9 @@ namespace VSCodeDebug
         {
             var msg = new Message(id, format, arguments, user, telemetry);
             var message = Utilities.ExpandVariables(msg.format, msg.variables);
+
+            Log(message);
+
             response.SetErrorBody(message, new ErrorResponseBody(msg));
             SendMessage(response);
         }
@@ -598,6 +602,12 @@ namespace VSCodeDebug
                     return clientPath;
                 }
             }
+        }
+
+        protected void Log(string message)
+        {
+            Debug.WriteLine(message);
+            SendEvent(new OutputEvent(null, message + Environment.NewLine));
         }
     }
 }
