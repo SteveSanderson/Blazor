@@ -1,6 +1,7 @@
 ﻿using ConferencePlanner.FrontEnd.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System;
 
 namespace ConferencePlanner.FrontEnd.Services
 {
@@ -21,12 +22,36 @@ namespace ConferencePlanner.FrontEnd.Services
         //Task RemoveSessionFromAttendeeAsync(string name, int sessionId);
     }
 
-    public class ClientSessionResponse : Models.Session
+    public class ClientSessionResponse
     {
+        public int ID { get; set; }
+
+        //[Required]
+        public int ConferenceID { get; set; }
+
+        //[Required]
+        //[StringLength(200)]
+        public string Title { get; set; }
+
+        //[StringLength(4000)]
+        //[DataType(DataType.MultilineText)]
+        public virtual string Abstract { get; set; }
+
+        //[DisplayName("Start time")]
+        public virtual DateTime? StartTime { get; set; }
+
+        //[DisplayName("End time")]
+        public virtual DateTime? EndTime { get; set; }
+
+        // Bonus points to those who can figure out why this is written this way
+        public TimeSpan Duration => EndTime?.Subtract(StartTime ?? EndTime ?? DateTime.MinValue) ?? TimeSpan.Zero;
+
+        public int? TrackId { get; set; }
+
         public Track Track { get; set; }
 
-        public ICollection<Speaker> Speakers { get; set; } = new List<Speaker>();
+        public Speaker[] Speakers { get; set; }
 
-        public ICollection<Tag> Tags { get; set; } = new List<Tag>();
+        public Tag[] Tags { get; set; }
     }
 }

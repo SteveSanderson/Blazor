@@ -259,6 +259,12 @@ namespace System {
 			return ((year % 4 == 0 && year % 100 != 0) || year % 400 == 0);
 		}
 
+        // TODO: Parse something
+        public static DateTime Parse(string s)
+        {
+            return MinValue;
+        }
+
 		private int FromTicks(Which what) {
 			int num400, num100, num4, numyears;
 			int M = 1;

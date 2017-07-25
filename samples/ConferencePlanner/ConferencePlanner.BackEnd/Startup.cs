@@ -70,7 +70,7 @@ namespace ConferencePlanner.BackEnd
                 return Task.CompletedTask;
             });
 
-            //NDCOsloData.Seed(app.ApplicationServices);
+            NDCOsloData.Seed(app.ApplicationServices);
         }
     }
 }

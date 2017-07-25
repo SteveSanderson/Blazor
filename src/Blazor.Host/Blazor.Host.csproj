@@ -30,5 +30,6 @@
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
     <ProjectReference Include="../Blazor.Compiler/Blazor.Compiler.csproj" />
+    <ProjectReference Include="..\Blazor.Runtime\Blazor.Runtime.csproj" />
   </ItemGroup>
 </Project>

@@ -112,7 +112,7 @@ namespace Blazor.Util
                     if (deserializedPropertyDict.TryGetValue(propInfo.Name, out var deserializedPropertyValue))
                     {
                         var setMethod = propInfo.SetMethod;
-                        if (setMethod != null)
+                        if (!object.Equals(setMethod, null))
                         {
                             var mappedPropertyValue = CoerceShallow(deserializedPropertyValue, propInfo.PropertyType);
                             setMethod.Invoke(result, new[] { mappedPropertyValue });

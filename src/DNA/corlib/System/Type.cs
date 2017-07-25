@@ -131,6 +131,16 @@ namespace System {
 
         [MethodImpl(MethodImplOptions.InternalCall)]
         extern private object GetMethodInternal(string name);
+
+        public static bool operator ==(Type t1, Type t2)
+        {
+            return t1?.FullName.Equals(t2?.FullName) == true;
+        }
+
+        public static bool operator !=(Type t1, Type t2)
+        {
+            return t1?.FullName.Equals(t2?.FullName) == false;
+        }
     }
 }
 
