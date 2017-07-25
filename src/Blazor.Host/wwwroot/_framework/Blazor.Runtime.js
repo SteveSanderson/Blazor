@@ -128,7 +128,17 @@
                     // TODO add more function handlers
 					case 'onchange':
 					case 'onclick':
-					case 'onsubmit':
+          case 'onsubmit':
+          case 'onmouseover':
+          case 'onabort':
+          case 'oncancel':
+          case 'ondblclick':
+          case 'ondrag':
+          case 'ondragend':
+          case 'onerror':
+          case 'oninput':
+          case 'onkeydown':
+          case 'onload':
 						var attributeValue = attributeItem.attributeValue;
 						if (typeof attributeValue === 'number') {
 							// Event handler

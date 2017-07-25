@@ -109,6 +109,116 @@ namespace Blazor.Components
             };
         }
 
+
+        protected VDomAttribute onmouseover(Action callback)
+        {
+            return new VDomAttribute
+            {
+                Name = "onmouseover",
+                Value = new VEventHandler(_ => { callback(); })
+            };
+        }
+
+        protected VDomAttribute onmouseover(Action<EventInfo> callback)
+        {
+            return new VDomAttribute
+            {
+                Name = "onmouseover",
+                Value = new VEventHandler(evtInfo => callback(evtInfo))
+            };
+        }
+
+        protected VDomAttribute onmouseoverAsync(Func<Task> callback)
+        {
+            return new VDomAttribute
+            {
+                Name = "onmouseover",
+                Value = new VEventAsyncHandler(_ => callback())
+            };
+        }
+
+        protected VDomAttribute onmouseoverAsync(Func<EventInfo, Task> callback)
+        {
+            return new VDomAttribute
+            {
+                Name = "onmouseover",
+                Value = new VEventAsyncHandler(evtInfo => callback(evtInfo))
+            };
+        }
+
+        protected VDomAttribute onabort(Action callback)
+        {
+            return new VDomAttribute
+            {
+                Name = "onabort",
+                Value = new VEventHandler(_ => { callback(); })
+            };
+        }
+
+        protected VDomAttribute onabort(Action<EventInfo> callback)
+        {
+            return new VDomAttribute
+            {
+                Name = "onabort",
+                Value = new VEventHandler(evtInfo => callback(evtInfo))
+            };
+        }
+
+        protected VDomAttribute onabortAsync(Func<Task> callback)
+        {
+            return new VDomAttribute
+            {
+                Name = "onabort",
+                Value = new VEventAsyncHandler(_ => callback())
+            };
+        }
+
+        protected VDomAttribute onabortAsync(Func<EventInfo, Task> callback)
+        {
+            return new VDomAttribute
+            {
+                Name = "onabort",
+                Value = new VEventAsyncHandler(evtInfo => callback(evtInfo))
+            };
+        }
+
+
+        protected VDomAttribute oncancel(Action callback)
+        {
+            return new VDomAttribute
+            {
+                Name = "oncancel",
+                Value = new VEventHandler(_ => { callback(); })
+            };
+        }
+
+        protected VDomAttribute oncancel(Action<EventInfo> callback)
+        {
+            return new VDomAttribute
+            {
+                Name = "oncancel",
+                Value = new VEventHandler(evtInfo => callback(evtInfo))
+            };
+        }
+
+        protected VDomAttribute oncancelAsync(Func<Task> callback)
+        {
+            return new VDomAttribute
+            {
+                Name = "oncancel",
+                Value = new VEventAsyncHandler(_ => callback())
+            };
+        }
+
+        protected VDomAttribute oncancelAsync(Func<EventInfo, Task> callback)
+        {
+            return new VDomAttribute
+            {
+                Name = "oncancel",
+                Value = new VEventAsyncHandler(evtInfo => callback(evtInfo))
+            };
+        }
+
         protected VDomAttribute onchange(Action<EventInfo> callback)
         {
             return new VDomAttribute
@@ -127,6 +237,260 @@ namespace Blazor.Components
             };
         }
 
+        protected VDomAttribute ondblclick(Action callback)
+        {
+            return new VDomAttribute
+            {
+                Name = "ondblclick",
+                Value = new VEventHandler(_ => { callback(); })
+            };
+        }
+
+        protected VDomAttribute ondblclick(Action<EventInfo> callback)
+        {
+            return new VDomAttribute
+            {
+                Name = "ondblclick",
+                Value = new VEventHandler(evtInfo => callback(evtInfo))
+            };
+        }
+
+        protected VDomAttribute ondblclickAsync(Func<Task> callback)
+        {
+            return new VDomAttribute
+            {
+                Name = "ondblclick",
+                Value = new VEventAsyncHandler(_ => callback())
+            };
+        }
+
+        protected VDomAttribute ondblclickAsync(Func<EventInfo, Task> callback)
+        {
+            return new VDomAttribute
+            {
+                Name = "ondblclick",
+                Value = new VEventAsyncHandler(evtInfo => callback(evtInfo))
+            };
+        }
+
+        protected VDomAttribute ondrag(Action callback)
+        {
+            return new VDomAttribute
+            {
+                Name = "ondrag",
+                Value = new VEventHandler(_ => { callback(); })
+            };
+        }
+
+        protected VDomAttribute ondrag(Action<EventInfo> callback)
+        {
+            return new VDomAttribute
+            {
+                Name = "ondrag",
+                Value = new VEventHandler(evtInfo => callback(evtInfo))
+            };
+        }
+
+        protected VDomAttribute ondragAsync(Func<Task> callback)
+        {
+            return new VDomAttribute
+            {
+                Name = "ondrag",
+                Value = new VEventAsyncHandler(_ => callback())
+            };
+        }
+
+        protected VDomAttribute ondragAsync(Func<EventInfo, Task> callback)
+        {
+            return new VDomAttribute
+            {
+                Name = "ondrag",
+                Value = new VEventAsyncHandler(evtInfo => callback(evtInfo))
+            };
+        }
+
+        protected VDomAttribute ondragend(Action callback)
+        {
+            return new VDomAttribute
+            {
+                Name = "ondragend",
+                Value = new VEventHandler(_ => { callback(); })
+            };
+        }
+
+        protected VDomAttribute ondragend(Action<EventInfo> callback)
+        {
+            return new VDomAttribute
+            {
+                Name = "ondragend",
+                Value = new VEventHandler(evtInfo => callback(evtInfo))
+            };
+        }
+
+        protected VDomAttribute ondragendAsync(Func<Task> callback)
+        {
+            return new VDomAttribute
+            {
+                Name = "ondragend",
+                Value = new VEventAsyncHandler(_ => callback())
+            };
+        }
+
+        protected VDomAttribute ondragendAsync(Func<EventInfo, Task> callback)
+        {
+            return new VDomAttribute
+            {
+                Name = "ondragend",
+                Value = new VEventAsyncHandler(evtInfo => callback(evtInfo))
+            };
+        }
+
+        protected VDomAttribute onerror(Action callback)
+        {
+            return new VDomAttribute
+            {
+                Name = "onerror",
+                Value = new VEventHandler(_ => { callback(); })
+            };
+        }
+
+        protected VDomAttribute onerror(Action<EventInfo> callback)
+        {
+            return new VDomAttribute
+            {
+                Name = "onerror",
+                Value = new VEventHandler(evtInfo => callback(evtInfo))
+            };
+        }
+
+        protected VDomAttribute onerrorAsync(Func<Task> callback)
+        {
+            return new VDomAttribute
+            {
+                Name = "onerror",
+                Value = new VEventAsyncHandler(_ => callback())
+            };
+        }
+
+        protected VDomAttribute onerrorAsync(Func<EventInfo, Task> callback)
+        {
+            return new VDomAttribute
+            {
+                Name = "onerror",
+                Value = new VEventAsyncHandler(evtInfo => callback(evtInfo))
+            };
+        }
+
+        protected VDomAttribute oninput(Action callback)
+        {
+            return new VDomAttribute
+            {
+                Name = "oninput",
+                Value = new VEventHandler(_ => { callback(); })
+            };
+        }
+
+        protected VDomAttribute oninput(Action<EventInfo> callback)
+        {
+            return new VDomAttribute
+            {
+                Name = "oninput",
+                Value = new VEventHandler(evtInfo => callback(evtInfo))
+            };
+        }
+
+        protected VDomAttribute oninputAsync(Func<Task> callback)
+        {
+            return new VDomAttribute
+            {
+                Name = "oninput",
+                Value = new VEventAsyncHandler(_ => callback())
+            };
+        }
+
+        protected VDomAttribute oninputAsync(Func<EventInfo, Task> callback)
+        {
+            return new VDomAttribute
+            {
+                Name = "oninput",
+                Value = new VEventAsyncHandler(evtInfo => callback(evtInfo))
+            };
+        }
+
+
+        protected VDomAttribute onkeydown(Action callback)
+        {
+            return new VDomAttribute
+            {
+                Name = "onkeydown",
+                Value = new VEventHandler(_ => { callback(); })
+            };
+        }
+
+        protected VDomAttribute onkeydown(Action<EventInfo> callback)
+        {
+            return new VDomAttribute
+            {
+                Name = "onkeydown",
+                Value = new VEventHandler(evtInfo => callback(evtInfo))
+            };
+        }
+
+        protected VDomAttribute onkeydownAsync(Func<Task> callback)
+        {
+            return new VDomAttribute
+            {
+                Name = "onkeydown",
+                Value = new VEventAsyncHandler(_ => callback())
+            };
+        }
+
+        protected VDomAttribute onkeydownAsync(Func<EventInfo, Task> callback)
+        {
+            return new VDomAttribute
+            {
+                Name = "onkeydown",
+                Value = new VEventAsyncHandler(evtInfo => callback(evtInfo))
+            };
+        }
+
+
+        protected VDomAttribute onload(Action callback)
+        {
+            return new VDomAttribute
+            {
+                Name = "onload",
+                Value = new VEventHandler(_ => { callback(); })
+            };
+        }
+
+        protected VDomAttribute onload(Action<EventInfo> callback)
+        {
+            return new VDomAttribute
+            {
+                Name = "onload",
+                Value = new VEventHandler(evtInfo => callback(evtInfo))
+            };
+        }
+
+        protected VDomAttribute onloadAsync(Func<Task> callback)
+        {
+            return new VDomAttribute
+            {
+                Name = "onload",
+                Value = new VEventAsyncHandler(_ => callback())
+            };
+        }
+
+        protected VDomAttribute onloadAsync(Func<EventInfo, Task> callback)
+        {
+            return new VDomAttribute
+            {
+                Name = "onload",
+                Value = new VEventAsyncHandler(evtInfo => callback(evtInfo))
+            };
+        }
+
         protected VDomAttribute onsubmit(Action callback)
         {
             return new VDomAttribute
@@ -135,6 +499,34 @@ namespace Blazor.Components
                 Value = new VEventHandler(_ => { callback(); })
             };
         }
+
+        protected VDomAttribute onsubmit(Action<EventInfo> callback)
+        {
+            return new VDomAttribute
+            {
+                Name = "onsubmit",
+                Value = new VEventHandler(evtInfo => callback(evtInfo))
+            };
+        }
+
+        protected VDomAttribute onsubmitAsync(Func<Task> callback)
+        {
+            return new VDomAttribute
+            {
+                Name = "onsubmit",
+                Value = new VEventAsyncHandler(_ => callback())
+            };
+        }
+
+        protected VDomAttribute onsubmitAsync(Func<EventInfo, Task> callback)
+        {
+            return new VDomAttribute
+            {
+                Name = "onsubmit",
+                Value = new VEventAsyncHandler(evtInfo => callback(evtInfo))
+            };
+        }
+
 
         protected VDomElementKey key(string keyValue)
         {

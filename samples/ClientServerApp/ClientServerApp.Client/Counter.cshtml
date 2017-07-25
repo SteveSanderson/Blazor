@@ -7,26 +7,10 @@
 
 <p>
     Current count: <strong>@Model.MyProperty</strong> &nbsp;
-    <button @onclick(IncrementCount)>Increment</button>
+    <button @onclick(Model.IncrementCount)>Increment</button>
 </p>
 
 <p>It's also possible to include child components, pass data to them, and receive callbacks from them:</p>
 
 <counter-display current-count=@Model.MyProperty
-                 on-reset=@((Action)OnResetCounter) />
-
-@functions {
-
-    void IncrementCount()
-    {
-        Model.MyProperty++;
-    }
-
-    void OnResetCounter()
-    {
-        Model.MyProperty = 0;
-
-        Render();
-    }
-
-}
+                 on-reset=@((Action)Model.OnResetCounter) />

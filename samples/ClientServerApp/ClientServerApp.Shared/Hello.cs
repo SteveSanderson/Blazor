@@ -7,5 +7,17 @@ namespace ClientServerApp.Shared
     public class Hello
     {
         public int MyProperty { get; set; }
+
+        public string AnotherProp { get; set; }
+
+        public void IncrementCount()
+        {
+            MyProperty++;
+        }
+
+        public void OnResetCounter()
+        {
+            MyProperty = 0;
+        }
     }
 }
