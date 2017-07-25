@@ -1,10 +1,15 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using Blazor.TypeScriptProxy.TypeScriptIR;
 using Blazor.TypeScriptProxy.Generator;
+using Microsoft.CodeAnalysis.CSharp;
 using Newtonsoft.Json;
+using Microsoft.CodeAnalysis;
+using System.Reflection;
+using Blazor.Components;
 
 namespace Blazor.TypeScriptProxy
 {
@@ -45,12 +50,52 @@ namespace Blazor.TypeScriptProxy
                 };
                 process.Start();
                 var json = process.StandardOutput.ReadToEnd();
-                var module = JsonConvert.DeserializeObject<Module>(json);
+                var module = JsonConvert.DeserializeObject<Blazor.TypeScriptProxy.TypeScriptIR.Module>(json);
 
                 var generator = new CSharpGenerator();
                 var code = generator.Render(module);
 
                 Console.WriteLine(code);
+
+                var compilationOptions = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
+                .WithOptimizationLevel(OptimizationLevel.Debug);
+                var syntaxTree = CSharpSyntaxTree.ParseText(code);
+
+                var standardReferencePaths = new[]
+                {
+                    AssemblyLocation("mscorlib"),
+                    AssemblyLocation(typeof(object)), // CoreLib
+                    AssemblyLocation("System.Console"),
+                    AssemblyLocation("System.Collections"),
+                    AssemblyLocation("System.Linq"),
+                    AssemblyLocation("System.Runtime"),
+                    AssemblyLocation("System.Threading.Tasks"),
+                    AssemblyLocation("System.Net.Http"),
+                    AssemblyLocation("System.Private.Uri"),
+                    AssemblyLocation("System.Security.Principal"),
+                    AssemblyLocation("System.Security.Claims"),
+                    AssemblyLocation("Blazor.Runtime")
+                };
+
+                var compilation = CSharpCompilation.Create("JSTypeProxies",
+                    syntaxTrees: new[] { syntaxTree },
+                    references: standardReferencePaths.Select(assemblyLocation => MetadataReference.CreateFromFile(assemblyLocation)),
+                    options: compilationOptions);
+                var errors = compilation.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error);
+
+                if (errors.Any())
+                {
+                    foreach (var error in errors)
+                    {
+                        Console.WriteLine(error.ToString());
+                    }
+                    throw new InvalidOperationException(string.Join(Environment.NewLine, errors.Select(e => e.ToString()).ToArray()));
+                }
+                else
+                {
+                    compilation.Emit(Path.Combine(Directory.GetCurrentDirectory(), "JSTypeProxies.dll"));
+                }
+
                 Console.ReadLine();
 
                 //var settings = new JsonSerializerSettings();
@@ -58,6 +103,22 @@ namespace Blazor.TypeScriptProxy
                 //var serialized = JsonConvert.SerializeObject(module, Formatting.Indented, settings);
                 //Console.WriteLine(serialized);
             }
+        }
+
+        static string AssemblyLocation(string assemblyName)
+        {
+            return AssemblyLocation(Assembly.Load(new AssemblyName(assemblyName)));
+        }
+
+        static string AssemblyLocation(Type containedType)
+        {
+            return AssemblyLocation(containedType.GetTypeInfo().Assembly);
+        }
+
+        static string AssemblyLocation(Assembly assembly)
+        {
+            var locationProperty = typeof(Assembly).GetRuntimeProperty("Location");
+            return (string)locationProperty.GetValue(assembly);
         }
     }
 }
