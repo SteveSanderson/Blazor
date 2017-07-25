@@ -8,3 +8,4 @@ obj
 /artifacts/
 .emsdk/
 /**/PublishProfiles/*
+/**/node_modules/*
