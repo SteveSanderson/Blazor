@@ -50,10 +50,18 @@ namespace RazorRenderer
                     classNode.Name = RazorComponent.GetViewClassName(rootDir, codeDoc.Source.FileName);
                     if (!string.IsNullOrEmpty((string)codeDoc.Items["DetectedBaseClass"]))
                     {
-                        classNode.BaseType = (string)codeDoc.Items["DetectedBaseClass"];
+                        // UBER HACK
+                        if (codeDoc.Items["DetectedModel"] != null)
+                        {
+                            classNode.BaseType = $"{(string)codeDoc.Items["DetectedBaseClass"]}<{(string)codeDoc.Items["DetectedModel"]}>";
+                        }
+                        else
+                        {
+                            classNode.BaseType = (string)codeDoc.Items["DetectedBaseClass"];
+                        }
                     }
 
-                    AddIComponentRazorViewFactoryImplementation(classNode);
+                    AddIComponentRazorViewFactoryImplementation(classNode, codeDoc);
 
                     var layoutProperty = new CSharpStatementIRNode
                     {
@@ -102,7 +110,7 @@ namespace RazorRenderer
             }
         }
 
-        private static void AddIComponentRazorViewFactoryImplementation(ClassDeclarationIRNode classNode)
+        private static void AddIComponentRazorViewFactoryImplementation(ClassDeclarationIRNode classNode, RazorCodeDocument codeDoc)
         {
             // The Activator.CreateInstance feature that I added to the DNA runtime is very basic and doesn't
             // actually invoke the default constructor of the type being created. It just allocates memory for
@@ -122,16 +130,23 @@ namespace RazorRenderer
             var methodStatement = new CSharpStatementIRNode { Parent = classNode, Source = null };
             classNode.Children.Add(methodStatement);
 
-            methodStatement.Children.Add(new RazorIRToken
+            var model = codeDoc.Items["DetectedModel"];
+            string content = "";
+            if (model != null)
             {
+                content = $@"Model = new {model}();";
+            }
+            var razorToken = new RazorIRToken { 
                 Kind = RazorIRToken.TokenKind.CSharp,
                 Parent = classNode,
                 Content = $@"
                     {typeof(RazorComponent).FullName} {typeof(IRazorComponentFactory).FullName}.{nameof(IRazorComponentFactory.Instantiate)}()
                     {{
+                        {content} 
                         return new {classNode.Name}();
                     }}"
-            });
+            };
+            methodStatement.Children.Add(razorToken);
         }
 
         static IList<SyntaxTree> GetSyntaxTrees(RazorEngine engine, string rootDir, string[] filenames)
@@ -224,6 +239,7 @@ namespace RazorRenderer
         {
             string detectedLayout = null;
             string detectedTagName = null;
+            string detectedModel = null;
             using (var ms = new MemoryStream())
             {
                 using (var sw = new StreamWriter(ms))
@@ -256,6 +272,13 @@ namespace RazorRenderer
                             continue;
                         }
 
+                        const string modelLinePrefix = "@model ";
+                        if (line.StartsWith(modelLinePrefix))
+                        {
+                            detectedModel = line.Substring(modelLinePrefix.Length);
+                            continue;
+                        }
+
                         var tagNameRegex = new Regex("^\\s*\\@TagName\\(\\s*\\\"([^\\\"]+)\\\"\\s*\\)");
                         var tagNameMatch = tagNameRegex.Match(line);
                         if (tagNameMatch.Success)
@@ -273,6 +296,7 @@ namespace RazorRenderer
                     var codeDoc = RazorCodeDocument.Create(sourceDoc);
                     codeDoc.Items["DetectedLayout"] = detectedLayout;
                     codeDoc.Items["DetectedTagName"] = detectedTagName;
+                    codeDoc.Items["DetectedModel"] = detectedModel;
                     codeDoc.Items["DetectedBaseClass"] = lastInheritsLine;
                     codeDoc.Items["UsingNamespaces"] = usingNamespaces;
 

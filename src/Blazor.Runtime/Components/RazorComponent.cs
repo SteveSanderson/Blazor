@@ -209,5 +209,7 @@ namespace Blazor.Components
         // This is not really used, but simply has to exist so that the Razor tooling is willing to regard
         // Blazor.Components.RazorComponent as a valid base class. This would probably go away if updating
         // to work using newer Razor tooling.
+
+        public static TModel Model { get;  set; } // TODO this really should be a private set.
     }
 }
