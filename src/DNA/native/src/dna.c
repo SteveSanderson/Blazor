@@ -83,7 +83,7 @@ doneArgs:;
 	Socket_Init();
 
 #ifdef DIAG_OPCODE_TIMES
-#ifdef WIN32
+#ifdef _WIN32
 	{
 		HANDLE hProcess = GetCurrentProcess();
 		SetProcessAffinityMask(hProcess, 1);

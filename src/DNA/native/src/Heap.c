@@ -382,7 +382,7 @@ static void GarbageCollect() {
 				}
 				// Use pSync to point to next entry in this linked-list.
 				//(tHeapEntry*)(pNode->pSync) = pToDelete;
-				pNode->pSync = pToDelete;
+				pNode->pSync = (tSync*)pToDelete;
 				pToDelete = pNode;
 			}
 		}

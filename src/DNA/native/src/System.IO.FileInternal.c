@@ -127,7 +127,7 @@ tAsyncCall* System_IO_FileInternal_Close(PTR pThis_, PTR pParams, PTR pReturnVal
 tAsyncCall* System_IO_FileInternal_GetCurrentDirectory(PTR pThis_, PTR pParams, PTR pReturnValue) {
 	U32 *pError = ((U32**)pParams)[0];
 	HEAP_PTR curDir;
-#ifdef WIN32
+#ifdef _WIN32
 	unsigned short dir[256];
 	GetCurrentDirectoryW(256, dir);
 	curDir = SystemString_FromCharPtrUTF16(dir);
@@ -141,7 +141,7 @@ tAsyncCall* System_IO_FileInternal_GetCurrentDirectory(PTR pThis_, PTR pParams, 
 	return NULL;
 }
 
-#ifndef WIN32
+#ifndef _WIN32
 // Get attributes of file and map from UNIX to .NET attribute flags
 static U32 Attrs(unsigned char *pPath, U32 *pError) {
 	struct stat info;
@@ -168,7 +168,7 @@ tAsyncCall* System_IO_FileInternal_GetFileAttributes(PTR pThis_, PTR pParams, PT
 	U32 pathLen;
 	STRING2 path = SystemString_GetString(pathHeapPtr, &pathLen);
 	U32 ret;
-#ifdef WIN32
+#ifdef _WIN32
 	unsigned short pathNullTerm[256];
 	memcpy(pathNullTerm, path, pathLen << 1);
 	pathNullTerm[pathLen] = 0;
@@ -203,7 +203,7 @@ tAsyncCall* System_IO_FileInternal_GetFileSystemEntries(PTR pThis_, PTR pParams,
 	U32 tempStoreSize = 32, tempStoreOfs = 0, i;
 	HEAP_PTR *pTempStore = malloc(tempStoreSize * sizeof(void*));
 	PTR arrayElements;
-#ifdef WIN32
+#ifdef _WIN32
 	unsigned short pathPatternNullTerm[256];
 	HANDLE hFind;
 	WIN32_FIND_DATA find;

@@ -101,7 +101,7 @@ tAsyncCall* System_Array_Internal_SetValue(PTR pThis_, PTR pParams, PTR pReturnV
 
 	index = ((U32*)pParams)[1];
 
-#if defined(WIN32) && defined(_DEBUG)
+#if defined(_WIN32) && defined(_DEBUG)
 	// Do a bounds-check
 	if (index >= pArray->length) {
 		printf("[Array] Internal_SetValue() Bounds-check failed\n");
@@ -167,7 +167,7 @@ tAsyncCall* System_Array_Internal_Copy(PTR pThis_, PTR pParams, PTR pReturnValue
 		dstIndex = ((U32*)pParams)[3];
 		length = ((U32*)pParams)[4];
 
-#if defined(WIN32) && defined(_DEBUG)
+#if defined(_WIN32) && defined(_DEBUG)
 		// Do bounds check
 		if (srcIndex + length > pSrc->length || dstIndex + length > pDst->length) {
 			printf("[Array] Internal_Copy() Bounds check failed\n");
@@ -259,7 +259,7 @@ void SystemArray_StoreElement(HEAP_PTR pThis_, U32 index, PTR value) {
 	tMD_TypeDef *pArrayTypeDef;
 	U32 elemSize;
 
-#if defined(WIN32) && defined(_DEBUG)
+#if defined(_WIN32) && defined(_DEBUG)
 	// Do a bounds check
 	if (index >= pArray->length) {
 		printf("SystemArray_StoreElement() Bounds check failed. Array length: %d  index: %d\n", pArray->length, index);
@@ -312,7 +312,7 @@ PTR SystemArray_LoadElementAddress(HEAP_PTR pThis_, U32 index) {
 	tSystemArray *pArray = (tSystemArray*)pThis_;
 	tMD_TypeDef *pArrayTypeDef;
 
-#if defined(WIN32) && defined(_DEBUG)
+#if defined(_WIN32) && defined(_DEBUG)
 	if (index >= pArray->length) {
 		printf("SystemArray_LoadElementAddress() Bounds check failed\n");
 		__debugbreak();
@@ -328,7 +328,7 @@ U32 SystemArray_GetNumBytes(HEAP_PTR pThis_, tMD_TypeDef *pElementType) {
 }
 
 tAsyncCall* System_Array_CreateInstance(PTR pThis_, PTR pParams, PTR pReturnValue) {
-	tMD_TypeDef *pElementType = RuntimeType_DeRef(INTERNALCALL_PARAM(0, tRuntimeType*));
+	tMD_TypeDef *pElementType = RuntimeType_DeRef((PTR)(INTERNALCALL_PARAM(0, tRuntimeType*)));
 	tMD_TypeDef *pArrayType = Type_GetArrayTypeDef(pElementType, NULL, NULL);
 	U32 length = INTERNALCALL_PARAM(4, U32);
 	*(HEAP_PTR*)pReturnValue = SystemArray_NewVector(pArrayType, length);

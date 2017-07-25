@@ -180,7 +180,7 @@ tAsyncCall* System_Type_GetMethod(PTR pThis_, PTR pParams, PTR pReturnValue)
 			// Assign method def
 			pMethodInfo->methodBase.methodDef = pMethodDef;
 
-			*(HEAP_PTR*)pReturnValue = (HEAP_PTR*)pMethodInfo;
+			*(HEAP_PTR*)pReturnValue = *(HEAP_PTR*)pMethodInfo;
 			return NULL;
 		}
 	}

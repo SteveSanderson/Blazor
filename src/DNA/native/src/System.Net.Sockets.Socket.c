@@ -25,7 +25,7 @@
 
 #include "System.Array.h"
 
-#ifdef WIN32
+#ifdef _WIN32
 #define ERRNO WSAGetLastError()
 #define WOULDBLOCK WSAEWOULDBLOCK
 #else
@@ -38,7 +38,7 @@
 #endif
 
 void Socket_Init() {
-#ifdef WIN32
+#ifdef _WIN32
 	WSADATA d;
 	WSAStartup(0x0202, &d);
 #endif
@@ -66,7 +66,7 @@ tAsyncCall* System_Net_Sockets_Internal_CreateSocket(PTR pThis_, PTR pParams, PT
 	}
 
 	// Set socket to non-blocking
-#ifdef WIN32
+#ifdef _WIN32
 	{
 		u_long nonblock = 1;
 		ioctlsocket(s, FIONBIO, &nonblock);
@@ -91,7 +91,7 @@ tAsyncCall* System_Net_Sockets_Internal_Bind(PTR pThis_, PTR pParams, PTR pRetur
 	U32 *pError = INTERNALCALL_PARAM(12, U32*);
 
 	sa.sin_family = AF_INET;
-#ifdef WIN32
+#ifdef _WIN32
 	sa.sin_addr.S_un.S_addr = addr;
 #else
 	sa.sin_addr.s_addr = addr;
@@ -108,7 +108,7 @@ tAsyncCall* System_Net_Sockets_Internal_Close(PTR pThis_, PTR pParams, PTR pRetu
 
 	int s = INTERNALCALL_PARAM(0, int);
 
-#ifdef WIN32
+#ifdef _WIN32
 	closesocket(s);
 #else
 	close(s);
@@ -175,7 +175,7 @@ static U32 Connect_Check(PTR pThis_, PTR pParams, PTR pReturnValue, tAsyncCall *
 	U32 *pError = INTERNALCALL_PARAM(12, U32*);
 
 	sa.sin_family = AF_INET;
-#ifdef WIN32
+#ifdef _WIN32
 	sa.sin_addr.S_un.S_addr = addr;
 #else
 	sa.sin_addr.s_addr = addr;
@@ -190,7 +190,7 @@ static U32 Connect_Check(PTR pThis_, PTR pParams, PTR pReturnValue, tAsyncCall *
 	} else {
 		int err = ERRNO;
 		//printf("Connect_Check: errno=%d\n", err);
-#ifdef WIN32
+#ifdef _WIN32
 		if (err == WSAEINVAL || err == WSAEWOULDBLOCK || err == WSAEALREADY) {
 #else
 		if (err == EINPROGRESS || err == EALREADY) {
@@ -198,7 +198,7 @@ static U32 Connect_Check(PTR pThis_, PTR pParams, PTR pReturnValue, tAsyncCall *
 			// Still waiting for connection
 			return 0;
 		} else {
-#ifdef WIN32
+#ifdef _WIN32
 			if (err == WSAEISCONN) {
 #else
 			if (err == EISCONN) {
@@ -267,7 +267,7 @@ static U32 Receive_Check(PTR pThis_, PTR pParams, PTR pReturnValue, tAsyncCall *
 	} else {
 		int err = ERRNO;
 	//printf("Receive_Check: errno=%d\n", err);
-#ifdef WIN32
+#ifdef _WIN32
 		if (err == WSAEINPROGRESS || err == WSAEWOULDBLOCK) {
 #else
 		if (err == EAGAIN) {
@@ -331,7 +331,7 @@ static U32 Send_Check(PTR pThis_, PTR pParams, PTR pReturnValue, tAsyncCall *pAs
 	} else {
 		int err = ERRNO;
 printf("Send_Check: errno=%d\n", err);
-#ifdef WIN32
+#ifdef _WIN32
 		if (err == WSAEINPROGRESS || err == WSAEWOULDBLOCK) {
 #else
 		if (err == EAGAIN) {

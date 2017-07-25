@@ -18,7 +18,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#ifdef _WIN32
+#include <time.h>
+#else
 #include <sys/time.h>
+#endif // _WIN32
 
 #include "Compat.h"
 #include "Sys.h"
@@ -39,7 +43,7 @@ void Crash(char *pMsg, ...) {
 
 	printf("\n\n");
 
-#ifdef WIN32
+#ifdef _WIN32
 	{
 		// Cause a delibrate exception, to get into debugger
 		__debugbreak();
@@ -95,7 +99,7 @@ void* mallocTrace(int s, char *pFile, int line) {
 */
 
 U64 msTime() {
-#ifdef WIN32
+#ifdef _WIN32
 	static LARGE_INTEGER freq = {0,0};
 	LARGE_INTEGER time;
 	if (freq.QuadPart == 0) {
@@ -116,7 +120,7 @@ U64 msTime() {
 
 #if defined(DIAG_METHOD_CALLS) || defined(DIAG_OPCODE_TIMES) || defined(DIAG_GC) || defined(DIAG_TOTAL_TIME)
 U64 microTime() {
-#ifdef WIN32
+#ifdef _WIN32
 	static LARGE_INTEGER freq = {0,0};
 	LARGE_INTEGER time;
 	if (freq.QuadPart == 0) {
@@ -137,7 +141,7 @@ U64 microTime() {
 #endif
 
 void SleepMS(U32 ms) {
-#ifdef WIN32
+#ifdef _WIN32
 	Sleep(ms);
 #else
 	sleep(ms / 1000);
