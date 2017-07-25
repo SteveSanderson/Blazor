@@ -1,11 +1,11 @@
 ﻿using Blazor.Runtime.Interop;
-using JSLibs.DOM;
+using static Blazor.Runtime.Interop.Document;
 
 namespace JSLibs.Bootstrap
 {
     public class Modal : JSObject
     {
-        public Modal(DocumentNode node)
+        public Modal(Node node)
             : base((JSObjectHandle)JSObjectHandle.Global.CallNew("Modal", node))
         {
         }

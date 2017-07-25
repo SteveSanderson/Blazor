@@ -1,4 +1,4 @@
-﻿@using JSLibs.DOM
+﻿@using Blazor.Runtime.Interop
 @using JSLibs.Bootstrap
 
 <h1>Bootstrap</h1>
@@ -29,7 +29,7 @@
 @functions {
     void ShowModal()
     {
-        var elem = Window.Document.GetElementById("my-modal");
+        var elem = JavaScript.Document.GetElementById("my-modal");
         new Modal(elem).Show();
     }
 }
