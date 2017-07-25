@@ -11,6 +11,9 @@ using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Razor.Language;
 using System.Reflection;
 using Microsoft.CodeAnalysis.Emit;
+using System.Text;
+using System.Runtime.CompilerServices;
+using System.Diagnostics;
 
 namespace RazorRenderer
 {
@@ -143,10 +146,11 @@ namespace RazorRenderer
             {
                 content = $@"Model = new {model}();";
             }
-            if ( (bool) codeDoc.Items["DetectedPage"])
+            if ((bool)codeDoc.Items["DetectedPage"])
             {
                 isPage += "classNode.IsPage = true;";
             }
+
             if ((codeDoc.Items["DetectedPageMatches"]) != null) 
             {
                 var list = (List<string>)codeDoc.Items["DetectedPageMatches"];
@@ -157,7 +161,8 @@ namespace RazorRenderer
                 }
                 addItems += "\r\n Items = list;";
             }
-            var razorToken = new RazorIRToken { 
+            var razorToken = new RazorIRToken
+            { 
                 Kind = RazorIRToken.TokenKind.CSharp,
                 Parent = classNode,
                 Content = $@"
@@ -408,6 +413,9 @@ namespace RazorRenderer
                 AssemblyLocation("System.Private.Uri"),
                 AssemblyLocation("System.Security.Principal"),
                 AssemblyLocation("System.Security.Claims"),
+                AssemblyLocation("System.ComponentModel.Annotations"),
+                AssemblyLocation("netstandard"),
+                AssemblyLocation("Newtonsoft.Json"),
                 AssemblyLocation(typeof(RazorComponent)) // Blazor
             };
             var allReferences = assemblyReferences
@@ -421,6 +429,9 @@ namespace RazorRenderer
                 syntaxTrees: syntaxTrees,
                 references: allReferences,
                 options: compilationOptions);
+
+            compilation = AttributesHack.AddGetAttributesExtensionMethod(compilation);
+
             var errors = compilation.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error);
 
             if (errors.Any())

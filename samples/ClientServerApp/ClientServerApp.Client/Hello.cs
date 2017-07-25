@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Text;
 using Blazor.Runtime.Components;
 using System.Threading.Tasks;
@@ -8,8 +9,11 @@ namespace ClientServerApp.Client
 {
     public class Hello : PageModel
     {
+        [Required]
         public int MyProperty { get; set; }
 
+        [StringLength(10)]
+        [Display(Name = "Test")]
         public string AnotherProp { get; set; }
 
         public void IncrementCount()

@@ -1,4 +1,5 @@
-﻿@section Scripts {
+﻿@using System.Reflection
+@section Scripts {
     <br />
     <h6>This is from RenderSection. </h6>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
@@ -12,4 +13,27 @@
 
 @{
     Context.Items["hello"] = "This shows BlazorContext is persistent across pages.";
+
+    var getAttributesMethodInfo = Type.GetType("System.Reflection.MyCustomAttributeExtensions").GetMethod("GetMyCustomAttributes");
+
+    var typeInfo = typeof(ClientServerApp.Client.Hello);
+    <h2>@typeInfo.Name attributes</h2>
+    <ul>
+        @foreach (var memberInfo in typeInfo.GetMembers())
+        {
+            var attributes = (IEnumerable<Attribute>)getAttributesMethodInfo.Invoke(null, new[] { memberInfo });
+            if (attributes.Count() > 0)
+            {
+            <li>
+                <p>@memberInfo.Name</p>
+                <ul>
+                    @foreach (var attribute in attributes)
+                    {
+                        <li>@attribute.GetType().Name</li>
+                    }
+                </ul>
+            </li>
+            }
+        }
+    </ul>
 }
