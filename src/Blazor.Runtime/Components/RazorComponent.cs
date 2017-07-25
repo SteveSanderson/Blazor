@@ -7,12 +7,18 @@ using System.Linq;
 using Blazor.Routing;
 using Blazor.Runtime.Components;
 using Blazor.Interop;
+using Blazor.Runtime.Interop;
 
 namespace Blazor.Components
 {
     public abstract class RazorComponent : Component
     {
         public IDictionary<string, object> ViewData { get; } = new Dictionary<string, object>();
+
+        public void NavigationHelper(string url)
+        {
+            JavaScript.Window["location"]["assign"].Invoke<object>(url);
+        }
 
         public void DefineSection(string name, Action<VDomBuilder> section)
         {
