@@ -10,6 +10,10 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.Loader;
 using System.Text;
+using Microsoft.AspNetCore.Routing;
+using System.Net.WebSockets;
+using System.Threading.Tasks;
+using System.Threading;
 
 namespace Blazor.Host
 {
@@ -23,6 +27,88 @@ namespace Blazor.Host
     {
         private readonly static Assembly _hostAssembly = typeof(BlazorApplicationBuilderExtensions).GetTypeInfo().Assembly;
         private readonly static string _embeddedResourceProjectName = "Blazor.Host"; // Note: Not the same as _hostAssembly.Name
+
+        public static IApplicationBuilder UseBlazorDebugger(this IApplicationBuilder app)
+        {
+            app.UseWebSockets();
+            return app.UseRouter(routes =>
+            {
+                var sessions = new Dictionary<string, (WebSocket debuggee, TaskCompletionSource<WebSocket> waitForDebugger)>();
+
+                routes.MapGet("__debugger", async context =>
+                {
+                    var sessionId = context.Request.Query["id"];
+
+                    // The first connection is the debugee
+                    // The second connection is the debugger
+                    if (context.WebSockets.IsWebSocketRequest)
+                    {
+                        using (var ws = await context.WebSockets.AcceptWebSocketAsync())
+                        {
+                            if (!sessions.TryGetValue(sessionId, out var pair))
+                            {
+                                // No session, this is the debuggee
+                                var waitForDebugger = new TaskCompletionSource<WebSocket>();
+                                sessions[sessionId] = (ws, waitForDebugger);
+                                var debugger = await waitForDebugger.Task;
+
+                                // Read from debuggee, send to debugger
+                                await DoProxy(ws, debugger);
+                            }
+                            else
+                            {
+                                // We have a session, so connect!
+                                pair.waitForDebugger.TrySetResult(ws);
+
+                                // Read from debugger, send to debuggee
+                                await DoProxy(ws, pair.debuggee);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        context.Response.StatusCode = 400;
+                    }
+                });
+            });
+        }
+
+        private static async Task DoProxy(WebSocket source, WebSocket dest)
+        {
+            var cumulative = new List<ArraySegment<byte>>();
+            while (true)
+            {
+                byte[] data = new byte[4096];
+                var result = await source.ReceiveAsync(new ArraySegment<byte>(data), CancellationToken.None);
+
+                if (result.MessageType == WebSocketMessageType.Close)
+                {
+                    await source.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
+                    break;
+                }
+
+                cumulative.Add(new ArraySegment<byte>(data, 0, result.Count));
+
+                if (result.EndOfMessage)
+                {
+                    var size = 0;
+                    foreach (var chunk in cumulative)
+                    {
+                        size += chunk.Count;
+                    }
+                    var all = new byte[size];
+                    int offset = 0;
+                    foreach (var chunk in cumulative)
+                    {
+                        Buffer.BlockCopy(chunk.Array, chunk.Offset, all, offset, chunk.Count);
+                        offset += chunk.Count;
+                    }
+
+                    await dest.SendAsync(new ArraySegment<byte>(all), WebSocketMessageType.Text, endOfMessage: true, cancellationToken: CancellationToken.None);
+                    cumulative.Clear();
+                }
+            }
+        }
 
         public static IApplicationBuilder UseBlazorUI(this IApplicationBuilder app, string rootPath, Action<BlazorUIOptions> configure = null)
         {
@@ -39,6 +125,8 @@ namespace Blazor.Host
             contentTypeProvider.Mappings.Add(".dll", "application/octet-stream");
             contentTypeProvider.Mappings.Add(".exe", "application/octet-stream");
             contentTypeProvider.Mappings.Add(".wasm", "application/octet-stream");
+
+            app.UseBlazorDebugger();
 
             app.UseStaticFiles(new StaticFileOptions
             {

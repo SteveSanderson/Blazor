@@ -790,7 +790,38 @@ window['jsobject.js'] = (function () {
         }
     }
 
+    function guid() {
+        function s4() {
+            return Math.floor((1 + Math.random()) * 0x10000)
+                .toString(16)
+                .substring(1);
+        }
+        return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+            s4() + '-' + s4() + s4() + s4();
+    }
+
+    function ListenForDebugger() {
+        if (window.WebSocket) {
+            var sessionId = guid();
+            var url = 'ws://' + document.location.host + '/__debugger?id=' + sessionId;
+
+            // No websockets, no debugging, sorry...
+            var ws = new WebSocket(url);
+            ws.onopen = function () {
+                console.log('Opened debugger connection: Use ' + sessionId + ' to attach to this session');
+            };
+            ws.onmessage = function (event) {
+                console.log('Received message from debugger: ' + event.data);
+            };
+            ws.onclose = function (event) {
+                console.log('Debugger connection closed!');
+            };
+        }
+    }
+
     ListenForReload();
+
+    ListenForDebugger();
 
     function DisplayErrorPage(html) {
         var frame = document.createElement('iframe');
