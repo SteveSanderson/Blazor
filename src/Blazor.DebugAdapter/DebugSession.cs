@@ -206,6 +206,17 @@ namespace VSCodeDebug
         { }
     }
 
+    public class BreakpointEvent : Event
+    {
+        public BreakpointEvent(string reason, Breakpoint breakpoint)
+            : base("breakpoint", new
+            {
+                reason = reason,
+                breakpoint = breakpoint
+            })
+        { }
+    }
+
     // ---- Response -------------------------------------------------------------------------
 
     public class Capabilities : ResponseBody
