@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using System.Text;
 using Blazor.Util;
 
-namespace ConferencePlanner.FrontEnd.Infrastructure
+namespace System.Net.Http
 {
     public static class HttpClientExtensions
     {
@@ -21,12 +21,12 @@ namespace ConferencePlanner.FrontEnd.Infrastructure
 
         public static Task<HttpResponseMessage> PostJsonAsync<T>(this HttpClient client, string url, T value)
         {
-            return SendJsonAsync<T>(client, HttpMethod.Post, url, value);
+            return SendJsonAsync(client, HttpMethod.Post, url, value);
         }
 
         public static Task<HttpResponseMessage> PutJsonAsync<T>(this HttpClient client, string url, T value)
         {
-            return SendJsonAsync<T>(client, HttpMethod.Put, url, value);
+            return SendJsonAsync(client, HttpMethod.Put, url, value);
         }
 
         public static Task<HttpResponseMessage> SendJsonAsync<T>(this HttpClient client, HttpMethod method, string url, T value)
@@ -35,10 +35,10 @@ namespace ConferencePlanner.FrontEnd.Infrastructure
 
             var request = new HttpRequestMessage(method, url)
             {
-                Content = new StringContent(bodyRaw, Encoding.UTF8, "application/json")
+                Content = new StringContent(bodyRaw)                
             };
 
-            request.Content.Headers.TryAddWithoutValidation("Content-Type", "application/json");
+            //request.Content.Headers.TryAddWithoutValidation("Content-Type", "application/json");
 
             return client.SendAsync(request);
         }

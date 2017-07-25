@@ -74,7 +74,11 @@
 			var url = parsed.url;
 
             var xhr = new XMLHttpRequest;
-            xhr.open("GET", url);
+            xhr.open(parsed.method || "GET", url);
+            var mediaType = parsed["mediaType"];
+            if (mediaType) {
+                xhr.setRequestHeader("Content-Type", mediaType);
+            }
             xhr.onreadystatechange = function xhrOnReadyStateChange (evt) {
                 if (xhr.readyState === 4) {
                     InvokeStatic('corlib', 'System.Net.Http', 'HttpClient', 'OnFetchCompleted', JSON.stringify({
@@ -84,7 +88,7 @@
                 }
             };
 
-            xhr.send(null);
+            xhr.send(parsed.body || null);
 		}
 	};
 

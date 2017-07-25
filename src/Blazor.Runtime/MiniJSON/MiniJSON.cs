@@ -428,6 +428,13 @@ namespace MiniJSON
                 IDictionary asDict;
                 string asStr;
 
+                int? nullableInt;
+                if (value is int?)
+                {
+                    nullableInt = value as int?;
+                    value = nullableInt.Value;
+                }
+
                 if (value == null) {
                     builder.Append("null");
                 } else if ((asStr = value as string) != null) {

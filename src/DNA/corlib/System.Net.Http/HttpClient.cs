@@ -29,15 +29,25 @@ namespace System.Net.Http
             }
         }
 
-        public Task<HttpResponseMessage> GetAsync(string url)
+        public Task<HttpResponseMessage> SendAsync(HttpRequestMessage request)
         {
+            Console.WriteLine($"CALLED SendAsync({request.Url})");
+
             var tcs = new TaskCompletionSource<HttpResponseMessage>();
 
-            BeginGetResponse(url, ar =>
+            var body = request.Content as StringContent;
+
+            Console.WriteLine($"CALLED SendAsync({request.Url}).BeginResponse");
+            BeginResponse(request.Method?.Method ?? HttpMethod.Get.Method, request.Url, body?.Content, body?.MediaType, ar =>
             {
+                Console.WriteLine($"RUNNING SendAsync({request.Url}).BeginResponse callback");
+
                 try
                 {
-                    var response = EndGetResponse(ar);
+                    Console.WriteLine($"CALLING EndResponse({request.Url})");
+                    var response = EndResponse(ar);
+                    Console.WriteLine($"RETURNED EndResponse({request.Url})");
+
                     if ((int)response.StatusCode < 200 || (int)response.StatusCode >= 300)
                     {
                         throw new HttpClientException($"Response status code was {response.StatusCode}");
@@ -50,9 +60,13 @@ namespace System.Net.Http
                     tcs.TrySetException(ex);
                 }
             }, null);
+            Console.WriteLine($"RETURNED SendAsync({request.Url}).BeginResponse");
 
             return tcs.Task;
         }
+
+        public Task<HttpResponseMessage> GetAsync(string url) =>
+            SendAsync(new HttpRequestMessage(HttpMethod.Get, url));
 
         public async Task<string> GetStringAsync(string url)
         {
@@ -60,12 +74,16 @@ namespace System.Net.Http
             return await response.Content.ReadAsStringAsync();
         }
 
-        private IAsyncResult BeginGetResponse(string url, AsyncCallback asyncCallback, object state)
+        private IAsyncResult BeginResponse(string method, string url, string body, string mediaType, AsyncCallback asyncCallback, object state)
         {
+            Console.WriteLine($"CALLED BeginResponse({method}, {url}, {body}, {mediaType}, ...)");
             var asyncResult = new HttpClientAsyncResult(asyncCallback, state);
             var gcHandle = GCHandle.Alloc(asyncResult, GCHandleType.Pinned);
             var descriptorDict = new Dictionary<string, object>()
             {
+                { "method", method },
+                { "body", body },
+                { "mediaType", mediaType },
                 { "url", url },
                 { "asyncResultAddress", gcHandle.AddrOfPinnedObject().ToInt32() }
             };
@@ -73,7 +91,7 @@ namespace System.Net.Http
             return asyncResult;
         }
 
-        private HttpResponseMessage EndGetResponse(IAsyncResult asyncResult)
+        private HttpResponseMessage EndResponse(IAsyncResult asyncResult)
         {
             return ((HttpClientAsyncResult)asyncResult).Result;
         }

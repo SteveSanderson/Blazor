@@ -1,0 +1,51 @@
+﻿@model ConferencePlanner.FrontEnd.EditSessionModel
+
+@if (Model.ShowMessage)
+{
+    <div class="alert alert-success alert-dismissible" role="alert">
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        @Model.Message
+    </div>
+}
+
+<form method="post" class="form-horizontal">
+    <div asp-validation-summary="All" class="text-danger"></div>
+    <div class="form-group">
+        <label asp-for="Session.Title" class="col-md-2 control-label">Title</label>
+        <div class="col-md-10">
+            <input asp-for="Session.Title" @bind(Model.Session.Title) class="form-control" />
+            <span asp-validation-for="Session.Title" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="form-group">
+        <label asp-for="Session.Abstract" class="col-md-2 control-label">Abstract</label>
+        <div class="col-md-10">
+            <textarea asp-for="Session.Abstract" @bind(Model.Session.Abstract) class="form-control"></textarea>
+            <span asp-validation-for="Session.Abstract" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="form-group">
+        <label asp-for="Session.StartTime" class="col-md-2 control-label">Start time</label>
+        <div class="col-md-10">
+            <input asp-for="Session.StartTime" @bind(Model.Session.StartTime) class="form-control" />
+            <span asp-validation-for="Session.StartTime" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="form-group">
+        <label asp-for="Session.EndTime" class="col-md-2 control-label">End time</label>
+        <div class="col-md-10">
+            <input asp-for="Session.EndTime" @bind(Model.Session.EndTime) class="form-control" />
+            <span asp-validation-for="Session.EndTime" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="col-md-offset-2 col-md-10">
+            <button type="button" @onclickAsync(Model.OnSaveClick) class="btn btn-primary">Save</button>
+            <button type="button" @onclick(Model.OnDeleteClick) class="btn btn-danger">Delete</button>
+        </div>
+    </div>
+</form>
+
+@functions {
+    protected override Task InitAsync() => Model.InitAsync();
+}

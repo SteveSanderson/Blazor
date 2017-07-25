@@ -5,7 +5,7 @@ namespace System.Net.Http
 {
     public class HttpContent
     {
-        private IDictionary<string, object> dictionary;
+        protected IDictionary<string, object> dictionary;
 
         public HttpContent(IDictionary<string, object> dictionary)
         {
