@@ -5,6 +5,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.WebSockets;
+using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 
 namespace VSCodeDebug
@@ -17,9 +19,11 @@ namespace VSCodeDebug
         private string _sourceFile;
         private IEnumerable<string> _sourceLines;
         private int _currentLine;
+        private TaskCompletionSource<WebSocket> _debugTargetTcs;
 
-        public BlazorDebugSession() : base(debuggerLinesStartAt1: true)
+        public BlazorDebugSession(TaskCompletionSource<WebSocket> debugTargetTcs) : base(debuggerLinesStartAt1: true)
         {
+            _debugTargetTcs = debugTargetTcs;
         }
 
         public override void Attach(Response response, dynamic arguments)
@@ -44,6 +48,8 @@ namespace VSCodeDebug
 
         public override void Initialize(Response response, dynamic args)
         {
+            // TODO: Verify that the client connected before
+
             Log("Initialize");
 
             SendEvent(new InitializedEvent());

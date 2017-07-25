@@ -7,6 +7,11 @@ using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using System.Net.WebSockets;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 
 namespace VSCodeDebug
 {
@@ -73,18 +78,25 @@ namespace VSCodeDebug
                 }
             }
 
+            var lifetime = new TaskCompletionSource<object>();
+            var debugTargetTcs = new TaskCompletionSource<WebSocket>();
+            RunWebSocketServer(debugTargetTcs, lifetime);
+
             if (port > 0)
             {
                 // TCP/IP server
                 Program.Log("waiting for debug protocol on port " + port);
-                RunServer(port);
+                RunServer(debugTargetTcs, port);
             }
             else
             {
                 // stdin/stdout
                 Program.Log("waiting for debug protocol on stdin/stdout");
-                RunSession(Console.OpenStandardInput(), Console.OpenStandardOutput());
+                RunSession(debugTargetTcs, Console.OpenStandardInput(), Console.OpenStandardOutput());
             }
+
+            // Let the websocket server shutdown
+            lifetime.TrySetResult(null);
         }
 
         static TextWriter logFile;
@@ -131,9 +143,9 @@ namespace VSCodeDebug
             }
         }
 
-        private static void RunSession(Stream inputStream, Stream outputStream)
+        private static void RunSession(TaskCompletionSource<WebSocket> webSocketTcs, Stream inputStream, Stream outputStream)
         {
-            DebugSession debugSession = new BlazorDebugSession();
+            DebugSession debugSession = new BlazorDebugSession(webSocketTcs);
             debugSession.TRACE = trace_requests;
             debugSession.TRACE_RESPONSE = trace_responses;
             debugSession.Start(inputStream, outputStream).Wait();
@@ -146,7 +158,7 @@ namespace VSCodeDebug
             }
         }
 
-        private static void RunServer(int port)
+        private static void RunServer(TaskCompletionSource<WebSocket> debugTargetTcs, int port)
         {
             TcpListener serverSocket = new TcpListener(IPAddress.Parse("127.0.0.1"), port);
             serverSocket.Start();
@@ -166,7 +178,7 @@ namespace VSCodeDebug
                             {
                                 try
                                 {
-                                    RunSession(networkStream, networkStream);
+                                    RunSession(debugTargetTcs, networkStream, networkStream);
                                 }
                                 catch (Exception e)
                                 {
@@ -179,6 +191,33 @@ namespace VSCodeDebug
                     }
                 }
             }).Start();
+        }
+
+        private static void RunWebSocketServer(TaskCompletionSource<WebSocket> debugTargetTcs, TaskCompletionSource<object> lifetime)
+        {
+            var host = WebHost.CreateDefaultBuilder()
+                            .Configure(app =>
+                            {
+                                app.Run(async context =>
+                                {
+                                    if (context.WebSockets.IsWebSocketRequest)
+                                    {
+                                        using (var ws = await context.WebSockets.AcceptWebSocketAsync())
+                                        {
+                                            debugTargetTcs.TrySetResult(ws);
+                                            await lifetime.Task;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        // Only websockets supported
+                                        context.Response.StatusCode = 400;
+                                    }
+                                });
+                            })
+                            .Build();
+
+            host.Start();
         }
     }
 }
