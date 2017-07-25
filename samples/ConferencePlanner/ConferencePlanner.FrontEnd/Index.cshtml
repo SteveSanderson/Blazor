@@ -1,0 +1,88 @@
+﻿<div class="agenda">
+    <h1 @onclick(TitleClicked)>NDC Oslo 2017 @TitleSuffix</h1>
+
+    @*<ul class="nav nav-pills">
+        @foreach (var day in DayOffsets)
+        {
+            <li role="presentation" class="@(CurrentDayOffset == day.Offset ? "active" : null)">
+                <a asp-route-day="@day.Offset">@day.DayofWeek?.ToString()</a>
+            </li>
+        }
+    </ul>*@
+
+    @foreach (var timeSlot in Sessions)
+    {
+        <h4>@timeSlot.Key?.ToString("HH:mm")</h4>
+        <div class="row">
+            @foreach (var session in timeSlot)
+            {
+                <div class="col-md-3">
+                    <div class="panel panel-default session">
+                        <div class="panel-body">
+                            <p>@session.Track?.Name</p>
+                            <h3 class="panel-title"><a asp-page="Session" asp-route-id="@session.ID">@session.Title</a></h3>
+                            <p>
+                                @if (session.Speakers != null)
+                                {
+                                @foreach (var speaker in session.Speakers)
+                                {
+                                    <em><a asp-page="Speaker" asp-route-id="@speaker.ID">@speaker.Name</a></em>
+                                }
+                                }
+                            </p>
+                            <form method="post">
+                                <input type="hidden" name="sessionId" value="@session.ID" />
+                                <p>
+                                    <a authz-policy="Admin" asp-page="/Admin/EditSession" asp-route-id="@session.ID" class="btn btn-default btn-sm">Edit</a>
+                                    @if (UserSessions.Contains(session.ID))
+                                    {
+                                        <button authz="true" type="submit" asp-page-handler="Remove" class="btn btn-default btn-sm"><span class="glyphicon glyphicon-star" aria-hidden="true"></span></button>
+                                    }
+                                    else
+                                    {
+                                        <button authz="true" type="submit" class="btn btn-default btn-sm"><span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span></button>
+                                    }
+                                </p>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@functions {
+    public IEnumerable<IGrouping<DateTime?, ClientSessionResponse>> Sessions { get; set; }
+       = Enumerable.Empty<IGrouping<DateTime?, ClientSessionResponse>>();
+
+    public List<int> UserSessions { get; set; } = new List<int>();
+
+    protected readonly IApiClient _apiClient =
+        new ApiClient(new HttpClient(), "http://localhost:56009");
+
+    public string TitleSuffix { get; set; } = "Initial";
+
+    override protected async Task InitAsync()
+    {
+        var sessions = await  _apiClient.GetSessionsAsync();
+
+        var startDate = sessions.Min(s => s.StartTime?.Date);
+        var endDate = sessions.Max(s => s.EndTime?.Date);
+
+        var numberOfDays = ((endDate - startDate)?.Days) + 1;
+
+        var day = 0;
+        var filterDate = startDate?.AddDays(day);
+
+        Sessions = sessions.Where(s => s.StartTime?.Date == filterDate)
+                           .OrderBy(s => s.TrackId)
+                           .GroupBy(s => s.StartTime)
+                           .OrderBy(g => g.Key);
+    }
+
+    void TitleClicked()
+    {
+        TitleSuffix = "Clicked on the client!!";
+    }
+}

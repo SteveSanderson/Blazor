@@ -13,7 +13,7 @@ namespace Blazor.Sdk.Host
     internal static class RazorCompilation
     {
         static PathString binDir = new PathString("/_bin");
-        static IDictionary<string, byte[]> cachedCompilationResults = new Dictionary<string, byte[]>();
+        static IDictionary<string, (byte[], byte[])> cachedCompilationResults = new Dictionary<string, (byte[], byte[])>();
         static object cachedCompilationResultsLock = new object();
         static FileSystemWatcher activeFileSystemWatcher; // If we don't hold a reference to this, it gets disposed automatically on Linux (though not on Windows)
 
@@ -76,14 +76,14 @@ namespace Blazor.Sdk.Host
             // Serve the assembly
             context.Response.ContentType = "application/octet-steam";
             var compiledAssembly = GetCompiledViewsAssembly(rootDir, assemblyFilename, references);
-            await context.Response.Body.WriteAsync(compiledAssembly, 0, compiledAssembly.Length);
+            await context.Response.Body.WriteAsync(compiledAssembly.Item1, 0, compiledAssembly.Item1.Length);
         }
 
-        internal static byte[] GetCompiledViewsAssembly(string rootDir, string assemblyFilename, IEnumerable<string> references)
+        internal static (byte[], byte[]) GetCompiledViewsAssembly(string rootDir, string assemblyFilename, IEnumerable<string> references)
         {
             // Get or create cached compilation result. Doesn't really matter that we might be blocking
             // other request threads with this lock, as this is a development-time feature only.
-            byte[] compiledAssembly;
+            (byte[], byte[]) compiledAssembly;
             lock (cachedCompilationResultsLock)
             {
                 var cacheKey = assemblyFilename;
@@ -98,7 +98,7 @@ namespace Blazor.Sdk.Host
             return compiledAssembly;
         }
 
-        private static byte[] PerformCompilation(string assemblyFilename, string rootDir, IEnumerable<string> additionalReferenceAssemblies)
+        private static (byte[], byte[]) PerformCompilation(string assemblyFilename, string rootDir, IEnumerable<string> additionalReferenceAssemblies)
         {
             // Get the total list of assembly paths to reference during compilation
             var inferredMainAssemblyFilename = InferMainAssemblyFilename(assemblyFilename);
@@ -110,6 +110,7 @@ namespace Blazor.Sdk.Host
             referenceAssemblyFilenames.AddRange(additionalReferenceAssemblies);
 
             using (var ms = new MemoryStream())
+            using (var symbols = new MemoryStream())
             {
                 RazorVDomCompiler.CompileToStream(
                     enableLogging: false,
@@ -126,9 +127,10 @@ namespace Blazor.Sdk.Host
                         return path;
                     }).ToArray(),
                     outputAssemblyName: Path.GetFileNameWithoutExtension(assemblyFilename),
-                    outputStream: ms);
+                    outputStream: ms,
+                    pdbStream: symbols);
 
-                return ms.ToArray();
+                return (ms.ToArray(), symbols.ToArray());
             }
         }
 
@@ -139,6 +141,13 @@ namespace Blazor.Sdk.Host
             {
                 return $"{partBeforeSuffix.Groups[1].Value}.dll";
             }
+
+            partBeforeSuffix = Regex.Match(viewsAssemblyFilename, "(.*)\\.Views\\.dll$");
+            if (partBeforeSuffix.Success)
+            {
+                return $"{partBeforeSuffix.Groups[1].Value}.dll";
+            }
+
 
             return null;
         }

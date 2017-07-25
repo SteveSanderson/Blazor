@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.EntityFrameworkCore;
 using Swashbuckle.AspNetCore.Swagger;
+using Newtonsoft.Json.Serialization;
 
 namespace ConferencePlanner.BackEnd
 {
@@ -40,7 +41,7 @@ namespace ConferencePlanner.BackEnd
              });
 
             services.AddMvcCore()
-                .AddJsonFormatters()
+                .AddJsonFormatters(json => json.ContractResolver = new DefaultContractResolver())
                 .AddApiExplorer();
 
             services.AddSwaggerGen(options =>
@@ -53,6 +54,8 @@ namespace ConferencePlanner.BackEnd
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
+            app.UseCors(policy => policy.AllowAnyOrigin());
+
             app.UseSwagger();
 
             app.UseSwaggerUI(options =>

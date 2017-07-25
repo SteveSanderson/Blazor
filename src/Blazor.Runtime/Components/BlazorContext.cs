@@ -1,4 +1,7 @@
-﻿namespace Blazor.Runtime.Components
+﻿using System.Security.Claims;
+using System.Security.Principal;
+
+namespace Blazor.Runtime.Components
 {
     public class BlazorContext
     {
