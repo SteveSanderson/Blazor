@@ -16,7 +16,7 @@
     <EmbeddedResource Include="../DNA/corlib/bin/Debug/netstandard1.3/corlib.dll">
       <LogicalName>$(ProjectName).wwwroot._framework.corlib.dll</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="../Blazor.Runtime/bin/Debug/netstandard1.3/Blazor.Runtime.dll">
+    <EmbeddedResource Include="../Blazor.Runtime/bin/Debug/netstandard1.6/Blazor.Runtime.dll">
       <LogicalName>$(ProjectName).wwwroot._framework.Blazor.Runtime.dll</LogicalName>
     </EmbeddedResource>
   </ItemGroup>
