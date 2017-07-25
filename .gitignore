@@ -7,5 +7,5 @@ obj
 /packages/
 /artifacts/
 .emsdk/
-/**/PublishProfiles/*
-/**/node_modules/*
+PublishProfiles/
+node_modules/
