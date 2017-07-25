@@ -153,8 +153,8 @@ namespace VSCodeDebug
             foreach (var clientLineNumber in clientLineNumbers)
             {
                 var debuggerLineNumber = ConvertClientLineToDebugger(clientLineNumber);
-                breakpoints.Add(new Breakpoint(debuggerLineNumber < lines.Length, clientLineNumber));
-                Log($"Added breakpoint to line #{clientLineNumber} containing {lines[debuggerLineNumber]}");
+                breakpoints.Add(new Breakpoint(debuggerLineNumber - 1 < lines.Length, clientLineNumber));
+                Log($"Added breakpoint to line #{clientLineNumber} containing {lines[debuggerLineNumber - 1]}");
             }
 
             _breakpoints[path] = breakpoints.ToArray();
@@ -226,7 +226,7 @@ namespace VSCodeDebug
          // Fire StoppedEvent if line is not empty.
         private bool FireStepEvent(Response response, int lineNumber)
         {
-            if (string.IsNullOrWhiteSpace(_sourceLines[lineNumber - 1]))
+            if (!string.IsNullOrWhiteSpace(_sourceLines[lineNumber - 1]))
             {
                 _currentLine = lineNumber;
                 SendResponse(response);
