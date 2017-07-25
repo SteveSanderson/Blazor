@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.WebSockets;
+using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 
@@ -19,19 +20,25 @@ namespace VSCodeDebug
         private string _sourceFile;
         private string[] _sourceLines;
         private int _currentLine;
-        private TaskCompletionSource<WebSocket> _debugTargetTcs;
 
         // maps from sourceFile to array of Breakpoints
         private Dictionary<string, Breakpoint[]> _breakpoints = new Dictionary<string, Breakpoint[]>();
+        private ClientWebSocket _clientWebSocket = new ClientWebSocket();
 
-        public BlazorDebugSession(TaskCompletionSource<WebSocket> debugTargetTcs) : base(debuggerLinesStartAt1: true)
+        public BlazorDebugSession() : base(debuggerLinesStartAt1: true)
         {
-            _debugTargetTcs = debugTargetTcs;
         }
 
-        public override void Attach(Response response, dynamic arguments)
+        public override async void Attach(Response response, dynamic arguments)
         {
             Log("Attach");
+
+            string address = arguments.address;
+            int port = arguments.port;
+
+            await _clientWebSocket.ConnectAsync(new System.Uri($"http://{address}:{port}"), CancellationToken.None);
+
+            // REVIEW: What goes here?
         }
 
         public override void Continue(Response response, dynamic arguments)
