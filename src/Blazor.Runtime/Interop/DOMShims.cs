@@ -1,21 +1,21 @@
 ﻿namespace Blazor.Interop
 {
-    public class Element
+    public interface Element
     {
     }
-    public class Event
+    public interface Event
     {
     }
     public delegate object Function(object data);
-    public class Node
+    public interface Node
     {
     }
-    public class XMLDocument
+    public interface XMLDocument
     {
     }
-    public class HTMLElement
+    public interface HTMLElement
     {
     }
-    public class Document { }
-    public class XMLHttpRequest { }
+    public interface Document { }
+    public interface XMLHttpRequest { }
 }

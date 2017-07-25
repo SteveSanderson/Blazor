@@ -15,8 +15,13 @@ namespace Blazor.TypeScriptProxy.Generator
 
         public int CurrentIndent { get; set; }
 
-        public CSharpWriter WriteLine(string content)
+        public CSharpWriter WriteLine(string content = null)
         {
+            if (content == null)
+            {
+                return this;
+            }
+
             TryWriteIndent();
             Builder.AppendLine(content);
 

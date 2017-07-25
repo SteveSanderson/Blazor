@@ -41,6 +41,21 @@ namespace Blazor.TypeScriptProxy.Generator
 
                 RenderGenericTypeParameters(interfaceSignature.GenericTypeParameters);
 
+                var inherits = interfaceSignature.Inherits?.ToList();
+                if (inherits?.Any() == true)
+                {
+                    Writer.Write(" : ");
+                    for (var i = 0; i < inherits.Count; i++)
+                    {
+                        Visit(inherits[i]);
+
+                        if (i + 1 < inherits.Count)
+                        {
+                            Writer.Write(", ");
+                        }
+                    }
+                }
+
                 Writer.WriteLine("{");
 
                 Writer.CurrentIndent += 4;
@@ -135,6 +150,43 @@ namespace Blazor.TypeScriptProxy.Generator
                 Writer.Write("[]");
             }
 
+            public override void VisitVariableStatement(VariableStatement variableDeclaration)
+            {
+                if (variableDeclaration.Modifiers?.Contains(SyntaxKind.DeclareKeyword) == true)
+                {
+                    Visit(variableDeclaration.Declarations);
+                }
+            }
+
+            public override void VisitVariableDeclaration(VariableDeclaration variableDeclaration)
+            {
+                if (variableDeclaration.Name[0] == '$')
+                {
+                    // Hack for jquery until we get proper name verification.
+                    return;
+                }
+
+                Writer
+                    .WriteLine("namespace Blazor.Runtime.Interop")
+                    .WriteLine("{");
+                Writer.CurrentIndent += 4;
+
+                Writer
+                    .WriteLine("public partial class JavaScript")
+                    .WriteLine("{");
+                Writer.CurrentIndent += 4;
+
+                Writer.Write("public static ");
+                Visit(variableDeclaration.TypeToken);
+                Writer.WriteLine($" {variableDeclaration.Name} = null;");
+
+                Writer.CurrentIndent -= 4;
+                Writer.WriteLine("}");
+
+                Writer.CurrentIndent -= 4;
+                Writer.WriteLine("}");
+            }
+
             public override void VisitFunctionTypeToken(FunctionTypeToken functionTypeToken)
             {
                 if (functionTypeToken.ReturnTypeToken.Kind != SyntaxKind.VoidKeyword)
@@ -175,6 +227,12 @@ namespace Blazor.TypeScriptProxy.Generator
                 }
 
                 Writer.Write(">");
+            }
+
+            public override void VisitExpressionTypeArgumentToken(ExpressionTypeArgumentToken expressionTypeArgumentToken)
+            {
+                Writer.Write(expressionTypeArgumentToken.Expression);
+                RenderGenericTypeParameters(expressionTypeArgumentToken.GenericTypeParameters);
             }
 
             public override void VisitPropertySignature(PropertySignature propertySignature)

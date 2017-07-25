@@ -6,7 +6,7 @@ using Newtonsoft.Json.Linq;
 
 namespace Blazor.TypeScriptProxy.TypeScriptIR
 {
-    public class ISyntaxTokenConverter : JsonConverter
+    public class SyntaxTokenConverter : JsonConverter
     {
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
@@ -20,12 +20,14 @@ namespace Blazor.TypeScriptProxy.TypeScriptIR
                     var members = obj["members"].ToObject<IEnumerable<ISyntaxToken>>();
                     members = members.Where(member => member != null);
                     var genericTypeParameters = obj["typeParameters"]?.ToObject<IEnumerable<ISyntaxToken>>();
+                    var inherits = obj["heritageClauses"]?[0]["types"].ToObject<IEnumerable<ISyntaxToken>>();
 
                     return new InterfaceDeclaration()
                     {
                         Name = (string)obj["name"]["text"],
                         Members = members,
                         GenericTypeParameters = genericTypeParameters,
+                        Inherits = inherits,
                     };
                 case SyntaxKind.PropertySignature:
                     var type = GetTypeToken((JObject)obj["type"]);
@@ -50,6 +52,31 @@ namespace Blazor.TypeScriptProxy.TypeScriptIR
                         Parameters = parameters,
                         GenericTypeParameters = genericTypeParameters,
                     };
+                case SyntaxKind.Parameter:
+                    type = GetTypeToken((JObject)obj["type"]);
+
+                    return new Parameter()
+                    {
+                        Name = (string)obj["name"]["text"],
+                        TypeToken = type,
+                    };
+                case SyntaxKind.VariableDeclaration:
+                    type = GetTypeToken((JObject)obj["type"]);
+
+                    return new VariableDeclaration()
+                    {
+                        Name = (string)obj["name"]["text"],
+                        TypeToken = type,
+                    };
+                case SyntaxKind.VariableStatement:
+                    var modifiers = obj["modifiers"]?.Select(modifier => (SyntaxKind)((int)modifier["kind"]));
+                    var declarations = obj["declarationList"]["declarations"].ToObject<IEnumerable<ISyntaxToken>>();
+                    return new VariableStatement()
+                    {
+                        Modifiers = modifiers,
+                        Declarations = declarations,
+                    };
+                case SyntaxKind.ExpressionWithTypeArguments:
                 case SyntaxKind.AnyKeyword:
                 case SyntaxKind.StringKeyword:
                 case SyntaxKind.BooleanKeyword:
@@ -61,14 +88,6 @@ namespace Blazor.TypeScriptProxy.TypeScriptIR
                     type = GetTypeToken(obj);
 
                     return type;
-                case SyntaxKind.Parameter:
-                    type = GetTypeToken((JObject)obj["type"]);
-
-                    return new Parameter()
-                    {
-                        Name = (string)obj["name"]["text"],
-                        TypeToken = type,
-                    };
             }
 
             return existingValue;
@@ -79,6 +98,13 @@ namespace Blazor.TypeScriptProxy.TypeScriptIR
             var typeKind = (int)type["kind"];
             switch ((SyntaxKind)typeKind)
             {
+                case SyntaxKind.ExpressionWithTypeArguments:
+                    var genericTypeParameters = type["typeArguments"]?.ToObject<IEnumerable<ISyntaxToken>>().Where(parameter => parameter != null);
+                    return new ExpressionTypeArgumentToken()
+                    {
+                        Expression = (string)type["expression"]["text"],
+                        GenericTypeParameters = genericTypeParameters,
+                    };
                 case SyntaxKind.FunctionType:
                     var parameters = type["parameters"]?.ToObject<IEnumerable<ISyntaxToken>>().Where(parameter => parameter != null);
                     var returnType = GetTypeToken((JObject)type["type"]);
@@ -89,7 +115,7 @@ namespace Blazor.TypeScriptProxy.TypeScriptIR
                         ReturnTypeToken = returnType,
                     };
                 case SyntaxKind.TypeReference:
-                    var genericTypeParameters = type["typeArguments"]?.ToObject<IEnumerable<ISyntaxToken>>().Where(parameter => parameter != null);
+                    genericTypeParameters = type["typeArguments"]?.ToObject<IEnumerable<ISyntaxToken>>().Where(parameter => parameter != null);
                     return new ReferenceTypeToken()
                     {
                         TypeName = (string)type["typeName"]["text"],

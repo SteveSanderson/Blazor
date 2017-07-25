@@ -5,7 +5,7 @@ using Newtonsoft.Json.Converters;
 
 namespace Blazor.TypeScriptProxy.TypeScriptIR
 {
-    [JsonConverter(typeof(ISyntaxTokenConverter))]
+    [JsonConverter(typeof(SyntaxTokenConverter))]
     public interface ISyntaxToken
     {
         SyntaxKind Kind { get; }

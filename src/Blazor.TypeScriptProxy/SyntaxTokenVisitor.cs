@@ -54,5 +54,17 @@ namespace Blazor.TypeScriptProxy
         public virtual void VisitFunctionTypeToken(FunctionTypeToken functionTypeToken)
         {
         }
+
+        public virtual void VisitExpressionTypeArgumentToken(ExpressionTypeArgumentToken expressionTypeArgumentToken)
+        {
+        }
+
+        public virtual void VisitVariableStatement(VariableStatement variableDeclaration)
+        {
+        }
+
+        public virtual void VisitVariableDeclaration(VariableDeclaration variableDeclaration)
+        {
+        }
     }
 }

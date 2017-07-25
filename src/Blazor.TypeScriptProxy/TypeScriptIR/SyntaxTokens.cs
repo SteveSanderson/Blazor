@@ -13,6 +13,8 @@ namespace Blazor.TypeScriptProxy.TypeScriptIR
 
         public IEnumerable<ISyntaxToken> Members { get; set; }
 
+        public IEnumerable<ISyntaxToken> Inherits { get; set; }
+
         public void Accept(SyntaxTokenVisitor visitor) => visitor.VisitInterfaceDeclaration(this);
     }
 
@@ -115,5 +117,40 @@ namespace Blazor.TypeScriptProxy.TypeScriptIR
         public ISyntaxToken ReturnTypeToken { get; set; }
 
         public override void Accept(SyntaxTokenVisitor visitor) => visitor.VisitFunctionTypeToken(this);
+    }
+
+    public class ExpressionTypeArgumentToken : TypeToken
+    {
+        public ExpressionTypeArgumentToken() : base(SyntaxKind.ExpressionWithTypeArguments)
+        {
+        }
+
+        public string Expression { get; set; }
+
+        public IEnumerable<ISyntaxToken> GenericTypeParameters { get; set; }
+
+        public override void Accept(SyntaxTokenVisitor visitor) => visitor.VisitExpressionTypeArgumentToken(this);
+    }
+
+    public class VariableStatement : ISyntaxToken
+    {
+        public SyntaxKind Kind => SyntaxKind.VariableStatement;
+
+        public IEnumerable<SyntaxKind> Modifiers { get; set; }
+
+        public IEnumerable<ISyntaxToken> Declarations { get; set; }
+
+        public void Accept(SyntaxTokenVisitor visitor) => visitor.VisitVariableStatement(this);
+    }
+
+    public class VariableDeclaration : ISyntaxToken
+    {
+        public SyntaxKind Kind => SyntaxKind.VariableDeclaration;
+
+        public string Name { get; set; }
+
+        public ISyntaxToken TypeToken { get; set; }
+
+        public void Accept(SyntaxTokenVisitor visitor) => visitor.VisitVariableDeclaration(this);
     }
 }
