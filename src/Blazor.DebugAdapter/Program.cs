@@ -198,6 +198,7 @@ namespace VSCodeDebug
             var host = WebHost.CreateDefaultBuilder()
                             .Configure(app =>
                             {
+                                app.UseWebSockets();
                                 app.Run(async context =>
                                 {
                                     if (context.WebSockets.IsWebSocketRequest)
