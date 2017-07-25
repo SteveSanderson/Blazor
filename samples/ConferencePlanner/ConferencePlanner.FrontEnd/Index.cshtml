@@ -1,5 +1,5 @@
 ﻿<div class="agenda">
-    <h1>NDC Oslo 2017</h1>
+    <h1 @onclick(TitleClicked)>NDC Oslo 2017 @TitleSuffix</h1>
 
     @*<ul class="nav nav-pills">
         @foreach (var day in DayOffsets)
@@ -22,9 +22,12 @@
                             <p>@session.Track?.Name</p>
                             <h3 class="panel-title"><a asp-page="Session" asp-route-id="@session.ID">@session.Title</a></h3>
                             <p>
+                                @if (session.Speakers != null)
+                                {
                                 @foreach (var speaker in session.Speakers)
                                 {
                                     <em><a asp-page="Speaker" asp-route-id="@speaker.ID">@speaker.Name</a></em>
+                                }
                                 }
                             </p>
                             <form method="post">
@@ -50,13 +53,15 @@
 </div>
 
 @functions {
-    public IEnumerable<IGrouping<DateTimeOffset?, SessionResponse>> Sessions { get; set; }
-       = Enumerable.Empty<IGrouping<DateTimeOffset?, SessionResponse>>();
+    public IEnumerable<IGrouping<DateTime?, ClientSessionResponse>> Sessions { get; set; }
+       = Enumerable.Empty<IGrouping<DateTime?, ClientSessionResponse>>();
 
     public List<int> UserSessions { get; set; } = new List<int>();
 
     protected readonly IApiClient _apiClient =
-        new ApiClient(new HttpClient { BaseAddress = new Uri("http://localhost:56009") });
+        new ApiClient(new HttpClient(), "http://localhost:56009");
+
+    public string TitleSuffix { get; set; } = "Initial";
 
     override protected async Task InitAsync()
     {
@@ -74,5 +79,10 @@
                            .OrderBy(s => s.TrackId)
                            .GroupBy(s => s.StartTime)
                            .OrderBy(g => g.Key);
+    }
+
+    void TitleClicked()
+    {
+        TitleSuffix = "Clicked on the client!!";
     }
 }

@@ -36,6 +36,7 @@ namespace Blazor.Util
             {
                 var deserializedValueInt = (int)deserializedValue;
                 if (typeOfT == typeof(int)) { return deserializedValueInt; }
+                if (typeOfT == typeof(int?)) { return new int?(deserializedValueInt); }
                 if (typeOfT == typeof(uint)) { return (uint)deserializedValueInt; }
                 if (typeOfT == typeof(long)) { return (long)deserializedValueInt; }
                 if (typeOfT == typeof(ulong)) { return (ulong)deserializedValueInt; }
@@ -43,14 +44,24 @@ namespace Blazor.Util
                 if (typeOfT == typeof(ushort)) { return (ushort)deserializedValueInt; }
                 if (typeOfT == typeof(float)) { return (float)deserializedValueInt; }
                 if (typeOfT == typeof(double)) { return (double)deserializedValueInt; }
-
+                
                 throw new ArgumentException($"Can't convert JSON value parsed as type {deserializedValue.GetType().FullName} to a value of type {typeOfT.FullName}");
             }
-            else if (deserializedValue is string)
+            else if (deserializedValue is string s)
             {
                 if (typeOfT == typeof(string))
                 {
                     return deserializedValue;
+                }
+
+                if (typeOfT == typeof(DateTime))
+                {
+                    return DateTime.Parse(s);
+                }
+
+                if (typeOfT == typeof(DateTime?))
+                {
+                    return new DateTime?(DateTime.Parse(s));
                 }
 
                 throw new ArgumentException($"Can't convert JSON value parsed as type {deserializedValue.GetType().FullName} to a value of type {typeOfT.FullName}");
@@ -76,7 +87,8 @@ namespace Blazor.Util
             {
                 if (!typeOfT.IsArray)
                 {
-                    throw new ArgumentException($"Can't convert JSON array to type {typeOfT.FullName}, because that's not an array type.");
+                    return null;
+                    //throw new ArgumentException($"Can't convert JSON array to type {typeOfT.FullName}, because that's not an array type.");
                 }
 
                 var deserializedValueList = (List<object>)deserializedValue;

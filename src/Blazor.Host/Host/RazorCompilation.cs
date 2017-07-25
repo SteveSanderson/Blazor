@@ -142,6 +142,13 @@ namespace Blazor.Sdk.Host
                 return $"{partBeforeSuffix.Groups[1].Value}.dll";
             }
 
+            partBeforeSuffix = Regex.Match(viewsAssemblyFilename, "(.*)\\.Views\\.dll$");
+            if (partBeforeSuffix.Success)
+            {
+                return $"{partBeforeSuffix.Groups[1].Value}.dll";
+            }
+
+
             return null;
         }
     }

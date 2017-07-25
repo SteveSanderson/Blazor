@@ -18,5 +18,15 @@ namespace System.Net.Http
         public HttpContent Content { get; }
 
         public HttpStatusCode StatusCode { get; }
+
+        public HttpResponseMessage EnsureSuccessStatusCode()
+        {
+            if ((int)StatusCode >= 300)
+            {
+                throw new Exception($"Status Code {StatusCode}");
+            }
+
+            return this;
+        }
     }
 }

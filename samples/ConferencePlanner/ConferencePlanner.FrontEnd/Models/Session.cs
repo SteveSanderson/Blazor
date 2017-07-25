@@ -5,17 +5,32 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace ConferencePlanner.FrontEnd.Pages.Models
+namespace ConferencePlanner.FrontEnd.Models
 {
-    public class Session : ConferenceDTO.Session
+    public class Session
     {
-        [DataType(DataType.MultilineText)]
-        public override string Abstract { get => base.Abstract; set => base.Abstract = value; }
+        public int ID { get; set; }
 
-        [DisplayName("Start time")]
-        public override DateTimeOffset? StartTime { get => base.StartTime; set => base.StartTime = value; }
+        //[Required]
+        public int ConferenceID { get; set; }
 
-        [DisplayName("End time")]
-        public override DateTimeOffset? EndTime { get => base.EndTime; set => base.EndTime = value; }
+        //[Required]
+        //[StringLength(200)]
+        public string Title { get; set; }
+
+        //[StringLength(4000)]
+        //[DataType(DataType.MultilineText)]
+        public virtual string Abstract { get; set; }
+
+        //[DisplayName("Start time")]
+        public virtual DateTime? StartTime { get; set; }
+
+        //[DisplayName("End time")]
+        public virtual DateTime? EndTime { get; set; }
+
+        // Bonus points to those who can figure out why this is written this way
+        public TimeSpan Duration => EndTime?.Subtract(StartTime ?? EndTime ?? DateTime.MinValue) ?? TimeSpan.Zero;
+
+        public int? TrackId { get; set; }
     }
 }

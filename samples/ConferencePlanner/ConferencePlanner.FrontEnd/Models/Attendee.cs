@@ -5,18 +5,28 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace ConferencePlanner.FrontEnd.Pages.Models
+namespace ConferencePlanner.FrontEnd.Models
 {
-    public class Attendee : ConferenceDTO.Attendee
+    public class Attendee
     {
-        [DisplayName("First name")]
-        public override string FirstName { get => base.FirstName; set => base.FirstName = value; }
+        public int ID { get; set; }
 
-        [DisplayName("Last name")]
-        public override string LastName { get => base.LastName; set => base.LastName = value; }
+        //[Required]
+        //[StringLength(200)]
+        //[DisplayName("First name")]
+        public virtual string FirstName { get; set; }
 
-        [DisplayName("Email address")]
-        [DataType(DataType.EmailAddress)]
-        public override string EmailAddress { get => base.EmailAddress; set => base.EmailAddress = value; }
+        //[Required]
+        //[StringLength(200)]
+        //[DisplayName("Last name")]
+        public virtual string LastName { get; set; }
+
+        //[Required]
+        //[StringLength(200)]
+        public string UserName { get; set; }
+
+        //[StringLength(256)]
+        //[DisplayName("Email address")]
+        public virtual string EmailAddress { get; set; }
     }
 }
