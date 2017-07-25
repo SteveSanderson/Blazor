@@ -27,6 +27,8 @@
 #include "Types.h"
 #include "EvalStack.h"
 #include "Generics.h"
+#include "System.Attribute.h"
+#include "System.Reflection.MemberInfo.h"
 #include "System.Reflection.MethodBase.h"
 #include "System.Reflection.MethodInfo.h"
 #include "System.Reflection.PropertyInfo.h"
@@ -406,6 +408,8 @@ static tTypeInit typeInit[] = {
 	{mscorlib, SystemReflection, "PropertyInfo", EVALSTACK_O, 4, 4, sizeof(tPropertyInfo)},
 	{mscorlib, SystemReflection, "MethodInfo", EVALSTACK_O, 4, 4, sizeof(tMethodInfo)},
 	{mscorlib, SystemReflection, "MethodBase", EVALSTACK_O, 4, 4, sizeof(tMethodBase)},
+	{mscorlib, SystemReflection, "MemberInfo", EVALSTACK_O, 4, 4, sizeof(tMemberInfo)},
+	{mscorlib, System, "Attribute", EVALSTACK_O, 4, 4, sizeof(tSystemAttribute)},
 };
 
 int CorLibDone = 0;

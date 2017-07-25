@@ -128,7 +128,8 @@ tAsyncCall* System_Type_GetProperties(PTR pThis_, PTR pParams, PTR pReturnValue)
 
 	// Now fill the PropertyInfo[]
 	for (i=0; i<numProperties; i++) {
-		tMD_Property *pPropertyMetadata = (tMD_Property*)MetaData_GetTableRow(pMetaData, MAKE_TABLE_INDEX(MD_TABLE_PROPERTY, firstIdx + i));
+		IDX_TABLE index = MAKE_TABLE_INDEX(MD_TABLE_PROPERTY, firstIdx + i);
+		tMD_Property *pPropertyMetadata = (tMD_Property*)MetaData_GetTableRow(pMetaData, index);
 
 		// Instantiate PropertyInfo and put it in the array
 		tPropertyInfo *pPropertyInfo = (tPropertyInfo*)Heap_AllocType(types[TYPE_SYSTEM_REFLECTION_PROPERTYINFO]);
@@ -148,6 +149,10 @@ tAsyncCall* System_Type_GetProperties(PTR pThis_, PTR pParams, PTR pReturnValue)
 		tMD_TypeDef *propertyTypeDef = Type_GetTypeFromSig(pMetaData, &typeSig, NULL, NULL);
 		MetaData_Fill_TypeDef(propertyTypeDef, NULL, NULL);
 		pPropertyInfo->propertyType = Type_GetTypeObject(propertyTypeDef);
+
+		// Assign propertyMetadata
+		pPropertyInfo->index = index;
+		pPropertyInfo->pMetaData = pPropertyMetadata;
 	}
 
 	return NULL;

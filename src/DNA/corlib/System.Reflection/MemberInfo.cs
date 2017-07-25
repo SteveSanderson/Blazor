@@ -22,17 +22,30 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace System.Reflection {
 	public abstract class MemberInfo {
+#pragma warning disable 0169, 0649
+        protected readonly Type _ownerType;
+        protected readonly string _name;
+#pragma warning restore 0169, 0649
 
-		protected MemberInfo() {
+        protected MemberInfo() {
 		}
 
-		public abstract string Name { get;}
+        protected MemberInfo(Type ownerType, string name)
+        {
+            _ownerType = ownerType;
+            _name = name;
+        }
+        
+        public virtual string Name => _name;
 
-	}
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        extern internal Attribute[] GetCustomAttributes();
+    }
 }
 
 #endif

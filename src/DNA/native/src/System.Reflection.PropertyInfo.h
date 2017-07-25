@@ -7,6 +7,9 @@ struct tPropertyInfo_ {
     HEAP_PTR ownerType;
     HEAP_PTR name;
     HEAP_PTR propertyType;
+
+	tMD_Property* pMetaData;
+	IDX_TABLE index;
 };
 
 #endif

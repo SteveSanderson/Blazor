@@ -168,6 +168,15 @@
     <ClInclude Include="src\Types.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\Reflection.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\System.Attribute.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\System.Reflection.MemberInfo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\CLIFile.c">
@@ -291,6 +300,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Type.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Reflection.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

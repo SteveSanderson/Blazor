@@ -1,10 +1,10 @@
 ﻿namespace System.Reflection
 {
-    public class TypeInfo
+    public class TypeInfo : MemberInfo
     {
         private readonly Type _type;
 
-        internal TypeInfo(Type type)
+        internal TypeInfo(Type type) : base(type, type.Name)
         {
             _type = type;
         }

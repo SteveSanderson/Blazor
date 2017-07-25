@@ -45,6 +45,7 @@ struct tFilesLoaded_ {
 static STRING assembliesMappedToDnaCorlib[] = {
 	"mscorlib",
 	"System.Collections",
+	"System.ComponentModel.Annotations",
 	"System.Console",
 	"System.IO",
 	"System.Linq",

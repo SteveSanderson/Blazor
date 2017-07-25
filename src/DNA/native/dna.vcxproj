@@ -38,9 +38,11 @@
     <ClInclude Include="src\PInvoke.h" />
     <ClInclude Include="src\PInvoke_CaseCode.h" />
     <ClInclude Include="src\PInvoke_TypeDef.h" />
+    <ClInclude Include="src\Reflection.h" />
     <ClInclude Include="src\RVA.h" />
     <ClInclude Include="src\Sys.h" />
     <ClInclude Include="src\System.Array.h" />
+    <ClInclude Include="src\System.Attribute.h" />
     <ClInclude Include="src\System.Char.CaseConversion.h" />
     <ClInclude Include="src\System.Char.h" />
     <ClInclude Include="src\System.Char.UC_IndexRuns.h" />
@@ -55,6 +57,7 @@
     <ClInclude Include="src\System.Net.Dns.h" />
     <ClInclude Include="src\System.Net.Sockets.Socket.h" />
     <ClInclude Include="src\System.Object.h" />
+    <ClInclude Include="src\System.Reflection.MemberInfo.h" />
     <ClInclude Include="src\System.Reflection.MethodBase.h" />
     <ClInclude Include="src\System.Reflection.MethodInfo.h" />
     <ClInclude Include="src\System.Reflection.PropertyInfo.h" />
@@ -87,6 +90,7 @@
     <ClCompile Include="src\MetaData_Search.c" />
     <ClCompile Include="src\MethodState.c" />
     <ClCompile Include="src\PInvoke.c" />
+    <ClCompile Include="src\Reflection.c" />
     <ClCompile Include="src\RVA.c" />
     <ClCompile Include="src\Sys.c" />
     <ClCompile Include="src\System.Array.c" />
