@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace ClientServerApp.Shared
+namespace ClientServerApp.Client
 {
     public class Hello
     {
