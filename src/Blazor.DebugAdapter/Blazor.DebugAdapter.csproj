@@ -6,9 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.VisualStudio.Shared.VsCodeDebugProtocol" Version="15.0.10614.3" />
     <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
-    <PackageReference Include="Ookii.CommandLine" Version="2.2.0" />
   </ItemGroup>
 
 </Project>
