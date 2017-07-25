@@ -25,7 +25,7 @@
 #include <stdarg.h>
 #include <fcntl.h>
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <winsock2.h> // winsock2.h must be included before windows.h
 #include <io.h>
 #include <windows.h>
@@ -65,7 +65,7 @@
 #define LIB_SUFFIX "dll"
 #define STDCALL __stdcall
 
-#else // WIN32
+#else // _WIN32
 
 #include <stdlib.h>
 #include <strings.h>
@@ -84,7 +84,7 @@
 #define LIB_SUFFIX "so"
 #define STDCALL
 
-#endif // WIN32
+#endif // _WIN32
 
 #define TMALLOC(t) (t*)malloc(sizeof(t))
 #define TMALLOCFOREVER(t) (t*)mallocForever(sizeof(t))

@@ -27,7 +27,7 @@
 #include "System.Array.h"
 #include "System.String.h"
 
-#ifndef WIN32
+#ifndef _WIN32
 #include <netdb.h>
 #endif
 

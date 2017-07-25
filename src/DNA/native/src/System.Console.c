@@ -61,7 +61,7 @@ static U32 Internal_ReadKey_Check(PTR pThis_, PTR pParams, PTR pReturnValue, tAs
 		nextKeybC = 0xffffffff;
 		return 1;
 	} else {
-#ifdef WIN32
+#ifdef _WIN32
 		if (_kbhit()) {
 			U32 c = _getch();
 			*(U32*)pReturnValue = c;
