@@ -1,4 +1,4 @@
-﻿namespace Blazor.TypeScriptProxy.Contract
+﻿namespace Blazor.TypeScriptProxy.TypeScriptIR
 {
     public enum SyntaxKind
     {

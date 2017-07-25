@@ -1,0 +1,216 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using Blazor.TypeScriptProxy.TypeScriptIR;
+
+namespace Blazor.TypeScriptProxy.Generator
+{
+    public class CSharpGenerator
+    {
+        private readonly Visitor _visitor;
+
+        public CSharpGenerator()
+        {
+            _visitor = new Visitor();
+        }
+
+        public string Render(Module module)
+        {
+            _visitor.Visit(module.Statements);
+
+            var code = _visitor.Writer.GenerateCode();
+            return code;
+        }
+
+        private class Visitor : SyntaxTokenVisitor
+        {
+            public Visitor()
+            {
+                Writer = new CSharpWriter();
+
+                Writer.WriteLine("using System;");
+                Writer.WriteLine("using Blazor.Interop;");
+            }
+
+            public CSharpWriter Writer { get; }
+
+            public override void VisitInterfaceDeclaration(InterfaceDeclaration interfaceSignature)
+            {
+                Writer
+                    .Write($"public interface {interfaceSignature.Name}");
+
+                RenderGenericTypeParameters(interfaceSignature.GenericTypeParameters);
+
+                Writer.WriteLine("{");
+
+                Writer.CurrentIndent += 4;
+
+                Visit(interfaceSignature.Members);
+
+                Writer.CurrentIndent -= 4;
+                Writer.WriteLine("}");
+            }
+
+            public override void VisitMethodSignature(MethodSignature signature)
+            {
+                Visit(signature.ReturnTypeToken);
+
+                Writer.Write($" @{signature.Name}");
+
+                RenderGenericTypeParameters(signature.GenericTypeParameters);
+
+                Writer.Write("(");
+                var parameterList = signature.Parameters.ToList();
+
+                for (var i = 0; i < parameterList.Count; i++)
+                {
+                    var parameter = parameterList[i];
+                    Visit(parameter);
+
+                    if (i + 1 < parameterList.Count)
+                    {
+                        Writer.Write(", ");
+                    }
+                }
+                Writer.WriteLine(");");
+            }
+
+            public override void VisitParameter(Parameter parameter)
+            {
+                Visit(parameter.TypeToken);
+
+                Writer
+                    .Write(" @")
+                    .Write(parameter.Name);
+            }
+
+            public override void VisitTypeToken(TypeToken typeToken)
+            {
+                switch (typeToken.Kind)
+                {
+                    case SyntaxKind.FirstTypeNode:
+                        Writer.Write("object /* Generic Type */");
+                        break;
+                    case SyntaxKind.TypeLiteral:
+                        Writer.Write("object /* Type Literal */");
+                        break;
+                    case SyntaxKind.UnionType:
+                        Writer.Write("object /* Union Type */");
+                        break;
+                    case SyntaxKind.AnyKeyword:
+                        Writer.Write("object");
+                        break;
+                    case SyntaxKind.BooleanKeyword:
+                        Writer.Write("bool");
+                        break;
+                    case SyntaxKind.StringKeyword:
+                        Writer.Write("string");
+                        break;
+                    case SyntaxKind.NumberKeyword:
+                        Writer.Write("double");
+                        break;
+                    case SyntaxKind.VoidKeyword:
+                        Writer.Write("void");
+                        break;
+                    default:
+                        throw new InvalidOperationException("Unsupported syntax kind: " + typeToken.Kind.ToString());
+                }
+            }
+
+            public override void VisitGenericTypeToken(GenericTypeToken genericTypeToken)
+            {
+                Writer.Write(genericTypeToken.TypeName);
+            }
+
+            public override void VisitReferenceTypeToken(ReferenceTypeToken referenceTypeToken)
+            {
+                Writer.Write(referenceTypeToken.TypeName);
+
+                RenderGenericTypeParameters(referenceTypeToken.GenericTypeParameters);
+            }
+
+            public override void VisitArrayTypeToken(ArrayTypeToken arrayTypeToken)
+            {
+                Visit(arrayTypeToken.ElementTypeToken);
+                Writer.Write("[]");
+            }
+
+            public override void VisitFunctionTypeToken(FunctionTypeToken functionTypeToken)
+            {
+                if (functionTypeToken.ReturnTypeToken.Kind != SyntaxKind.VoidKeyword)
+                {
+                    Writer.Write("Func<");
+                }
+                else
+                {
+                    Writer.Write("Action<");
+                }
+
+                var parameters = functionTypeToken.Parameters.ToList();
+                for (var i = 0; i < parameters.Count; i++)
+                {
+                    switch (parameters[i])
+                    {
+                        case Parameter parameter:
+                            Visit(parameter.TypeToken);
+                            break;
+                        default:
+                            throw new InvalidOperationException("Unsupported function parameter kind: " + parameters[i].Kind.ToString());
+                    }
+
+                    if (i + 1 < parameters.Count)
+                    {
+                        Writer.Write(", ");
+                    }
+                }
+
+                if (functionTypeToken.ReturnTypeToken.Kind != SyntaxKind.VoidKeyword)
+                {
+                    if (parameters.Count > 0)
+                    {
+                        Writer.Write(", ");
+                    }
+
+                    Visit(functionTypeToken.ReturnTypeToken);
+                }
+
+                Writer.Write(">");
+            }
+
+            public override void VisitPropertySignature(PropertySignature propertySignature)
+            {
+                Visit(propertySignature.TypeToken);
+                Writer.Write($" @{propertySignature.Name}");
+
+                Writer.WriteLine(" { get; set; }");
+            }
+
+            private void RenderGenericTypeParameters(IEnumerable<ISyntaxToken> parameters)
+            {
+                if (parameters?.Any() == true)
+                {
+                    Writer.Write("<");
+                    var generics = parameters.ToList();
+                    for (var i = 0; i < generics.Count; i++)
+                    {
+                        if (generics[i].Kind == SyntaxKind.VoidKeyword)
+                        {
+                            // C# does not support void generics
+                            Writer.Write("object /* void */");
+                        }
+                        else
+                        {
+                            Visit(generics[i]);
+                        }
+
+                        if (i + 1 < generics.Count)
+                        {
+                            Writer.Write(", ");
+                        }
+                    }
+                    Writer.Write(">");
+                }
+            }
+        }
+    }
+}

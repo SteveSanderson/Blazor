@@ -2,7 +2,8 @@
 using System.Diagnostics;
 using System.IO;
 using System.Text;
-using Blazor.TypeScriptProxy.Contract;
+using Blazor.TypeScriptProxy.TypeScriptIR;
+using Blazor.TypeScriptProxy.Generator;
 using Newtonsoft.Json;
 
 namespace Blazor.TypeScriptProxy
@@ -46,10 +47,16 @@ namespace Blazor.TypeScriptProxy
                 var json = process.StandardOutput.ReadToEnd();
                 var module = JsonConvert.DeserializeObject<Module>(json);
 
-                var settings = new JsonSerializerSettings();
-                settings.ReferenceLoopHandling = ReferenceLoopHandling.Serialize;
-                var serialized = JsonConvert.SerializeObject(module, Formatting.Indented, settings);
-                Console.WriteLine(serialized);
+                var generator = new CSharpGenerator();
+                var code = generator.Render(module);
+
+                Console.WriteLine(code);
+                Console.ReadLine();
+
+                //var settings = new JsonSerializerSettings();
+                //settings.ReferenceLoopHandling = ReferenceLoopHandling.Serialize;
+                //var serialized = JsonConvert.SerializeObject(module, Formatting.Indented, settings);
+                //Console.WriteLine(serialized);
             }
         }
     }
