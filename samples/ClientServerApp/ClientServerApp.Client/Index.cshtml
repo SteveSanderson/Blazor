@@ -7,3 +7,7 @@
 <p>Welcome to your new single-page application.</p>
 
 <button @onclick(() => NavigationHelper("/Counter"))>Navigate to Counter</button>
+
+@{
+    Context.Items["hello"] = "This shows BlazorContext is persistent across pages.";
+}

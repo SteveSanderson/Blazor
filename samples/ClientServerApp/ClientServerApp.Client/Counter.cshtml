@@ -16,6 +16,8 @@
 <counter-display current-count=@Model.MyProperty
                  on-reset=@((Action)Model.OnResetCounter) />
 
+<p>@Context.Items["hello"]</p>
+
 @section Scripts {
     <p> More render section goodness. </p>
 }
