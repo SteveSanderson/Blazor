@@ -5,6 +5,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Newtonsoft.Json.Linq;
 
 namespace VSCodeDebug
 {
@@ -95,15 +96,15 @@ namespace VSCodeDebug
             Log("SetBreakpoints");
 
             string path = arguments.source.path;
-            int[] clientLineNumbers = arguments.lines ?? new string[0];
+            IEnumerable<JToken> clientLineNumbers = arguments.lines ?? Enumerable.Empty<JToken>();
 
             var lines = File.ReadLines(path).ToArray();
             var breakpoints = new List<Breakpoint>();
 
             foreach (var clientLineNumber in clientLineNumbers)
             {
-                var debuggerLineNumber = ConvertClientLineToDebugger(clientLineNumber);
-                breakpoints.Add(new Breakpoint(debuggerLineNumber < lines.Length, clientLineNumber));
+                var debuggerLineNumber = ConvertClientLineToDebugger(clientLineNumber.Value<int>());
+                breakpoints.Add(new Breakpoint(debuggerLineNumber < lines.Length, clientLineNumber.Value<int>()));
             }
 
             response.body = new SetBreakpointsResponseBody(breakpoints);
@@ -157,6 +158,11 @@ namespace VSCodeDebug
             });
 
             SendResponse(response);
+        }
+
+        public override void ConfigurationDone(Response response, dynamic arguments)
+        {
+            Log("ConfigurationDone");
         }
     }
 }
