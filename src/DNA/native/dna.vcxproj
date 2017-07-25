@@ -239,6 +239,9 @@
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <Target Name="AfterBuild" AfterTargets="Build">
+    <MSBuild Projects="..\corlib\corlib.csproj" Properties="Configuration=$(Configuration);OutDir=$(OutDir)" />
+  </Target>
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
 </Project>
