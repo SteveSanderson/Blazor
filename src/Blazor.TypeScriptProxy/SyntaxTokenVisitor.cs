@@ -19,6 +19,11 @@ namespace Blazor.TypeScriptProxy
             }
         }
 
+        public virtual void Visit(Module module)
+        {
+            Visit(module.Statements);
+        }
+
         public virtual void VisitMethodSignature(MethodSignature signature)
         {
         }

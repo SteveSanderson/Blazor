@@ -7,29 +7,50 @@ namespace Blazor.TypeScriptProxy.Generator
 {
     public class CSharpGenerator
     {
-        private readonly Visitor _visitor;
-
-        public CSharpGenerator()
-        {
-            _visitor = new Visitor();
-        }
-
         public string Render(Module module)
         {
-            _visitor.Visit(module.Statements);
+            var entryPointLocator = new EntryPointLocator();
+            entryPointLocator.Visit(module);
 
-            var code = _visitor.Writer.GenerateCode();
+            var visitor = new Visitor(entryPointLocator.EntryPointTypes);
+            visitor.Visit(module);
+
+            var code = visitor.Writer.GenerateCode();
             return code;
+        }
+
+        private class EntryPointLocator : SyntaxTokenVisitor
+        {
+            public EntryPointLocator()
+            {
+                EntryPointTypes = new List<ISyntaxToken>();
+            }
+
+            public List<ISyntaxToken> EntryPointTypes { get; }
+
+            public override void VisitVariableStatement(VariableStatement variableDeclaration)
+            {
+                Visit(variableDeclaration.Declarations);
+            }
+
+            public override void VisitVariableDeclaration(VariableDeclaration variableDeclaration)
+            {
+                EntryPointTypes.Add(variableDeclaration.TypeToken);
+            }
         }
 
         private class Visitor : SyntaxTokenVisitor
         {
-            public Visitor()
+            private readonly IEnumerable<ISyntaxToken> _entryPointTypes;
+
+            public Visitor(IEnumerable<ISyntaxToken> entryPointTypes)
             {
+                _entryPointTypes = entryPointTypes;
                 Writer = new CSharpWriter();
 
                 Writer.WriteLine("using System;");
                 Writer.WriteLine("using Blazor.Interop;");
+                Writer.WriteLine("using Blazor.Runtime.Interop;");
             }
 
             public CSharpWriter Writer { get; }
@@ -87,7 +108,9 @@ namespace Blazor.TypeScriptProxy.Generator
                         Writer.Write(", ");
                     }
                 }
-                Writer.WriteLine(");");
+                Writer
+                    .Write(") => JavaScript.Window")
+
             }
 
             public override void VisitParameter(Parameter parameter)
@@ -167,21 +190,13 @@ namespace Blazor.TypeScriptProxy.Generator
                 }
 
                 Writer
-                    .WriteLine("namespace Blazor.Runtime.Interop")
-                    .WriteLine("{");
-                Writer.CurrentIndent += 4;
-
-                Writer
-                    .WriteLine("public partial class JavaScript")
+                    .WriteLine("public partial class Browser")
                     .WriteLine("{");
                 Writer.CurrentIndent += 4;
 
                 Writer.Write("public static ");
                 Visit(variableDeclaration.TypeToken);
                 Writer.WriteLine($" {variableDeclaration.Name} = null;");
-
-                Writer.CurrentIndent -= 4;
-                Writer.WriteLine("}");
 
                 Writer.CurrentIndent -= 4;
                 Writer.WriteLine("}");

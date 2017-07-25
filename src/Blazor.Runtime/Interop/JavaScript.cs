@@ -1,6 +1,6 @@
 ﻿namespace Blazor.Runtime.Interop
 {
-    public partial class JavaScript
+    public class JavaScript
     {
         private static readonly JSObjectHandle _windowHandle = (JSObjectHandle)JSObjectHandle.Global.GetProperty("window");
         private static readonly JSObjectHandle _documentHandle = (JSObjectHandle)_windowHandle.GetProperty("document");
