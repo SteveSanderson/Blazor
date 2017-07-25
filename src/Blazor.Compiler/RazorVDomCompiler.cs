@@ -42,6 +42,9 @@ namespace RazorRenderer
             Log("Creating Razor engine...");
             var engine = RazorEngine.Create(builder =>
             {
+                var directivePass = builder.Features.OfType<IRazorDirectiveClassifierPass>().Single();
+                builder.Features.Remove(directivePass);
+                builder.Features.Add(new MyDirectiveIRPass());
                 var defaultCSharpLoweringPhase = builder.Phases.OfType<IRazorCSharpLoweringPhase>().Single();
                 builder.Phases.Remove(defaultCSharpLoweringPhase);
                 builder.Phases.Add(new VirtualDomCSharpLoweringPhase(defaultCSharpLoweringPhase));

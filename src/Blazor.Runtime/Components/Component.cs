@@ -25,7 +25,11 @@ namespace Blazor.Components
         // Try to find ways of encapsulating this better. Currently, derived components can interfere with this directly.
         protected readonly VDomBuilder builder = new VDomBuilder();
 
+        public static IDictionary<string, Action<VDomBuilder>> SectionWriters { get; } =
+            new Dictionary<string, Action<VDomBuilder>>();
+
         private DOMElement Element { get; set; }
+
         private bool _replaceElement;
 
         private readonly int _id;
@@ -49,6 +53,7 @@ namespace Blazor.Components
 
         public Component MountAsPage(string populateElementRef)
         {
+            SectionWriters.Clear();
             return Mount(populateElementRef, replace: false, enableLayouts: true);
         }
 
@@ -114,6 +119,9 @@ namespace Blazor.Components
         }
 
         protected abstract void RenderVirtualDom();
+
+        public abstract void DefineSections();
+
         protected abstract void ReceiveParameters(IDictionary<string, object> parameters);
 
         protected virtual void Init() { }

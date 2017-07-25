@@ -6,12 +6,33 @@ using System.Threading.Tasks;
 using System.Linq;
 using Blazor.Routing;
 using Blazor.Runtime.Components;
+using Blazor.Interop;
 
 namespace Blazor.Components
 {
     public abstract class RazorComponent : Component
     {
-        public static IDictionary<string, object> ViewData { get; } = new Dictionary<string, object>();
+        public IDictionary<string, object> ViewData { get; } = new Dictionary<string, object>();
+
+        public void DefineSection(string name, Action<VDomBuilder> section)
+        {
+            SectionWriters[name] = section;
+        }
+
+        public override void DefineSections()
+        {
+        }
+
+        public void RenderSection(string name)
+        {
+            if (!SectionWriters.ContainsKey(name))
+            {
+                return;
+            }
+
+            var section = SectionWriters[name];
+            section(builder);
+        }
 
         public static Component Instantiate(string cshtmlFileName, BlazorContext context)
         {
@@ -583,8 +604,10 @@ namespace Blazor.Components
 
         protected VDomComponent RenderBody()
         {
+            //Console.WriteLine("Render body called");
             if (BodyComponent != null)
             {
+                BodyComponent.DefineSections();
                 return RenderComponent(BodyComponent);
             }
             else
