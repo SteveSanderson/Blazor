@@ -615,7 +615,7 @@ namespace Blazor.Components
             if (BodyComponent != null)
             {
                 BodyComponent.DefineSections();
-                BodyComponent.InitAsync();
+                //BodyComponent.InitAsync();
                 return RenderComponent(BodyComponent);
             }
             else
@@ -655,7 +655,7 @@ namespace Blazor.Components
             if (BodyComponent != null)
             {
                 BodyComponent.DefineSections();
-                InitAsync();
+                //InitAsync();
                 return RenderComponent(BodyComponent);
             }
             else
