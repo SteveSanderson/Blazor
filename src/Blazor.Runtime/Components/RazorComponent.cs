@@ -616,7 +616,6 @@ namespace Blazor.Components
             {
                 BodyComponent.DefineSections();
                 BodyComponent.InitAsync();
-                Console.WriteLine("Hello!");
                 return RenderComponent(BodyComponent);
             }
             else
@@ -640,15 +639,12 @@ namespace Blazor.Components
 
         public override Task InitAsync()
         {
-            Console.WriteLine("Trying to call init async");
             if (IsPage)
             {
-                Console.WriteLine("IsPage is true");
                 return (Model as IModel).InitAsync();
             }
             else
             {
-                Console.WriteLine("Failed to call init async");
                 return null;
             }
         }
@@ -660,7 +656,6 @@ namespace Blazor.Components
             {
                 BodyComponent.DefineSections();
                 InitAsync();
-                Console.WriteLine("Hello!");
                 return RenderComponent(BodyComponent);
             }
             else

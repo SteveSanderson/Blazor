@@ -12,6 +12,7 @@ namespace Blazor.Routing
         private static string _currentPageComponentPath;
         private static Component _currentPageComponent;
         public static IEnumerable<Assembly> ViewAssemblies;
+        private static BlazorContext _context;
 
         public static void MountInElement(string selector)
         {
@@ -23,7 +24,15 @@ namespace Blazor.Routing
             var parsed = MiniJSON.Json.Deserialize(descriptor) as Dictionary<string, object>;
             var url = (string)parsed["url"];
             var absoluteUrl = (string)parsed["absoluteUrl"];
-            return MountPageFromUrl(url, new BlazorContext(absoluteUrl));
+            if (_context == null)
+            {
+                _context = new BlazorContext(absoluteUrl);
+            }
+            else
+            {
+                _context.AbsoluteUrl = absoluteUrl;
+            }
+            return MountPageFromUrl(url, _context);
         }
 
         internal static Component MountPageFromUrl(string url, BlazorContext context)

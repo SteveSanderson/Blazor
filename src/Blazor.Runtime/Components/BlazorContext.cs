@@ -5,7 +5,7 @@ namespace Blazor.Runtime.Components
 {
     public class BlazorContext
     {
-        public string AbsoluteUrl { get; private set; }
+        public string AbsoluteUrl { get; set; }
 
         public BlazorContext(string absoluteUrl)
         {
