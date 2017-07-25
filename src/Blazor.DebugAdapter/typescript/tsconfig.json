@@ -6,7 +6,7 @@
     "removeComments": false,
     "preserveConstEnums": true,
     "target": "es5",
-    "outDir": "../../out",
+    "outDir": "../out",
     "sourceMap": true
   }
 }
