@@ -137,9 +137,14 @@ namespace RazorRenderer
 
             var model = codeDoc.Items["DetectedModel"];
             string content = "";
+            string isPage = "";
             if (model != null)
             {
                 content = $@"Model = new {model}();";
+            }
+            if ( (bool) codeDoc.Items["DetectedPage"])
+            {
+                isPage += "classNode.IsPage = true;";
             }
             var razorToken = new RazorIRToken { 
                 Kind = RazorIRToken.TokenKind.CSharp,
@@ -148,7 +153,9 @@ namespace RazorRenderer
                     {typeof(RazorComponent).FullName} {typeof(IRazorComponentFactory).FullName}.{nameof(IRazorComponentFactory.Instantiate)}()
                     {{
                         {content} 
-                        return new {classNode.Name}();
+                        var classNode = new {classNode.Name}();
+                        {isPage}
+                        return classNode;
                     }}"
             };
             methodStatement.Children.Add(razorToken);
@@ -245,6 +252,7 @@ namespace RazorRenderer
             string detectedLayout = null;
             string detectedTagName = null;
             string detectedModel = null;
+            bool detectedPage = false;
             using (var ms = new MemoryStream())
             {
                 using (var sw = new StreamWriter(ms))
@@ -284,6 +292,15 @@ namespace RazorRenderer
                             continue;
                         }
 
+                        // The @page directive is only used to generate the page models.
+                        // Currently, blazor assumes that all razor components are pages.
+                        const string pageLinePrefix = "@page";
+                        if (line.StartsWith(pageLinePrefix))
+                        {
+                            detectedPage = true;
+                            continue;
+                        }
+
                         var tagNameRegex = new Regex("^\\s*\\@TagName\\(\\s*\\\"([^\\\"]+)\\\"\\s*\\)");
                         var tagNameMatch = tagNameRegex.Match(line);
                         if (tagNameMatch.Success)
@@ -304,7 +321,7 @@ namespace RazorRenderer
                     codeDoc.Items["DetectedModel"] = detectedModel;
                     codeDoc.Items["DetectedBaseClass"] = lastInheritsLine;
                     codeDoc.Items["UsingNamespaces"] = usingNamespaces;
-
+                    codeDoc.Items["DetectedPage"] = detectedPage;
                     return codeDoc;
                 }
             }

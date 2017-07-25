@@ -20,6 +20,11 @@ namespace System.Threading.Tasks
             _task.MarkFailed(ex);
         }
 
+        public Task<T> FromResult(T i)
+        {
+            return Task;
+        }
+
         // Note: Don't add a generic param here (e.g., TrySetResult<TResult>) because it triggers
         // some bug in the DNA runtime leading to crashes at the start of any method that contains
         // a call to this.

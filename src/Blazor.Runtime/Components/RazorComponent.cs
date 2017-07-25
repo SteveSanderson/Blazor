@@ -58,6 +58,8 @@ namespace Blazor.Components
             return instance;
         }
 
+
+
         public static string GetViewClassName(string rootDir, string cshtmlFilename)
         {
             cshtmlFilename = cshtmlFilename.Replace('/', Path.DirectorySeparatorChar);
@@ -602,12 +604,13 @@ namespace Blazor.Components
             };
         }
 
-        protected VDomComponent RenderBody()
+        protected virtual VDomComponent RenderBody()
         {
-            //Console.WriteLine("Render body called");
             if (BodyComponent != null)
             {
                 BodyComponent.DefineSections();
+                BodyComponent.InitAsync();
+                Console.WriteLine("Hello!");
                 return RenderComponent(BodyComponent);
             }
             else
@@ -619,12 +622,45 @@ namespace Blazor.Components
         #endregion
     }
 
-    public abstract class RazorComponent<TModel> : RazorComponent
+    public abstract class RazorComponent<TModel> : RazorComponent 
     {
         // This is not really used, but simply has to exist so that the Razor tooling is willing to regard
         // Blazor.Components.RazorComponent as a valid base class. This would probably go away if updating
         // to work using newer Razor tooling.
 
         public static TModel Model { get;  set; } // TODO this really should be a private set.
+
+        public bool IsPage { get; set; }
+
+        public override Task InitAsync()
+        {
+            Console.WriteLine("Trying to call init async");
+            if (IsPage)
+            {
+                Console.WriteLine("IsPage is true");
+                return (Model as IModel).InitAsync();
+            }
+            else
+            {
+                Console.WriteLine("Failed to call init async");
+                return null;
+            }
+        }
+
+
+        protected override VDomComponent RenderBody()
+        {
+            if (BodyComponent != null)
+            {
+                BodyComponent.DefineSections();
+                InitAsync();
+                Console.WriteLine("Hello!");
+                return RenderComponent(BodyComponent);
+            }
+            else
+            {
+                throw new InvalidOperationException("Cannot call RenderBody except on layouts");
+            }
+        }
     }
 }

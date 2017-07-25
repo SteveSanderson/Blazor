@@ -125,7 +125,7 @@ namespace Blazor.Components
         protected abstract void ReceiveParameters(IDictionary<string, object> parameters);
 
         protected virtual void Init() { }
-        protected virtual Task InitAsync() { return null; }
+        public virtual Task InitAsync() { Console.WriteLine("From Component"); return null; }
 
         internal Component InstantiateAndRegisterChildComponent(int vdomItemIndex)
         {
