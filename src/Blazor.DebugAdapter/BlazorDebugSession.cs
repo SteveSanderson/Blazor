@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Net.WebSockets;
 using System.Threading;
+using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 
 namespace VSCodeDebug
@@ -39,7 +40,70 @@ namespace VSCodeDebug
             _clientWebSocket.ConnectAsync(new Uri(address), CancellationToken.None).Wait();
             _webSocketConnected = true;
 
+            _ = HandleMessages();
+
             Launch(response, arguments);
+        }
+
+        private async Task HandleMessages()
+        {
+            var cumulative = new List<ArraySegment<byte>>();
+            while (true)
+            {
+                byte[] data = new byte[4096];
+                WebSocketReceiveResult result;
+
+                try
+                {
+                    result = await _clientWebSocket.ReceiveAsync(new ArraySegment<byte>(data), CancellationToken.None);
+                }
+                catch (WebSocketException)
+                {
+                    _webSocketConnected = false;
+                    
+                    // This is supposed to be the exited event but it doesn't seem to do anything
+                    // SendEvent(new ExitedEvent(1));
+                    SendEvent(new TerminatedEvent());
+                    break;
+                }
+
+                if (result.MessageType == WebSocketMessageType.Close)
+                {
+                    _webSocketConnected = false;
+                    // This is supposed to be the exited event but it doesn't seem to do anything
+                    // SendEvent(new ExitedEvent(0));
+                    SendEvent(new TerminatedEvent());
+                    await _clientWebSocket.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
+                    break;
+                }
+
+                cumulative.Add(new ArraySegment<byte>(data, 0, result.Count));
+
+                if (result.EndOfMessage)
+                {
+                    var size = 0;
+                    foreach (var chunk in cumulative)
+                    {
+                        size += chunk.Count;
+                    }
+                    var all = new byte[size];
+                    int offset = 0;
+                    foreach (var chunk in cumulative)
+                    {
+                        Buffer.BlockCopy(chunk.Array, chunk.Offset, all, offset, chunk.Count);
+                        offset += chunk.Count;
+                    }
+
+                    OnMessage(all);
+
+                    cumulative.Clear();
+                }
+            }
+        }
+
+        private void OnMessage(byte[] all)
+        {
+            Console.WriteLine("Received Message from Debugee: " + Encoding.GetString(all));
         }
 
         public override void Continue(Response response, dynamic arguments)
@@ -62,6 +126,14 @@ namespace VSCodeDebug
         public override void Disconnect(Response response, dynamic arguments)
         {
             Log("Disconnect");
+
+            if (_webSocketConnected)
+            {
+                _webSocketConnected = false;
+
+                // TODO: Don't block
+                _clientWebSocket.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None).Wait();
+            }
         }
 
         public override void Evaluate(Response response, dynamic arguments)
@@ -223,7 +295,7 @@ namespace VSCodeDebug
             Log("ConfigurationDone");
         }
 
-         // Fire StoppedEvent if line is not empty.
+        // Fire StoppedEvent if line is not empty.
         private bool FireStepEvent(Response response, int lineNumber)
         {
             if (!string.IsNullOrWhiteSpace(_sourceLines[lineNumber - 1]))

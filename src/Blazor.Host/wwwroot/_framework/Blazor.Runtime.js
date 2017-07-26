@@ -803,7 +803,7 @@ window['jsobject.js'] = (function () {
     function ListenForDebugger() {
         if (window.WebSocket) {
             var sessionId = guid();
-            var url = 'ws://' + document.location.host + '/__debugger?id=' + sessionId;
+            var url = 'ws://' + document.location.host + '/__debugger?id=' + sessionId + '&d=1';
 
             // No websockets, no debugging, sorry...
             var ws = new WebSocket(url);

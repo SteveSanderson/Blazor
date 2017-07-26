@@ -1,19 +1,18 @@
-﻿using Blazor.Sdk.Host;
+﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Net.WebSockets;
+using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
+using Blazor.Sdk.Host;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.FileProviders;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Runtime.Loader;
-using System.Text;
-using Microsoft.AspNetCore.Routing;
-using System.Net.WebSockets;
-using System.Threading.Tasks;
-using System.Threading;
 
 namespace Blazor.Host
 {
@@ -33,35 +32,105 @@ namespace Blazor.Host
             app.UseWebSockets();
             return app.UseRouter(routes =>
             {
-                var sessions = new Dictionary<string, (WebSocket debuggee, TaskCompletionSource<WebSocket> waitForDebugger)>();
+                var sessions = new ConcurrentDictionary<string, DebugSession>();
 
                 routes.MapGet("__debugger", async context =>
                 {
+                    // The debuggee is responsible for creating the session and the debuggee
+                    // attaches to that session.
                     var sessionId = context.Request.Query["id"];
+                    var isDebuggee = context.Request.Query.ContainsKey("d");
+                    var isDebugger = !isDebuggee;
 
-                    // The first connection is the debugee
-                    // The second connection is the debugger
+                    // No session id, this is a bad connection
+                    if (string.IsNullOrEmpty(sessionId))
+                    {
+                        context.Response.StatusCode = 400;
+                        return;
+                    }
+
+                    // If this client is the debugger and the session doesn't exist then
+                    // fail
+                    if (isDebugger && !sessions.ContainsKey(sessionId))
+                    {
+                        context.Response.StatusCode = 400;
+                        return;
+                    }
+
                     if (context.WebSockets.IsWebSocketRequest)
                     {
                         using (var ws = await context.WebSockets.AcceptWebSocketAsync())
                         {
-                            if (!sessions.TryGetValue(sessionId, out var pair))
+                            if (!sessions.TryGetValue(sessionId, out var session))
                             {
-                                // No session, this is the debuggee
-                                var waitForDebugger = new TaskCompletionSource<WebSocket>();
-                                sessions[sessionId] = (ws, waitForDebugger);
-                                var debugger = await waitForDebugger.Task;
+                                Debug.Assert(isDebuggee, "Debuggee is the only one that can create a session");
 
-                                // Read from debuggee, send to debugger
-                                await DoProxy(ws, debugger);
+                                // No session, this is the debuggee
+                                session = new DebugSession
+                                {
+                                    Debuggee = ws,
+                                    DebugeeSource = new CancellationTokenSource(),
+                                    DebuggerSource = new CancellationTokenSource(),
+                                    WaitForDebugger = new TaskCompletionSource<WebSocket>(),
+                                    SessionId = sessionId
+                                };
+
+                                sessions[sessionId] = session;
+                                var state = new DebugSession.State();
+
+                                while (true)
+                                {
+                                    session.DebugeeSource = new CancellationTokenSource();
+
+                                    var debugee = session.Debuggee;
+
+                                    // Read from debuggee, send to debugger
+                                    var completed = await DoProxy(debugee, session.WaitForDebugger.Task, state, session.DebugeeSource.Token);
+
+                                    // The debuggee closed so shutdown the debugger because the session is toast
+                                    if (debugee == completed)
+                                    {
+                                        // Kill the loop and remove the session from the list
+                                        sessions.TryRemove(sessionId, out _);
+
+                                        // Kill the session
+                                        session.DebuggerSource.Cancel();
+                                        break;
+                                    }
+
+                                    // Tell the client to reset it's state here since the debugger detached
+                                }
                             }
                             else
                             {
+                                Debug.Assert(isDebugger, "Debugger should be the one attaching");
+                                var debugger = ws;
+
                                 // We have a session, so connect!
-                                pair.waitForDebugger.TrySetResult(ws);
+                                if (!session.WaitForDebugger.TrySetResult(debugger))
+                                {
+                                    // RACE Condition: We're not using out 
+                                    Debug.Fail("RACE Condition! We're not using the right debugger socket");
+                                }
 
                                 // Read from debugger, send to debuggee
-                                await DoProxy(ws, pair.debuggee);
+                                var completed = await DoProxy(debugger, Task.FromResult(session.Debuggee), state: null, cancellationToken: session.DebuggerSource.Token);
+
+                                if (completed == debugger)
+                                {
+                                    // Reset the tcs
+                                    session.WaitForDebugger = new TaskCompletionSource<WebSocket>();
+
+                                    // Cancel the debuggee so it stops trying to proxy to the old debugger socket
+                                    session.DebugeeSource.Cancel();
+
+                                    session.DebuggerSource = new CancellationTokenSource();
+                                }
+                                else
+                                {
+                                    // Something else ended the loop, so we need to send a close frame
+                                    await debugger.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
+                                }
                             }
                         }
                     }
@@ -73,19 +142,56 @@ namespace Blazor.Host
             });
         }
 
-        private static async Task DoProxy(WebSocket source, WebSocket dest)
+        private static async Task<WebSocket> DoProxy(
+            WebSocket source,
+            Task<WebSocket> destPromise,
+            DebugSession.State state,
+            CancellationToken cancellationToken)
         {
             var cumulative = new List<ArraySegment<byte>>();
             while (true)
             {
                 byte[] data = new byte[4096];
-                var result = await source.ReceiveAsync(new ArraySegment<byte>(data), CancellationToken.None);
+                WebSocketReceiveResult result = null;
+
+                var cancelledTask = Task.Delay(-1, cancellationToken);
+                var sourceTask = state?.ReceiveResultTask != null ? state.ReceiveResultTask : source.ReceiveAsync(new ArraySegment<byte>(data), CancellationToken.None);
+
+                var taskResult = await Task.WhenAny(cancelledTask, sourceTask);
+
+                if (taskResult == cancelledTask)
+                {
+                    if (state != null)
+                    {
+                        state.ReceiveResultTask = sourceTask;
+                    }
+                    return null;
+                }
+
+                try
+                {
+                    result = await sourceTask;
+                }
+                catch (WebSocketException)
+                {
+                    // Likely a connection reset
+                    return source;
+                }
+                finally
+                {
+                    if (state != null)
+                    {
+                        state.ReceiveResultTask = null;
+                    }
+                }
 
                 if (result.MessageType == WebSocketMessageType.Close)
                 {
                     await source.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
-                    break;
+                    return source;
                 }
+
+                var dest = await destPromise;
 
                 cumulative.Add(new ArraySegment<byte>(data, 0, result.Count));
 
@@ -104,7 +210,14 @@ namespace Blazor.Host
                         offset += chunk.Count;
                     }
 
-                    await dest.SendAsync(new ArraySegment<byte>(all), WebSocketMessageType.Text, endOfMessage: true, cancellationToken: CancellationToken.None);
+                    try
+                    {
+                        await dest.SendAsync(new ArraySegment<byte>(all), WebSocketMessageType.Text, endOfMessage: true, cancellationToken: CancellationToken.None);
+                    }
+                    catch
+                    {
+                        return dest;
+                    }
                     cumulative.Clear();
                 }
             }
@@ -221,6 +334,20 @@ namespace Blazor.Host
             var lastSlash = path.LastIndexOf('/');
             var lastDot = path.LastIndexOf('.');
             return lastDot > 0 && lastDot < path.Length - 1 && lastDot > lastSlash;
+        }
+
+        private class DebugSession
+        {
+            public string SessionId { get; set; }
+            public WebSocket Debuggee { get; set; }
+            public CancellationTokenSource DebuggerSource { get; set; }
+            public CancellationTokenSource DebugeeSource { get; set; }
+            public TaskCompletionSource<WebSocket> WaitForDebugger { get; set; }
+
+            public class State
+            {
+                public Task<WebSocketReceiveResult> ReceiveResultTask { get; set; }
+            }
         }
     }
 }
