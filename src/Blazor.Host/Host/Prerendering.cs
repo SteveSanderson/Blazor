@@ -53,9 +53,10 @@ namespace Blazor.Host
                 Console.WriteLine("NullReferenceException handled: " + ex.Message);
                 UseFallbackDll(clientRootDir, clientBinDir);
             }
-            catch (FileNotFoundException ex)
+            catch (FileNotFoundException)
             {
                 // This means there are no typescript files to compile. Just move on.
+                UseFallbackDll(clientRootDir, clientBinDir);
             }
 #else
             UseFallbackDll(clientRootDir, clientBinDir);
