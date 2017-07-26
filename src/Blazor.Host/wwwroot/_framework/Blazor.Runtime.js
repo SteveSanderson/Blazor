@@ -806,16 +806,21 @@ window['jsobject.js'] = (function () {
             var url = 'ws://' + document.location.host + '/__debugger?id=' + sessionId + '&d=1';
 
             // No websockets, no debugging, sorry...
-            var ws = new WebSocket(url);
-            ws.onopen = function () {
-                console.log('Opened debugger connection: Use ' + sessionId + ' to attach to this session');
-            };
-            ws.onmessage = function (event) {
-                console.log('Received message from debugger: ' + event.data);
-            };
-            ws.onclose = function (event) {
-                console.log('Debugger connection closed!');
-            };
+            try {
+                var ws = new WebSocket(url);
+                ws.onopen = function () {
+                    console.log('Opened debugger connection: Use ' + sessionId + ' to attach to this session');
+                };
+                ws.onmessage = function (event) {
+                    console.log('Received message from debugger: ' + event.data);
+                };
+                ws.onclose = function (event) {
+                    console.log('Debugger connection closed!');
+                };
+            }
+            catch() {
+                // Web socket error. No debugging
+            }
         }
     }
 
