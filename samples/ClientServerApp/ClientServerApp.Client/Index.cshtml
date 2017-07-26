@@ -14,7 +14,7 @@
 @{
     Context.Items["hello"] = "This shows BlazorContext is persistent across pages.";
 
-    var getAttributesMethodInfo = Type.GetType("System.Reflection.MyCustomAttributeExtensions").GetMethod("GetMyCustomAttributes");
+    @*var getAttributesMethodInfo = Type.GetType("System.Reflection.MyCustomAttributeExtensions").GetMethod("GetMyCustomAttributes");
 
     var typeInfo = typeof(ClientServerApp.Client.Hello);
     <h2>@typeInfo.Name attributes</h2>
@@ -35,5 +35,5 @@
             </li>
             }
         }
-    </ul>
+    </ul>*@
 }
