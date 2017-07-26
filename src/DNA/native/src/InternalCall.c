@@ -171,6 +171,7 @@ static tInternalCall internalCalls[] = {
 	{"System.Runtime.CompilerServices", "RuntimeHelpers", "InitializeArray", System_Runtime_CompilerServices_InitializeArray, TYPE_SYSTEM_VOID, 2, {TYPE_SYSTEM_ARRAY_NO_TYPE, TYPE_SYSTEM_RUNTIMEFIELDHANDLE}},
 
 	{"System.Diagnostics", "Debugger", "Break", System_Diagnostics_Debugger_Break, TYPE_SYSTEM_VOID, 0},
+    {"System.Diagnostics", "Debugger", "Internal_BreakPoint", System_Diagnostics_Debugger_Internal_Break_Point, TYPE_SYSTEM_VOID, 2, { TYPE_SYSTEM_INT32, TYPE_SYSTEM_INT32 } },
 
 	{"System.Net", "Dns", "Internal_GetHostEnt", System_Net_Dns_Internal_GetHostEnt, TYPE_SYSTEM_ARRAY_INT32, 2, {TYPE_SYSTEM_STRING, TYPE_SYSTEM_INTPTR}},
 

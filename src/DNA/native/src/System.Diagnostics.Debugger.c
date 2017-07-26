@@ -34,3 +34,14 @@ tAsyncCall* System_Diagnostics_Debugger_Break(PTR pThis_, PTR pParams, PTR pRetu
 #endif
 	return NULL;
 }
+
+tAsyncCall* System_Diagnostics_Debugger_Internal_Break_Point(PTR pThis_, PTR pParams, PTR pReturnValue) {
+    U32 arg0 = INTERNALCALL_PARAM(0, U32);
+    U32 offset = INTERNALCALL_PARAM(4, U32);
+
+    tMD_MethodDef* pMethodDef = (tMD_MethodDef*)arg0;
+
+    printf("BREAK_POINT at (%s, %d) \n", pMethodDef->name, offset);
+
+    return NULL;
+}

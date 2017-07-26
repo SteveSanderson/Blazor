@@ -25,6 +25,7 @@
 
 #include "JIT_OpCodes.h"
 #include "CIL_OpCodes.h"
+#include "CLIFile.h"
 
 #include "MetaData.h"
 #include "Types.h"
@@ -229,6 +230,11 @@ static U32 GenCombined(tOps *pOps, tOps *pIsDynamic, U32 startOfs, U32 count, U3
 }
 #endif
 
+static SetBreakPoint(tMD_MethodDef *pMethodDef, U32 cilOfs, tOps ops)
+{
+    
+}
+
 static U32* JITit(tMD_MethodDef *pMethodDef, U8 *pCIL, U32 codeSize, tParameter *pLocals, tJITted *pJITted, U32 genCombinedOpcodes) {
 	U32 maxStack = pJITted->maxStack;
 	U32 i;
@@ -294,12 +300,40 @@ static U32* JITit(tMD_MethodDef *pMethodDef, U8 *pCIL, U32 codeSize, tParameter 
 		// Set the JIT offset for this CIL opcode
 		pJITOffsets[cilOfs] = ops.ofs;
 
+        U32 pcilOfs = cilOfs;
+
 		op = pCIL[cilOfs++];
 		//printf("Opcode: 0x%02x\n", op);
 
 		switch (op) {
 			case CIL_NOP:
-				PushOp(JIT_NOP);
+                {
+                    PushOp(JIT_NOP);
+
+                    // This can be cached
+                    //tMD_MethodDef *pDebuggerBreakPointMethod;
+                    //tMetaData *pCorelibMetadata;
+                    //tMD_TypeDef *pDebuggerTypeDef;
+
+                    //pCorelibMetadata = CLIFile_GetMetaDataForAssembly("corlib");
+                    //pDebuggerTypeDef = MetaData_GetTypeDefFromName(pCorelibMetadata, "System.Diagnostics", "Debugger", NULL, /* assertExists */ 1);
+                    //MetaData_Fill_TypeDef(pDebuggerTypeDef, NULL, NULL);
+                    //for (int i = 0; i < pDebuggerTypeDef->numMethods; i++) {
+                    //    if (strcmp(pDebuggerTypeDef->ppMethods[i]->name, "Internal_BreakPoint") == 0) {
+                    //        pDebuggerBreakPointMethod = pDebuggerTypeDef->ppMethods[i];
+                    //        break;
+                    //    }
+                    //}
+
+                    //PushOp(JIT_LOAD_I32);
+                    //PushI32((int)pMethodDef);
+                    //PushOp(JIT_LOAD_I32);
+                    //PushI32(pcilOfs);
+                    //PushOp(JIT_CALL_O);
+                    //PushPTR(pDebuggerBreakPointMethod);
+
+                    //PushOp(JIT_NOP);
+                }
 				break;
 
 			case CIL_LDNULL:
@@ -543,6 +577,27 @@ cilLdInd:
 			case CIL_CALL:
 			case CIL_CALLVIRT:
 				{
+                    //tMD_MethodDef *pDebuggerBreakPointMethod;
+                    //tMetaData *pCorelibMetadata;
+                    //tMD_TypeDef *pDebuggerTypeDef;
+
+                    //pCorelibMetadata = CLIFile_GetMetaDataForAssembly("corlib");
+                    //pDebuggerTypeDef = MetaData_GetTypeDefFromName(pCorelibMetadata, "System.Diagnostics", "Debugger", NULL, /* assertExists */ 1);
+                    //MetaData_Fill_TypeDef(pDebuggerTypeDef, NULL, NULL);
+                    //for (int i = 0; i < pDebuggerTypeDef->numMethods; i++) {
+                    //    if (strcmp(pDebuggerTypeDef->ppMethods[i]->name, "Internal_BreakPoint") == 0) {
+                    //        pDebuggerBreakPointMethod = pDebuggerTypeDef->ppMethods[i];
+                    //        break;
+                    //    }
+                    //}
+
+                    //PushOp(JIT_LOAD_I32);
+                    //PushI32((int)pMethodDef);
+                    //PushOp(JIT_LOAD_I32);
+                    //PushI32(cilOfs);
+                    //PushOp(JIT_CALL_O);
+                    //PushPTR(pDebuggerBreakPointMethod);
+
 					tMD_MethodDef *pCallMethod;
 					tMD_TypeDef *pBoxCallType;
 					U32 derefRefType;
