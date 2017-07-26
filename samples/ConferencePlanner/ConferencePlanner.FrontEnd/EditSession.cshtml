@@ -1,4 +1,6 @@
-﻿@model ConferencePlanner.FrontEnd.EditSessionModel
+﻿@using ConferencePlanner.FrontEnd
+@page ""
+@model EditSession
 
 <h3>Edit Session</h3>
 
@@ -51,5 +53,5 @@
 </form>
 
 @functions {
-    public override Task InitAsync() => Model.InitAsyncImpl();
+    //public override Task InitAsync() => Model.InitAsyncImpl();
 }

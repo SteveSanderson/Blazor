@@ -641,6 +641,7 @@ namespace Blazor.Components
 
         public override Task InitAsync()
         {
+            Console.WriteLine($"CALLED RazorComponent.InitAsync(), IsPage={IsPage}, Model={((Model as IModel) == null ? "null" : "IModel")}");
             if (IsPage)
             {
                 return (Model as IModel).InitAsync();

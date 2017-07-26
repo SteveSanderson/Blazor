@@ -11,7 +11,7 @@ using System.Threading;
 
 namespace ConferencePlanner.FrontEnd
 {
-    public class EditSessionModel
+    public class EditSession : PageModel
     {
         private readonly string _baseUrl = "http://localhost:56009";
 
@@ -27,7 +27,7 @@ namespace ConferencePlanner.FrontEnd
 
         private int _initCount = 0;
 
-        public async Task InitAsyncImpl()
+        public override async Task InitAsync()
         {
             var count = Interlocked.Increment(ref _initCount);
             Console.WriteLine($"CALLED EditSessionModel.InitAsync() [{count}]");

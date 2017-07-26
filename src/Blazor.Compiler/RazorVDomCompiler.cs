@@ -347,6 +347,9 @@ namespace RazorRenderer
                     codeDoc.Items["UsingNamespaces"] = usingNamespaces;
                     codeDoc.Items["DetectedPage"] = detectedPage;
                     codeDoc.Items["DetectedPageMatches"] = detectedPageGroup;
+
+                    Console.WriteLine($"{sourceFileName} => DetectedModel={detectedModel}");
+
                     return codeDoc;
                 }
             }

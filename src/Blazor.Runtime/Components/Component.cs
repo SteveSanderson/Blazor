@@ -95,7 +95,8 @@ namespace Blazor.Components
                 if (idSegments.Length > 0 && int.TryParse(idSegments, out num))
                 {
                     InitAsync(num);
-                } else
+                }
+                else
                 {
                     InitAsync();
                 }
