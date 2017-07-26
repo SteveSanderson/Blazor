@@ -11,7 +11,7 @@
 <button @onclick(() => NavigationHelper("/Counter"))>Navigate to Counter</button>
 
 @* This shows an error at dev time but will work at runtime #hacky *@
-<button @onclick(() => Console.WriteLine(Browser.jQuery.now()))>Log jquery time</button>
+<button @onclick(() => Blazor.Runtime.Interop.JavaScript.Window["alert"].Invoke(Browser.jQuery.trim("              This content should not have any spaces surrounding it.                     ")))>Log jquery time</button>
 
 @{
     Context.Items["hello"] = "This shows BlazorContext is persistent across pages.";
