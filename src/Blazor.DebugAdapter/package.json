@@ -64,35 +64,65 @@
             "body": {
               "type": "blazor",
               "request": "launch",
-              "name": "${2:Launch Program}",
+              "name": "${2:Launch Blazor Program}",
               "program": "^\"\\${workspaceRoot}/${1:Program}\""
+            }
+          },
+          {
+            "label":  "Blazor Debug: Attach",
+            "description": "A new configuration for attaching to a Blazor program",
+            "body": {
+              "type": "blazor",
+              "request": "attach",
+              "name": "${2:Attach to Blazor Program}",
+              "program": "^\"\\${workspaceRoot}/${1:Program.cs}\"",
+              "address": "ws://localhost:5000/__debugger"
             }
           }
         ],
         "initialConfigurations": [
           {
-            "name": "%blazor.attach.config.name%",
+            "name": "Launch Blazor Program",
+            "type": "blazor",
+            "request": "launch",
+            "program": "${workspaceRoot}/Program.cs"
+          },
+          {
+            "name": "Attach to Blazor Program",
             "type": "blazor",
             "request": "attach",
-            "address": "localhost",
-            "port": 55555
+            "address": "ws://localhost:5000/__debugger",
+            "program":  "${workspaceRoot}/Program.cs"
           }
         ],
         "configurationAttributes": {
-          "attach": {
+          "launch": {
             "required": [
-              "port"
+              "program"
             ],
             "properties": {
-              "port": {
-                "type": "number",
-                "description": "%blazor.attach.port.description%",
-                "default": 55555
-              },
+              "program": {
+                "type": "string",
+                "description": "The source file to debug.",
+                "default": "${workspaceRoot}/Program.cs"
+              }
+            }
+          },
+          "attach": {
+            "required": [
+              "address",
+              "program"
+            ],
+            "properties": {
               "address": {
                 "type": "string",
-                "description": "%blazor.attach.address.description%",
-                "default": "undefined"
+                "description": "Address for WebSocket debugging endpoint.",
+                "default": "ws://localhost:5000/__debugger"
+              },
+              "program": {
+                "type": "string",
+                "description": "The source file to debug.",
+                "default": "${workspaceRoot}/Program.cs"
               }
             }
           }

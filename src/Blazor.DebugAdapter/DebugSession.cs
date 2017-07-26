@@ -327,7 +327,6 @@ namespace VSCodeDebug
         private bool _clientLinesStartAt1 = true;
         private bool _clientPathsAreURI = true;
 
-
         public DebugSession(bool debuggerLinesStartAt1, bool debuggerPathsAreURI = false)
         {
             _debuggerLinesStartAt1 = debuggerLinesStartAt1;
@@ -621,7 +620,7 @@ namespace VSCodeDebug
             }
         }
 
-        protected void Log(string message)
+        protected virtual void Log(string message)
         {
             Debug.WriteLine(message);
             SendEvent(new OutputEvent(null, message + Environment.NewLine));

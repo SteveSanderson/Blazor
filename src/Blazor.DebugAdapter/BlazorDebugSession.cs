@@ -2,12 +2,12 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.WebSockets;
 using System.Threading;
-using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 
 namespace VSCodeDebug
@@ -24,21 +24,22 @@ namespace VSCodeDebug
         // maps from sourceFile to array of Breakpoints
         private Dictionary<string, Breakpoint[]> _breakpoints = new Dictionary<string, Breakpoint[]>();
         private ClientWebSocket _clientWebSocket = new ClientWebSocket();
+        bool _webSocketConnected;
 
         public BlazorDebugSession() : base(debuggerLinesStartAt1: true)
         {
         }
 
-        public override async void Attach(Response response, dynamic arguments)
+        public override void Attach(Response response, dynamic arguments)
         {
             Log("Attach");
 
             string address = arguments.address;
-            int port = arguments.port;
 
-            await _clientWebSocket.ConnectAsync(new System.Uri($"http://{address}:{port}"), CancellationToken.None);
+            _clientWebSocket.ConnectAsync(new Uri(address), CancellationToken.None).Wait();
+            _webSocketConnected = true;
 
-            // REVIEW: What goes here?
+            Launch(response, arguments);
         }
 
         public override void Continue(Response response, dynamic arguments)
@@ -80,7 +81,6 @@ namespace VSCodeDebug
             {
                 supportsConfigurationDoneRequest = true,
                 supportsEvaluateForHovers = true,
-                supportsStepBack = true,
             };
 
             SendResponse(response);
@@ -287,6 +287,16 @@ namespace VSCodeDebug
             }
 
             return false;
+        }
+
+        protected override void Log(string message)
+        {
+            base.Log(message);
+
+            if (_webSocketConnected)
+            {
+                _clientWebSocket.SendAsync(new ArraySegment<byte>(Encoding.GetBytes(message)), WebSocketMessageType.Text, true, CancellationToken.None).Wait();
+            }
         }
     }
 }
