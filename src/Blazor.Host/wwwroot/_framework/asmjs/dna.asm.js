@@ -15395,7 +15395,7 @@ function _FindMethodInType(i9, i10, i13, i8, i14, i15) {
   i1 = 0;
   while (1) {
    if (i1 >>> 0 >= (HEAP32[i4 >> 2] | 0) >>> 0) break;
-   if (_MetaData_CompareNameAndSig(i10, i8, i13, i14, i15, HEAP32[(HEAP32[i5 >> 2] | 0) + (i1 << 2) >> 2] | 0, HEAP32[i3 >> 2] | 0, 0) | 0) {
+   if (_MetaData_CompareNameAndSig(i10, i8, i13, i14, i15, HEAP32[(HEAP32[i5 >> 2] | 0) + (i1 << 2) >> 2] | 0, HEAP32[i3 >> 2] | 0, i15) | 0) {
     i6 = 5;
     break L1;
    }
@@ -18624,6 +18624,33 @@ function _Receive_Check(i1, i3, i6, i2) {
  return i1 | 0;
 }
 
+function _Generics_GetMethodDefFromSpec(i1, i4, i5) {
+ i1 = i1 | 0;
+ i4 = i4 | 0;
+ i5 = i5 | 0;
+ var i2 = 0, i3 = 0, i6 = 0, i7 = 0, i8 = 0, i9 = 0;
+ i9 = STACKTOP;
+ STACKTOP = STACKTOP + 16 | 0;
+ if ((STACKTOP | 0) >= (STACK_MAX | 0)) abortStackOverflow(16);
+ i6 = i9;
+ i7 = i1 + 4 | 0;
+ i8 = _MetaData_GetMethodDefFromDefRefOrSpec(HEAP32[i7 >> 2] | 0, HEAP32[i1 + 8 >> 2] | 0, i4, i5) | 0;
+ HEAP32[i6 >> 2] = _MetaData_GetBlob(HEAP32[i1 + 12 >> 2] | 0, 0) | 0;
+ _MetaData_DecodeSigEntry(i6) | 0;
+ i2 = _MetaData_DecodeSigEntry(i6) | 0;
+ i3 = _malloc(i2 << 2) | 0;
+ i1 = 0;
+ while (1) {
+  if ((i1 | 0) == (i2 | 0)) break;
+  HEAP32[i3 + (i1 << 2) >> 2] = _Type_GetTypeFromSig(HEAP32[i7 >> 2] | 0, i6, i4, i5) | 0;
+  i1 = i1 + 1 | 0;
+ }
+ i8 = _Generics_GetMethodDefFromCoreMethod(i8, HEAP32[i8 + 48 >> 2] | 0, i2, i3) | 0;
+ _free(i3);
+ STACKTOP = i9;
+ return i8 | 0;
+}
+
 function _FindFieldInType(i4, i5) {
  i4 = i4 | 0;
  i5 = i5 | 0;
@@ -18659,33 +18686,6 @@ function _FindFieldInType(i4, i5) {
   _Crash(15881, i7);
  }
  return 0;
-}
-
-function _Generics_GetMethodDefFromSpec(i1, i4, i5) {
- i1 = i1 | 0;
- i4 = i4 | 0;
- i5 = i5 | 0;
- var i2 = 0, i3 = 0, i6 = 0, i7 = 0, i8 = 0, i9 = 0;
- i9 = STACKTOP;
- STACKTOP = STACKTOP + 16 | 0;
- if ((STACKTOP | 0) >= (STACK_MAX | 0)) abortStackOverflow(16);
- i6 = i9;
- i7 = i1 + 4 | 0;
- i8 = _MetaData_GetMethodDefFromDefRefOrSpec(HEAP32[i7 >> 2] | 0, HEAP32[i1 + 8 >> 2] | 0, 0, 0) | 0;
- HEAP32[i6 >> 2] = _MetaData_GetBlob(HEAP32[i1 + 12 >> 2] | 0, 0) | 0;
- _MetaData_DecodeSigEntry(i6) | 0;
- i2 = _MetaData_DecodeSigEntry(i6) | 0;
- i3 = _malloc(i2 << 2) | 0;
- i1 = 0;
- while (1) {
-  if ((i1 | 0) == (i2 | 0)) break;
-  HEAP32[i3 + (i1 << 2) >> 2] = _Type_GetTypeFromSig(HEAP32[i7 >> 2] | 0, i6, i4, i5) | 0;
-  i1 = i1 + 1 | 0;
- }
- i8 = _Generics_GetMethodDefFromCoreMethod(i8, HEAP32[i8 + 48 >> 2] | 0, i2, i3) | 0;
- _free(i3);
- STACKTOP = i9;
- return i8 | 0;
 }
 
 function _System_WeakReference_set_Target(i7, i2, i1) {
