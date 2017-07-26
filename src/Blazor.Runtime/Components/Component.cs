@@ -85,20 +85,20 @@ namespace Blazor.Components
                 // Render after Init/InitAsync have run synchronously, plus again after
                 // InitAsync's task completes (where applicable)
                 Init();
-                var initAsyncTask = InitAsync();
 
                 var url = Context.AbsoluteUrl;
                 var segments = url.Split(new char[] { '/' });
                 var idSegments = segments[segments.Length - 1];
 
                 int num;
+                Task initAsyncTask;
                 if (idSegments.Length > 0 && int.TryParse(idSegments, out num))
                 {
-                    InitAsync(num);
+                    initAsyncTask = InitAsync(num);
                 }
                 else
                 {
-                    InitAsync();
+                    initAsyncTask = InitAsync();
                 }
 
                 Render();
