@@ -2,10 +2,13 @@
 #include "Sys.h"
 #include "Reflection.h"
 #include "Type.h"
+#include "System.Attribute.h"
 #include "System.Array.h"
 #include "System.Reflection.PropertyInfo.h"
 #include "System.Reflection.MemberInfo.h"
+#include "System.Reflection.MethodBase.h"
 #include "System.RuntimeType.h"
+#include "System.String.h"
 
 tAsyncCall* Reflection_MemberInfo_GetCustomAttributes(PTR pThis_, PTR pParams, PTR pReturnValue)
 {
@@ -40,7 +43,7 @@ tAsyncCall* Reflection_MemberInfo_GetCustomAttributes(PTR pThis_, PTR pParams, P
 	}
 
 	// Allocate an array to use as the return value
-	tMD_TypeDef *pArrayType = Type_GetArrayTypeDef(types[TYPE_SYSTEM_ATTRIBUTE], NULL, NULL);
+	tMD_TypeDef *pArrayType = Type_GetArrayTypeDef(types[TYPE_SYSTEM_REFLECTION_INTERNALCUSTOMATTRIBUTEINFO], NULL, NULL);
 	HEAP_PTR ret = SystemArray_NewVector(pArrayType, numCustomAttributes);
 
 	// Assign to return value straight away, so it cannot be GCed
@@ -55,10 +58,73 @@ tAsyncCall* Reflection_MemberInfo_GetCustomAttributes(PTR pThis_, PTR pParams, P
 			tMD_MethodDef* pCtorMethodDef = MetaData_GetMethodDefFromDefRefOrSpec(pMetaData, pCustomAttribute->type, NULL, NULL);
 			tMD_TypeDef* pCtorTypeDef = MetaData_GetTypeDefFromMethodDef(pCtorMethodDef);
 			
+			// Create a InternalCustomAttributeInfo 
+			PTR arrayEntryPtr = SystemArray_LoadElementAddress(ret, insertionIndex++);
+			tInternalCustomAttributeInfo *pInternalCustomAttributeInfo = (tInternalCustomAttributeInfo*)arrayEntryPtr;
+			
 			// Actually instantiate the attribute
-			// TODO: Call the real constructor, pass constructor params, set properties, etc.
 			HEAP_PTR customAttributeInstance = Heap_AllocType(pCtorTypeDef);
-			SystemArray_StoreElement(ret, insertionIndex++, (PTR)&customAttributeInstance);
+			pInternalCustomAttributeInfo->pUninitializedInstance = customAttributeInstance;
+
+			// Supply info about the constructor back to the calling .NET code
+			HEAP_PTR customAttributeConstructorMethodBase = Heap_AllocType(types[TYPE_SYSTEM_REFLECTION_METHODBASE]);
+			tMethodBase *pMethodBase = (tMethodBase*)customAttributeConstructorMethodBase;
+			pMethodBase->name = SystemString_FromCharPtrASCII(pCtorMethodDef->name);
+			pMethodBase->ownerType = Type_GetTypeObject(pCtorTypeDef);
+			pMethodBase->methodDef = pCtorMethodDef;
+			pInternalCustomAttributeInfo->pConstructorMethodBase = customAttributeConstructorMethodBase;
+
+			// Construct an array of constructor args
+			tMD_TypeDef *pObjectArrayType = Type_GetArrayTypeDef(types[TYPE_SYSTEM_OBJECT], NULL, NULL);
+			HEAP_PTR pConstructorArgsArray = SystemArray_NewVector(pObjectArrayType, pCtorMethodDef->numberOfParameters - 1);
+			pInternalCustomAttributeInfo->pConstructorParams = pConstructorArgsArray;
+
+			// The info is in the 'value' blob from metadata
+			U32 blobLength;
+			PTR blob = MetaData_GetBlob(pCustomAttribute->value, &blobLength);
+			MetaData_DecodeSigEntry(&blob);
+
+			U32 numCtorArgs = pCtorMethodDef->numberOfParameters;
+			for (U32 argIndex = 0; argIndex < numCtorArgs; argIndex++) {
+				tParameter param = pCtorMethodDef->pParams[argIndex];
+
+				if (argIndex == 0) {
+					// Skip the 'this' param
+					MetaData_DecodeSigEntry(&blob);
+				} else { 
+					if (param.pTypeDef == types[TYPE_SYSTEM_INT32]) {
+						unsigned int sigEntry = MetaData_DecodeSigEntry(&blob);
+						HEAP_PTR boxedInt = Heap_Box(types[TYPE_SYSTEM_INT32], (PTR)&sigEntry);
+						SystemArray_StoreElement(pConstructorArgsArray, argIndex - 1, (PTR)&boxedInt);
+					} else if (param.pTypeDef == types[TYPE_SYSTEM_STRING]) {
+						HEAP_PTR dotNetString;
+						unsigned int numUtf8Bytes = MetaData_DecodeSigEntryExt(&blob, 0);
+						if (numUtf8Bytes == 0xffffffff) {
+							// Null
+							dotNetString = NULL;
+						} else {
+							// Not null (but maybe empty)
+							char* buf = malloc(numUtf8Bytes + 1);
+							for (U32 byteIndex = 0; byteIndex < numUtf8Bytes; byteIndex++) {
+								buf[byteIndex] = MetaData_DecodeSigEntry(&blob);
+							}
+							buf[numUtf8Bytes] = 0;
+							dotNetString = SystemString_FromCharPtrASCII(buf); // TODO: Handle non-ASCII UTF8, probably by converting the raw UTF8 data to UTF16
+							free(buf);
+						}
+						SystemArray_StoreElement(pConstructorArgsArray, argIndex - 1, (PTR)&dotNetString);
+					} else {
+						Crash("Unsupported: attribute parameter of type %s\n", param.pTypeDef->name);
+						return NULL;
+					}
+				}
+			}
+
+			unsigned int numNamedParams = MetaData_DecodeSigEntry(&blob);
+			if (numNamedParams > 0) {
+				Crash("Unsupported: attributes with named params on attribute %s\n", pCtorTypeDef->name);
+				return NULL;
+			}
 		}
 	}
 

@@ -44,7 +44,7 @@ namespace System.Reflection {
         public virtual string Name => _name;
 
         [MethodImpl(MethodImplOptions.InternalCall)]
-        extern internal Attribute[] GetCustomAttributes();
+        extern internal InternalCustomAttributeInfo[] GetCustomAttributes();
     }
 }
 

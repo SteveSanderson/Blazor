@@ -28,6 +28,10 @@
 #include "RVA.h"
 
 unsigned int MetaData_DecodeSigEntry(SIG *pSig) {
+	return MetaData_DecodeSigEntryExt(pSig, 1);
+}
+
+unsigned int MetaData_DecodeSigEntryExt(SIG *pSig, int coerceFFToZero) {
 	unsigned char a,b,c,d;
 	a = *(*pSig)++;
 	if ((a & 0x80) == 0) {
@@ -36,7 +40,7 @@ unsigned int MetaData_DecodeSigEntry(SIG *pSig) {
 	}
 	// Special case
 	if (a == 0xff) {
-		return 0;
+		return coerceFFToZero == 1 ? 0 : 0xffffffff;
 	}
 
 	b = *(*pSig)++;

@@ -6,4 +6,12 @@ struct tSystemAttribute_ {
 	int fake;
 };
 
+typedef struct tInternalCustomAttributeInfo_ tInternalCustomAttributeInfo;
+struct tInternalCustomAttributeInfo_ {
+	// Keep in sync with InternalCustomAttributeInfo struct in corlib C# code
+	HEAP_PTR pUninitializedInstance;
+	HEAP_PTR pConstructorMethodBase;
+	HEAP_PTR pConstructorParams;
+};
+
 #endif

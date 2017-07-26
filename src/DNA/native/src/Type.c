@@ -410,6 +410,7 @@ static tTypeInit typeInit[] = {
 	{mscorlib, SystemReflection, "MethodBase", EVALSTACK_O, 4, 4, sizeof(tMethodBase)},
 	{mscorlib, SystemReflection, "MemberInfo", EVALSTACK_O, 4, 4, sizeof(tMemberInfo)},
 	{mscorlib, System, "Attribute", EVALSTACK_O, 4, 4, sizeof(tSystemAttribute)},
+	{mscorlib, SystemReflection, "InternalCustomAttributeInfo", EVALSTACK_VALUETYPE, sizeof(tInternalCustomAttributeInfo), sizeof(tInternalCustomAttributeInfo), sizeof(tInternalCustomAttributeInfo) },
 };
 
 int CorLibDone = 0;
