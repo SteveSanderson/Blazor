@@ -432,8 +432,6 @@ namespace RazorRenderer
                 references: allReferences,
                 options: compilationOptions);
 
-            compilation = AttributesHack.AddGetAttributesExtensionMethod(compilation);
-
             var errors = compilation.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error);
 
             if (errors.Any())
