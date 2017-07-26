@@ -43,22 +43,8 @@ struct tFilesLoaded_ {
 // In .NET Core, the core libraries are split over numerous assemblies. For simplicity,
 // the DNA corlib just puts them in one assembly
 static STRING assembliesMappedToDnaCorlib[] = {
-	"mscorlib",
-	"System.Collections",
-	"System.ComponentModel.Annotations",
-	"System.Console",
-	"System.IO",
-	"System.Linq",
-	"System.Net.Http",
-	"System.Private.CoreLib",
-	"System.Private.Uri",
-	"System.Reflection",
-	"System.Reflection.Extensions",
-	"System.Runtime",
-	"System.Runtime.Extensions",
-	"System.Runtime.InteropServices",
-	"System.Threading",
-	"System.Threading.Tasks"
+	"mscorlib"
+	// Also, "System.*" is implemented below
 };
 static int numAssembliesMappedToDnaCorlib = sizeof(assembliesMappedToDnaCorlib)/sizeof(STRING);
 
@@ -92,6 +78,11 @@ tMetaData* CLIFile_GetMetaDataForAssembly(unsigned char *pAssemblyName) {
 			pAssemblyName = "corlib";
 			break;
 		}
+	}
+	
+	// Also redirect System.* into corlib for convenience
+	if (strncmp("System.", pAssemblyName, 7) == 0) {
+		pAssemblyName = "corlib";
 	}
 
 	// Look in already-loaded files first
