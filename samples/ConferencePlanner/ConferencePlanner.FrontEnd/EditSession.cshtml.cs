@@ -7,12 +7,15 @@ using ConferencePlanner.FrontEnd.Models;
 using ConferencePlanner.FrontEnd.Services;
 using Blazor.Util;
 using Blazor.Runtime.Components;
+using System.Threading;
 
 namespace ConferencePlanner.FrontEnd
 {
     public class EditSessionModel
     {
-        private readonly string _baseUrl = "http://localhost:56009/";
+        private readonly string _baseUrl = "http://localhost:56009";
+
+        private readonly HttpClient _httpClient = new HttpClient();
 
         public bool ShowMessage => !string.IsNullOrEmpty(Message);
 
@@ -22,15 +25,16 @@ namespace ConferencePlanner.FrontEnd
 
         public int SessionID { get; set; } = 1;
 
+        private int _initCount = 0;
+
         public async Task InitAsyncImpl()
         {
-            Console.WriteLine($"CALLED EditSessionModel.InitAsync()");
+            var count = Interlocked.Increment(ref _initCount);
+            Console.WriteLine($"CALLED EditSessionModel.InitAsync() [{count}]");
 
-            var http = new HttpClient();
-
-            Console.WriteLine($"CALLING http.GetAsync()");
-            var response = await http.GetAsync($"{_baseUrl}/api/Sessions/{SessionID}");
-            Console.WriteLine($"RETURNED http.GetAsync()");
+            Console.WriteLine($"CALLING http.GetAsync() [{count}]");
+            var response = await _httpClient.GetAsync($"{_baseUrl}/api/Sessions/{SessionID}");
+            Console.WriteLine($"RETURNED http.GetAsync() [{count}]");
 
             // BUG: Following line requires loading System.Net.Primitives which fails in DNA right now
             //if ((int)response.StatusCode == 404)
@@ -44,19 +48,25 @@ namespace ConferencePlanner.FrontEnd
             // BUG: This causes WASM to have a fit
             //var session = await response.Content.ReadAsJsonAsync<ClientSessionResponse>();
 
-            Console.WriteLine($"CALLING response.Content.ReadAsStringAsync()");
+            Console.WriteLine($"CALLING response.Content.ReadAsStringAsync() [{count}]");
             var session = await response.Content.ReadAsStringAsync();
-            Console.WriteLine($"RETURNED response.Content.ReadAsStringAsync()");
+            Console.WriteLine($"RETURNED response.Content.ReadAsStringAsync() [{count}]");
+
             Session = JsonUtil.Deserialize<ClientSessionResponse>(session);
 
-            Console.WriteLine($"RETURNING EditSessionModel.InitAsync()");
+            if (Session == null)
+            {
+                Message = "Error retrieving session.";
+                Session = new ClientSessionResponse();
+            }
+
+            Console.WriteLine($"RETURNING EditSessionModel.InitAsync() [{count}]");
         }
 
         public async Task OnSaveClick()
         {
-            Console.WriteLine($"CALLED OnSaveClick()");
-
-            var http = new HttpClient();
+            var count = Interlocked.Increment(ref _initCount);
+            Console.WriteLine($"CALLED OnSaveClick() [{count}]");
 
             //Console.WriteLine($"CALLING http.PutJsonAsync({_baseUrl}/api/Sessions/{SessionID})");
             //var response = await http.PutJsonAsync($"{_baseUrl}/api/Sessions/{SessionID}", Session);
@@ -70,20 +80,20 @@ namespace ConferencePlanner.FrontEnd
 
             var url = $"{_baseUrl}/api/Sessions/{SessionID}";
 
-            Console.WriteLine($"CALLING JsonUtil.Serialize({{ Title = {Session.Title}, TrackId = {Session.TrackId} }})");
+            Console.WriteLine($"CALLING JsonUtil.Serialize({{ Title = {Session.Title}, TrackId = {Session.TrackId} }}) [{count}]");
             var body = JsonUtil.Serialize(Session);
 
-            Console.WriteLine($"CALLING new HttpRequestMessage()");
+            Console.WriteLine($"CALLING new HttpRequestMessage() [{count}]");
             var request = new HttpRequestMessage(HttpMethod.Put, url)
             {
                 Content = new StringContent(body)
             };
 
-            Console.WriteLine($"RETURNED new HttpRequestMessage()");
+            Console.WriteLine($"RETURNED new HttpRequestMessage() [{count}]");
 
-            Console.WriteLine($"CALLING http.SendAsync({url})");
-            var response = await http.SendAsync(request);
-            Console.WriteLine($"RETURNED http.SendAsync({url})");
+            Console.WriteLine($"CALLING http.SendAsync({url}) [{count}]");
+            var response = await _httpClient.SendAsync(request);
+            Console.WriteLine($"RETURNED http.SendAsync({url}) [{count}]");
 
             try
             {
@@ -94,6 +104,8 @@ namespace ConferencePlanner.FrontEnd
             {
                 Message = $"Something went wrong: {ex.Message}";
             }
+
+            Console.WriteLine($"RETURNING OnSaveClick() [{count}]");
         }
 
         public void OnDeleteClick()
