@@ -27,7 +27,7 @@ namespace ConferencePlanner.FrontEnd
 
         private int _initCount = 0;
 
-        public override async Task InitAsync()
+        public override async Task InitAsync(int id)
         {
             var count = Interlocked.Increment(ref _initCount);
             Console.WriteLine($"CALLED EditSessionModel.InitAsync() [{count}]");
