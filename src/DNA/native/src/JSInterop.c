@@ -42,7 +42,7 @@ int JSInterop_CallDotNet(char* assemblyName, char* namespace, char* className, c
 
 tAsyncCall* Framework_JSInterop_ToHeapRef(PTR pThis_, PTR pParams, PTR pReturnValue) {
 	HEAP_PTR obj = ((HEAP_PTR*)pParams)[0];
-	*(U32*)pReturnValue = *(U32*)obj;
+	*(HEAP_PTR*)pReturnValue = obj;
 	return NULL;
 }
 
