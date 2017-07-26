@@ -93,9 +93,15 @@ tAsyncCall* Reflection_MemberInfo_GetCustomAttributes(PTR pThis_, PTR pParams, P
 					MetaData_DecodeSigEntry(&blob);
 				} else { 
 					if (param.pTypeDef == types[TYPE_SYSTEM_INT32]) {
-						unsigned int sigEntry = MetaData_DecodeSigEntry(&blob);
-						HEAP_PTR boxedInt = Heap_Box(types[TYPE_SYSTEM_INT32], (PTR)&sigEntry);
+						unsigned int intValue = *((int*)blob);
+						blob += sizeof(int);
+						HEAP_PTR boxedInt = Heap_Box(types[TYPE_SYSTEM_INT32], (PTR)&intValue);
 						SystemArray_StoreElement(pConstructorArgsArray, argIndex - 1, (PTR)&boxedInt);
+					} else if (param.pTypeDef == types[TYPE_SYSTEM_BOOLEAN]) {
+						U32 boolVal = *((char*)blob);
+						blob += sizeof(char);
+						HEAP_PTR boxedBool = Heap_Box(types[TYPE_SYSTEM_BOOLEAN], (PTR)&boolVal);
+						SystemArray_StoreElement(pConstructorArgsArray, argIndex - 1, (PTR)&boxedBool);
 					} else if (param.pTypeDef == types[TYPE_SYSTEM_STRING]) {
 						HEAP_PTR dotNetString;
 						unsigned int numUtf8Bytes = MetaData_DecodeSigEntryExt(&blob, 0);
@@ -106,7 +112,8 @@ tAsyncCall* Reflection_MemberInfo_GetCustomAttributes(PTR pThis_, PTR pParams, P
 							// Not null (but maybe empty)
 							char* buf = malloc(numUtf8Bytes + 1);
 							for (U32 byteIndex = 0; byteIndex < numUtf8Bytes; byteIndex++) {
-								buf[byteIndex] = MetaData_DecodeSigEntry(&blob);
+								buf[byteIndex] = *((char*)blob);
+								blob += sizeof(char);
 							}
 							buf[numUtf8Bytes] = 0;
 							dotNetString = SystemString_FromCharPtrASCII(buf); // TODO: Handle non-ASCII UTF8, probably by converting the raw UTF8 data to UTF16
