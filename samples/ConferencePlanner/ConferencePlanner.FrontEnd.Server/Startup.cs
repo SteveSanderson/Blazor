@@ -23,6 +23,8 @@ namespace ConferencePlanner.FrontEnd.Server
                     "application/octet-stream"
                 });
             });
+
+            services.AddRouting();
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)

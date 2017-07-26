@@ -56,7 +56,9 @@ namespace System.Net.Http
                         throw new HttpClientException($"Response status code was {response.StatusCode}");
                     }
 
+                    Console.WriteLine($"CALLING tcs.TrySetResult() [{count}]");
                     tcs.TrySetResult(response);
+                    Console.WriteLine($"RETURNED tcs.TrySetResult() [{count}]");
                 }
                 catch (Exception ex)
                 {
