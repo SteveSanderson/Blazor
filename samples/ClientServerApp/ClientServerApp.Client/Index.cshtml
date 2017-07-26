@@ -14,26 +14,22 @@
 @{
     Context.Items["hello"] = "This shows BlazorContext is persistent across pages.";
 
-    @*var getAttributesMethodInfo = Type.GetType("System.Reflection.MyCustomAttributeExtensions").GetMethod("GetMyCustomAttributes");
+    var getAttributesMethodInfo = Type.GetType("System.Reflection.MyCustomAttributeExtensions").GetMethod("GetMyCustomAttributes");
 
     var typeInfo = typeof(ClientServerApp.Client.Hello);
     <h2>@typeInfo.Name attributes</h2>
     <ul>
-        @foreach (var memberInfo in typeInfo.GetMembers())
+        @foreach (var prop in typeInfo.GetRuntimeProperties())
         {
-            var attributes = (IEnumerable<Attribute>)getAttributesMethodInfo.Invoke(null, new[] { memberInfo });
-            if (attributes.Count() > 0)
-            {
-            <li>
-                <p>@memberInfo.Name</p>
-                <ul>
-                    @foreach (var attribute in attributes)
-                    {
-                        <li>@attribute.GetType().Name</li>
-                    }
-                </ul>
-            </li>
-            }
+        <li>
+            <p>@prop.Name</p>
+            <ul>
+                @foreach (var attribute in prop.GetCustomAttributes())
+                {
+                    <li>@attribute.GetType().Name</li>
+                }
+            </ul>
+        </li>
         }
-    </ul>*@
+    </ul>
 }

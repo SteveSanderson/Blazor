@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Text;
 using Blazor.Runtime.Components;
 using System.Threading.Tasks;
+using System.ComponentModel;
 
 namespace ClientServerApp.Client
 {
@@ -13,7 +14,7 @@ namespace ClientServerApp.Client
         public int MyProperty { get; set; }
 
         [StringLength(10)]
-        [Display(Name = "Test")]
+        [DisplayName("Test")]
         public string AnotherProp { get; set; }
 
         public void IncrementCount()
