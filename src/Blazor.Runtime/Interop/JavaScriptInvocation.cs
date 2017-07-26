@@ -22,6 +22,17 @@ namespace Blazor.Runtime.Interop
             }
         }
 
+        public void Invoke(params object[] values)
+        {
+            var currentHandle = _currentHandle;
+            for (var i = 0; i < _names.Count - 1; i++)
+            {
+                currentHandle = (JSObjectHandle)currentHandle.GetProperty(_names[i]);
+            }
+
+            currentHandle.Call(_names[_names.Count - 1], values);
+        }
+
         public TResult Invoke<TResult>(params object[] values)
         {
             var currentHandle = _currentHandle;

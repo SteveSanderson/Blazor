@@ -12,7 +12,7 @@ namespace Blazor.TypeScriptProxy.Generator
             var entryPointLocator = new EntryPointLocator();
             entryPointLocator.Visit(module);
 
-            var visitor = new Visitor(entryPointLocator.EntryPointTypes);
+            var visitor = new RenderingVisitor(entryPointLocator.EntryPointDeclarations, new CSharpWriter());
             visitor.Visit(module);
 
             var code = visitor.Writer.GenerateCode();
@@ -23,10 +23,10 @@ namespace Blazor.TypeScriptProxy.Generator
         {
             public EntryPointLocator()
             {
-                EntryPointTypes = new List<ISyntaxToken>();
+                EntryPointDeclarations = new List<VariableDeclaration>();
             }
 
-            public List<ISyntaxToken> EntryPointTypes { get; }
+            public List<VariableDeclaration> EntryPointDeclarations { get; }
 
             public override void VisitVariableStatement(VariableStatement variableDeclaration)
             {
@@ -35,31 +35,132 @@ namespace Blazor.TypeScriptProxy.Generator
 
             public override void VisitVariableDeclaration(VariableDeclaration variableDeclaration)
             {
-                EntryPointTypes.Add(variableDeclaration.TypeToken);
+                EntryPointDeclarations.Add(variableDeclaration);
             }
         }
 
-        private class Visitor : SyntaxTokenVisitor
+        // Inheritance hack, this is an awful use of inheritance :D
+        private class ImplementationRenderingVisitor : RenderingVisitor
         {
-            private readonly IEnumerable<ISyntaxToken> _entryPointTypes;
+            private readonly string _entryPointName;
 
-            public Visitor(IEnumerable<ISyntaxToken> entryPointTypes)
+            public ImplementationRenderingVisitor(string entryPointName, List<VariableDeclaration> entryPointTypes, CSharpWriter writer) : base(entryPointTypes, writer)
             {
-                _entryPointTypes = entryPointTypes;
-                Writer = new CSharpWriter();
+                _entryPointName = entryPointName;
+            }
 
-                Writer.WriteLine("using System;");
-                Writer.WriteLine("using Blazor.Interop;");
-                Writer.WriteLine("using Blazor.Runtime.Interop;");
+            public override void VisitInterfaceDeclaration(InterfaceDeclaration interfaceSignature)
+            {
+                Writer.Write($"public class {interfaceSignature.Name}");
+
+                RenderGenericTypeParameters(interfaceSignature.GenericTypeParameters);
+
+                var inherits = interfaceSignature.Inherits?.ToList();
+                if (inherits?.Any() == true)
+                {
+                    Writer.Write(" : ");
+                    for (var i = 0; i < inherits.Count; i++)
+                    {
+                        Visit(inherits[i]);
+
+                        if (i + 1 < inherits.Count)
+                        {
+                            Writer.Write(", ");
+                        }
+                    }
+                }
+
+                Writer.WriteLine("{");
+
+                Writer.CurrentIndent += 4;
+
+                Visit(interfaceSignature.Members);
+
+                Writer.CurrentIndent -= 4;
+                Writer.WriteLine("}");
+            }
+
+            public override void VisitMethodSignature(MethodSignature signature)
+            {
+                Writer.Write("public ");
+                Visit(signature.ReturnTypeToken);
+
+                Writer.Write($" @{signature.Name}");
+
+                RenderGenericTypeParameters(signature.GenericTypeParameters);
+
+                Writer.Write("(");
+                var parameterList = signature.Parameters.ToList();
+
+                for (var i = 0; i < parameterList.Count; i++)
+                {
+                    var parameter = parameterList[i];
+                    Visit(parameter);
+
+                    if (i + 1 < parameterList.Count)
+                    {
+                        Writer.Write(", ");
+                    }
+                }
+                Writer
+                    .Write($") => Blazor.Runtime.Interop.JavaScript.Window[\"{_entryPointName}\"][\"{signature.Name}\"].Invoke");
+
+                if (signature.ReturnTypeToken.Kind != SyntaxKind.VoidKeyword)
+                {
+                    Writer.Write("<");
+                    Visit(signature.ReturnTypeToken);
+                    Writer.Write(">");
+                }
+
+                Writer.Write("(");
+                for (var i = 0; i < parameterList.Count; i++)
+                {
+                    if (parameterList[i] is Parameter parameter)
+                    {
+                        Writer.Write(parameter.Name);
+                    }
+
+                    if (i + 1 < parameterList.Count)
+                    {
+                        Writer.Write(", ");
+                    }
+                }
+                Writer.WriteLine(");");
+            }
+        }
+
+        private class RenderingVisitor : SyntaxTokenVisitor
+        {
+            private readonly List<VariableDeclaration> _entryPointDeclarations;
+
+            public RenderingVisitor(List<VariableDeclaration> entryPointDeclarations, CSharpWriter writer)
+            {
+                _entryPointDeclarations = entryPointDeclarations;
+                Writer = writer;
             }
 
             public CSharpWriter Writer { get; }
 
+            public override void Visit(Module module)
+            {
+                Writer.WriteLine("using System;");
+                Writer.WriteLine("using Blazor.Interop;");
+
+                base.Visit(module);
+            }
+
             public override void VisitInterfaceDeclaration(InterfaceDeclaration interfaceSignature)
             {
-                Writer
-                    .Write($"public interface {interfaceSignature.Name}");
+                var entryPoint = _entryPointDeclarations.FirstOrDefault(declaration => string.Equals(((ReferenceTypeToken)declaration.TypeToken).TypeName, interfaceSignature.Name));
+                if (entryPoint != null)
+                {
+                    // Entry point, render implementation
+                    var implementationVisitor = new ImplementationRenderingVisitor(entryPoint.Name, _entryPointDeclarations, Writer);
+                    implementationVisitor.Visit(interfaceSignature);
+                    return;
+                }
 
+                Writer.Write($"public interface {interfaceSignature.Name}");
                 RenderGenericTypeParameters(interfaceSignature.GenericTypeParameters);
 
                 var inherits = interfaceSignature.Inherits?.ToList();
@@ -195,7 +296,9 @@ namespace Blazor.TypeScriptProxy.Generator
 
                 Writer.Write("public static ");
                 Visit(variableDeclaration.TypeToken);
-                Writer.WriteLine($" {variableDeclaration.Name} = null;");
+                Writer.Write($" {variableDeclaration.Name} = new ");
+                Visit(variableDeclaration.TypeToken);
+                Writer.WriteLine("();");
 
                 Writer.CurrentIndent -= 4;
                 Writer.WriteLine("}");
@@ -257,7 +360,7 @@ namespace Blazor.TypeScriptProxy.Generator
                 Writer.WriteLine(" { get; set; }");
             }
 
-            private void RenderGenericTypeParameters(IEnumerable<ISyntaxToken> parameters)
+            protected void RenderGenericTypeParameters(IEnumerable<ISyntaxToken> parameters)
             {
                 if (parameters?.Any() == true)
                 {

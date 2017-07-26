@@ -1,12 +1,14 @@
 ﻿@section Scripts {
     <br />
     <h6>This is from RenderSection. </h6>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 }
 
 <h1>Hello, world!</h1>
 <p>Welcome to your new single-page application.</p>
 
 <button @onclick(() => NavigationHelper("/Counter"))>Navigate to Counter</button>
+<button @onclick(() => Console.WriteLine(Browser.jQuery.now()))>Log jquery time</button>
 
 @{
     Context.Items["hello"] = "This shows BlazorContext is persistent across pages.";
