@@ -86,6 +86,20 @@ namespace Blazor.Components
                 // InitAsync's task completes (where applicable)
                 Init();
                 var initAsyncTask = InitAsync();
+
+                var url = Context.AbsoluteUrl;
+                var segments = url.Split(new char[] { '/' });
+                var idSegments = segments[segments.Length - 1];
+
+                int num;
+                if (idSegments.Length > 0 && int.TryParse(idSegments, out num))
+                {
+                    InitAsync(num);
+                } else
+                {
+                    InitAsync();
+                }
+
                 Render();
                 _firstRenderCompletedTask = initAsyncTask?.ContinueWith(_ => {
                     Render();
@@ -127,6 +141,8 @@ namespace Blazor.Components
         protected virtual void Init() { }
         public virtual Task InitAsync() { return null; }
 
+        public virtual Task InitAsync(int id) { return null; }
+        
         internal Component InstantiateAndRegisterChildComponent(int vdomItemIndex)
         {
             var vdomItem = builder.Items[vdomItemIndex];

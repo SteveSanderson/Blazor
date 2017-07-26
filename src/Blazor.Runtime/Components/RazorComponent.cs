@@ -15,6 +15,8 @@ namespace Blazor.Components
     {
         public IDictionary<string, object> ViewData { get; } = new Dictionary<string, object>();
 
+
+        public List<string> Items { get; set; }
         public void NavigationHelper(string url)
         {
             JavaScript.Window["location"]["assign"].Invoke<object>(url);
@@ -40,9 +42,10 @@ namespace Blazor.Components
             section(builder);
         }
 
-        public static Component Instantiate(string cshtmlFileName, BlazorContext context)
+        public static Component Instantiate(string url, BlazorContext context)
         {
-            var razorViewClassName = GetViewClassName(".", cshtmlFileName);
+
+            var razorViewClassName = GetViewClassName(".", url);
             var viewTypeName = $"Views.{razorViewClassName}";
             Type viewType;
             if (Router.ViewAssemblies == null)
@@ -645,6 +648,32 @@ namespace Blazor.Components
             else
             {
                 return null;
+            }
+        }
+
+        public override Task InitAsync(int id)
+        {
+            if (IsPage)
+            {
+                return (Model as IModel).InitAsync(id);
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+
+        protected override VDomComponent RenderBody()
+        {
+            if (BodyComponent != null)
+            {
+                BodyComponent.DefineSections();
+                return RenderComponent(BodyComponent);
+            }
+            else
+            {
+                throw new InvalidOperationException("Cannot call RenderBody except on layouts");
             }
         }
     }

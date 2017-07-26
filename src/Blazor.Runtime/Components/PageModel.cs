@@ -13,5 +13,10 @@ namespace Blazor.Runtime.Components
         {
             return null;
         }
+        public virtual Task InitAsync(int id)
+        {
+            // THIS IS A HUGE HACK FOR THE DEMO VIA DAMIAN
+            return null;
+        }
     }
 }

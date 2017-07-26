@@ -138,6 +138,7 @@ namespace RazorRenderer
             var model = codeDoc.Items["DetectedModel"];
             string content = "";
             string isPage = "";
+            string addItems = "";
             if (model != null)
             {
                 content = $@"Model = new {model}();";
@@ -145,6 +146,16 @@ namespace RazorRenderer
             if ( (bool) codeDoc.Items["DetectedPage"])
             {
                 isPage += "classNode.IsPage = true;";
+            }
+            if ((codeDoc.Items["DetectedPageMatches"]) != null) 
+            {
+                var list = (List<string>)codeDoc.Items["DetectedPageMatches"];
+                addItems += "List<string> list = new List<string>();";
+                foreach (var item in list)
+                {
+                    addItems += $"\r\n list.Add(\"{item}\");";
+                }
+                addItems += "\r\n Items = list;";
             }
             var razorToken = new RazorIRToken { 
                 Kind = RazorIRToken.TokenKind.CSharp,
@@ -155,6 +166,7 @@ namespace RazorRenderer
                         {content} 
                         var classNode = new {classNode.Name}();
                         {isPage}
+                        {addItems}
                         return classNode;
                     }}"
             };
@@ -253,6 +265,7 @@ namespace RazorRenderer
             string detectedTagName = null;
             string detectedModel = null;
             bool detectedPage = false;
+            List<string> detectedPageGroup = null;
             using (var ms = new MemoryStream())
             {
                 using (var sw = new StreamWriter(ms))
@@ -298,6 +311,17 @@ namespace RazorRenderer
                         if (line.StartsWith(pageLinePrefix))
                         {
                             detectedPage = true;
+                            var parameters = new Regex("^\\s*{\\s*([^}]+)}\\s*");
+                            var matches = parameters.Matches(line.Substring(pageLinePrefix.Length + 1));
+                            if (matches.Count > 0)
+                            {
+                                detectedPageGroup = new List<string>();
+                                foreach (Match match in matches)
+                                {
+                                    var collection = match.Groups;
+                                    detectedPageGroup.Add(collection[0].Value);
+                                }
+                            }
                             continue;
                         }
 
@@ -322,6 +346,7 @@ namespace RazorRenderer
                     codeDoc.Items["DetectedBaseClass"] = lastInheritsLine;
                     codeDoc.Items["UsingNamespaces"] = usingNamespaces;
                     codeDoc.Items["DetectedPage"] = detectedPage;
+                    codeDoc.Items["DetectedPageMatches"] = detectedPageGroup;
                     return codeDoc;
                 }
             }

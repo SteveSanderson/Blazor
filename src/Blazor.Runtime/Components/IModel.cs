@@ -8,5 +8,6 @@ namespace Blazor.Runtime.Components
     public interface IModel
     {
         Task InitAsync();
+        Task InitAsync(int id);
     }
 }

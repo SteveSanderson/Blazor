@@ -27,5 +27,10 @@ namespace ClientServerApp.Client
             Console.WriteLine("HelloModel overriding InitAsync");
             return null;
         }
+        public override Task InitAsync(int id)
+        {
+            Console.WriteLine("Calling init async with id " + id);
+            return null;
+        }
     }
 }

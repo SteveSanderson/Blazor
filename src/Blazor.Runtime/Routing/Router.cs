@@ -1,5 +1,6 @@
 ﻿using Blazor.Components;
 using Blazor.Runtime.Components;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
@@ -51,9 +52,23 @@ namespace Blazor.Routing
 
         private static string UrlToComponentPath(string url)
         {
-            if (url.EndsWith("/"))
+            if (url.Equals("/"))
             {
                 url = url + "Index";
+            }
+            var split = url.Split(new char[] { '/' });
+            var id = split[split.Length - 1];
+            int res;
+            if (int.TryParse(id, out res))
+            {
+                // We have an int, remove id and continue
+                string temp = "/";
+                for (int i =0; i < split.Length - 1; i++)
+                {
+                    temp += split[i];
+                }
+                Console.WriteLine(temp);
+                return $".{temp.Replace('/', Path.DirectorySeparatorChar)}.cshtml";
             }
             
             return $".{url.Replace('/', Path.DirectorySeparatorChar)}.cshtml";
