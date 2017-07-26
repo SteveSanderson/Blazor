@@ -215,6 +215,21 @@ namespace RazorRenderer
                 generatedCode = generatedCode.Replace(
                     "public async override global::System.Threading.Tasks.Task ExecuteAsync()",
                     "protected override void RenderVirtualDom()");
+
+                if ((bool)codeDoc.Items["DetectedPage"])
+                {
+                    if (codeDoc.Source.FileName.Contains("Validation"))
+                    {
+                        // TODO: very very temporary. Need to make this dynamic.
+                        generatedCode = generatedCode.Replace(
+                            "protected override void RenderVirtualDom()",
+                            ValidationHack.GetValidationStuffToAppend() +
+                            "protected override void RenderVirtualDom()");
+                        generatedCode = @"using System.Reflection;
+using System.ComponentModel.DataAnnotations; " + generatedCode;
+                    }
+                }
+
                 Log(generatedCode);
 
                 var syntaxTree = CSharpSyntaxTree.ParseText(generatedCode);

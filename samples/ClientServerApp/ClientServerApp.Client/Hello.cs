@@ -13,6 +13,9 @@ namespace ClientServerApp.Client
         [Required]
         public int MyProperty { get; set; }
 
+        [Required]
+        public string MyString { get; set; }
+
         [StringLength(10)]
         [DisplayName("Test")]
         public string AnotherProp { get; set; }

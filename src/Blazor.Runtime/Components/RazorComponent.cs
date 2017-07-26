@@ -15,7 +15,6 @@ namespace Blazor.Components
     {
         public IDictionary<string, object> ViewData { get; } = new Dictionary<string, object>();
 
-
         public List<string> Items { get; set; }
         public void NavigationHelper(string url)
         {
@@ -638,6 +637,13 @@ namespace Blazor.Components
         public static TModel Model { get;  set; } // TODO this really should be a private set.
 
         public bool IsPage { get; set; }
+
+        public string ValidationSummary { get; set; }
+
+        public virtual void Validate()
+        {
+            // The view will override this.
+        }
 
         public override Task InitAsync()
         {
