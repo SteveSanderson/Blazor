@@ -35,6 +35,7 @@ namespace Blazor.Host
 
         internal static void EnablePrerendering(string clientRootDir, string clientBinDir, string assemblyName)
         {
+#if DEBUG
             try
             {
                 var wwwroot = Path.Combine(clientRootDir, "wwwroot");
@@ -56,6 +57,9 @@ namespace Blazor.Host
             {
                 // This means there are no typescript files to compile. Just move on.
             }
+#else
+            UseFallbackDll(clientRootDir, clientBinDir);
+#endif
 
             var clientAppAssemblyPath = Path.Combine(clientBinDir, assemblyName);
             var entrypointAssembly = LoadAssemblyFromPath(clientAppAssemblyPath);
