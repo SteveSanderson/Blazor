@@ -109,7 +109,7 @@ namespace Blazor.TypeScriptProxy.Generator
                     }
                 }
                 Writer
-                    .Write(") => JavaScript.Window");
+                    .WriteLine(");");
             }
 
             public override void VisitParameter(Parameter parameter)
