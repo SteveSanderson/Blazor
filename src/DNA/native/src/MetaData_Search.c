@@ -81,7 +81,7 @@ static tMD_MethodDef* FindMethodInType(tMD_TypeDef *pTypeDef, STRING name, tMeta
 
 	do {
 		for (i=0; i<pLookInType->numMethods; i++) {
-			if (MetaData_CompareNameAndSig(name, sigBlob, pSigMetaData, ppClassTypeArgs, ppMethodTypeArgs, pLookInType->ppMethods[i], pLookInType->ppClassTypeArgs, NULL)) {
+			if (MetaData_CompareNameAndSig(name, sigBlob, pSigMetaData, ppClassTypeArgs, ppMethodTypeArgs, pLookInType->ppMethods[i], pLookInType->ppClassTypeArgs, ppMethodTypeArgs)) {
 				return pLookInType->ppMethods[i];
 			}
 		}

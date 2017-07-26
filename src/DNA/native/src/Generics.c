@@ -167,7 +167,7 @@ tMD_MethodDef* Generics_GetMethodDefFromSpec
 	U32 argCount, i;
 	tMD_TypeDef **ppTypeArgs;
 
-	pCoreMethod = MetaData_GetMethodDefFromDefRefOrSpec(pMethodSpec->pMetaData, pMethodSpec->method, NULL, NULL);//ppCallingClassTypeArgs, ppCallingMethodTypeArgs);
+	pCoreMethod = MetaData_GetMethodDefFromDefRefOrSpec(pMethodSpec->pMetaData, pMethodSpec->method, ppCallingClassTypeArgs, ppCallingMethodTypeArgs);
 
 	//ppClassTypeArgs = pCoreMethod->pParentType->ppClassTypeArgs;
 	sig = MetaData_GetBlob(pMethodSpec->instantiation, NULL);
