@@ -414,6 +414,7 @@ namespace RazorRenderer
                 AssemblyLocation("System.Security.Principal"),
                 AssemblyLocation("System.Security.Claims"),
                 AssemblyLocation("System.ComponentModel.Annotations"),
+                AssemblyLocation("System.ComponentModel.Primitives"),
                 AssemblyLocation("netstandard"),
                 AssemblyLocation("Newtonsoft.Json"),
                 AssemblyLocation(typeof(RazorComponent)), // Blazor
