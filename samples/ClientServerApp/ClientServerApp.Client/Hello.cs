@@ -24,6 +24,7 @@ namespace ClientServerApp.Client
 
         public override Task InitAsync()
         {
+            Console.WriteLine("HelloModel overriding InitAsync");
             return null;
         }
     }

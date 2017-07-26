@@ -11,7 +11,6 @@ namespace Blazor.Runtime.Components
 
         public virtual Task InitAsync()
         {
-            Console.WriteLine("From PageModel");
             return null;
         }
     }

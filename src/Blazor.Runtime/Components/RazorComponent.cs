@@ -615,7 +615,6 @@ namespace Blazor.Components
             if (BodyComponent != null)
             {
                 BodyComponent.DefineSections();
-                //BodyComponent.InitAsync();
                 return RenderComponent(BodyComponent);
             }
             else
@@ -646,21 +645,6 @@ namespace Blazor.Components
             else
             {
                 return null;
-            }
-        }
-
-
-        protected override VDomComponent RenderBody()
-        {
-            if (BodyComponent != null)
-            {
-                BodyComponent.DefineSections();
-                //InitAsync();
-                return RenderComponent(BodyComponent);
-            }
-            else
-            {
-                throw new InvalidOperationException("Cannot call RenderBody except on layouts");
             }
         }
     }
