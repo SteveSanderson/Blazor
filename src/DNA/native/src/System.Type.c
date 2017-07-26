@@ -55,7 +55,7 @@ void DotNetStringToCString(unsigned char* buf, U32 bufLength, STRING dotnetStrin
 		Crash("String of length %i was too long for buffer of length %i\n", stringLen, bufLength);
 	}
 
-	int i;
+	U32 i;
 	for (i=0; i<stringLen; i++) {
 		buf[i] = (unsigned char)dotnetString2[i];
 	}
@@ -169,7 +169,7 @@ tAsyncCall* System_Type_GetMethod(PTR pThis_, PTR pParams, PTR pReturnValue)
 	tMD_TypeDef *pTypeDef = pRuntimeType->pTypeDef;
 
 	// Search for the method by name
-	for (int i=0; i<pTypeDef->numMethods; i++) {
+	for (U32 i=0; i<pTypeDef->numMethods; i++) {
 		if (strcmp(pTypeDef->ppMethods[i]->name, methodName) == 0) {
 			tMD_MethodDef *pMethodDef = pTypeDef->ppMethods[i];
 

@@ -25,7 +25,8 @@ using System.Reflection;
 using System.Collections.Generic;
 
 namespace System {
-	public abstract class Type : MemberInfo {
+#pragma warning disable 0660, 0661
+    public abstract class Type : MemberInfo {
 
         private static IDictionary<string, Type> typesByNameCache = new Dictionary<string, Type>();
 
@@ -142,6 +143,7 @@ namespace System {
             return t1?.FullName.Equals(t2?.FullName) == false;
         }
     }
+#pragma warning restore 0660, 0661
 }
 
 #endif
