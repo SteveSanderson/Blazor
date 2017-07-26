@@ -818,7 +818,7 @@ window['jsobject.js'] = (function () {
                     console.log('Debugger connection closed!');
                 };
             }
-            catch() {
+            catch(ex) {
                 // Web socket error. No debugging
             }
         }
