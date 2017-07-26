@@ -88,10 +88,6 @@ static tLoadedLib* GetLib(STRING name) {
 	return pLib;
 }
 
-#ifndef _WIN32
-extern char* invokeJsFunc(STRING libName, STRING funcName, STRING arg0);
-#endif
-
 fnPInvoke PInvoke_GetFunction(tMetaData *pMetaData, tMD_ImplMap *pImplMap) {
 	tLoadedLib *pLib;
 	STRING libName;
