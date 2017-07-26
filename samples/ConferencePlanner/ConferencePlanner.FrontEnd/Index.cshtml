@@ -23,7 +23,10 @@
                         <form method="post">
                             <input type="hidden" name="sessionId" value="@session.ID" />
                             <p>
-                                <a authz-policy="Admin" href="~/EditSession" asp-route-id="@session.ID" class="btn btn-default btn-sm">Edit</a>
+                                @{ 
+                                    var url = $"~/EditSession/{session.ID}";
+                                }
+                                <a authz-policy="Admin" href=@url asp-route-id="@session.ID" class="btn btn-default btn-sm">Edit</a>
                                 @if (UserSessions.Contains(session.ID))
                                 {
                                     <button authz="true" type="submit" asp-page-handler="Remove" class="btn btn-default btn-sm"><span class="glyphicon glyphicon-star" aria-hidden="true"></span></button>

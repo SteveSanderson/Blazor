@@ -56,6 +56,10 @@ namespace Blazor.Routing
             {
                 url = url + "Index";
             }
+            if (url[url.Length - 1] == '/')
+            {
+                url = url.Substring(0, url.Length - 1);
+            }
             var split = url.Split(new char[] { '/' });
             var id = split[split.Length - 1];
             int res;

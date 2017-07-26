@@ -332,7 +332,7 @@ using System.ComponentModel.DataAnnotations; " + generatedCode;
                         {
                             detectedPage = true;
                             var parameters = new Regex("^\\s*{\\s*([^}]+)}\\s*");
-                            var matches = parameters.Matches(line.Substring(pageLinePrefix.Length + 1));
+                            var matches = parameters.Matches(line.Substring(pageLinePrefix.Length));
                             if (matches.Count > 0)
                             {
                                 detectedPageGroup = new List<string>();

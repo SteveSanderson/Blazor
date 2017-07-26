@@ -87,6 +87,11 @@ namespace Blazor.Components
                 Init();
 
                 var url = Context.AbsoluteUrl;
+                if (url[url.Length - 1] == '/')
+                {
+                    url = url.Substring(0, url.Length - 1);
+                }
+
                 var segments = url.Split(new char[] { '/' });
                 var idSegments = segments[segments.Length - 1];
 
