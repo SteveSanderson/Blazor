@@ -19,10 +19,16 @@ namespace Blazor.TypeScriptProxy
         {
             if (args.Length == 0)
             {
-                throw new ArgumentOutOfRangeException(nameof(args), "You must provide a root directory.");
+                throw new ArgumentOutOfRangeException(nameof(args), "Usage: dotnet run <Path-to-ts-files> <optional-assembly-output-path>");
             }
 
+            var assemblyOutputPath = Path.Combine(Directory.GetCurrentDirectory(), "JSTypeProxies.dll");
             var searchDirectory = args[0];
+            if (args.Length == 2)
+            {
+                assemblyOutputPath = args[1];
+            }
+
             var headerFiles = Directory.GetFiles(searchDirectory, "*.d.ts", SearchOption.AllDirectories);
             for(var i = 0; i < headerFiles.Length; i++)
             {
@@ -33,8 +39,11 @@ namespace Blazor.TypeScriptProxy
                     throw new InvalidOperationException("First run npm install prior to executing this command line.");
                 }
 
-                var processInfo = new ProcessStartInfo(application, $"--compiler ntypescript generate.ts -n -- {headerFiles[i]}")
+                var absolutePath = Path.Combine(Directory.GetCurrentDirectory(), headerFiles[i]);
+
+                var processInfo = new ProcessStartInfo(application, $"--compiler ntypescript generate.ts -n -- {absolutePath}")
                 {
+                    WorkingDirectory = Path.Combine(Directory.GetCurrentDirectory(), "../../../src/Blazor.TypeScriptProxy/"), // TODO: Super hack; need to change
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     WindowStyle = ProcessWindowStyle.Hidden,
@@ -55,7 +64,7 @@ namespace Blazor.TypeScriptProxy
                 var generator = new CSharpGenerator();
                 var code = generator.Render(module);
 
-                Console.WriteLine(code);
+                //Console.WriteLine(code);
 
                 var compilationOptions = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
                 .WithOptimizationLevel(OptimizationLevel.Debug);
@@ -87,16 +96,16 @@ namespace Blazor.TypeScriptProxy
                 {
                     foreach (var error in errors)
                     {
-                        Console.WriteLine(error.ToString());
+                        //Console.WriteLine(error.ToString());
                     }
                     throw new InvalidOperationException(string.Join(Environment.NewLine, errors.Select(e => e.ToString()).ToArray()));
                 }
                 else
                 {
-                    compilation.Emit(Path.Combine(Directory.GetCurrentDirectory(), "JSTypeProxies.dll"));
+                    compilation.Emit(assemblyOutputPath);
                 }
 
-                Console.ReadLine();
+                //Console.ReadLine();
 
                 //var settings = new JsonSerializerSettings();
                 //settings.ReferenceLoopHandling = ReferenceLoopHandling.Serialize;

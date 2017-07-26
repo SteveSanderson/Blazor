@@ -416,7 +416,8 @@ namespace RazorRenderer
                 AssemblyLocation("System.ComponentModel.Annotations"),
                 AssemblyLocation("netstandard"),
                 AssemblyLocation("Newtonsoft.Json"),
-                AssemblyLocation(typeof(RazorComponent)) // Blazor
+                AssemblyLocation(typeof(RazorComponent)), // Blazor
+                AssemblyLocation("JSTypeProxies")
             };
             var allReferences = assemblyReferences
                 .Concat(standardReferencePaths.Select(assemblyLocation => MetadataReference.CreateFromFile(assemblyLocation)))

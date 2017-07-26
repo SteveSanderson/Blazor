@@ -184,7 +184,7 @@ namespace Blazor.Host
                 {
                     throw new ArgumentException($"If {nameof(options.EnableServerSidePrerendering)} is true, then you must specify a value for {nameof(options.ClientAssemblyName)}.");
                 }
-                Prerendering.EnablePrerendering(clientBinDir, options.ClientAssemblyName);
+                Prerendering.EnablePrerendering(rootPath, clientBinDir, options.ClientAssemblyName);
             }
 
             // SPA fallback routing - for requests that don't match physical files, and don't appear

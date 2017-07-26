@@ -23,8 +23,36 @@ namespace Blazor.Host
     {
         private static string[] viewReferenceAssemblies;
 
-        internal static void EnablePrerendering(string clientBinDir, string assemblyName)
+        internal static void UseFallbackDll(string rootPath, string binDir)
         {
+            // This will be reached only when something happened during the dll generation.
+            // Most likely cause is npm install hasn't run in the Blazor.TypeScriptProxy project.
+            var tsAssemblyPath = Path.Combine(Directory.GetCurrentDirectory(), rootPath, "fallback", "JSTypeProxies.dll");
+            var destPath = Path.Combine(binDir, "JSTypeProxies.dll");
+            File.Copy(tsAssemblyPath, destPath, overwrite: true);
+            AssemblyLoadContext.Default.LoadFromAssemblyPath(destPath);
+        }
+
+        internal static void EnablePrerendering(string clientRootDir, string clientBinDir, string assemblyName)
+        {
+            try
+            {
+                var wwwroot = Path.Combine(clientRootDir, "wwwroot");
+                var tsAssemblyPath = Path.Combine(clientBinDir, "JSTypeProxies.dll");
+                Blazor.TypeScriptProxy.Program.Main(new[] { wwwroot, tsAssemblyPath });
+                AssemblyLoadContext.Default.LoadFromAssemblyPath(tsAssemblyPath);
+            }
+            catch (InvalidOperationException ex)
+            {
+                Console.WriteLine("InvalidOperationException handled: " + ex.Message);
+                UseFallbackDll(clientRootDir, clientBinDir);
+            }
+            catch (NullReferenceException ex)
+            {
+                Console.WriteLine("NullReferenceException handled: " + ex.Message);
+                UseFallbackDll(clientRootDir, clientBinDir);
+            }
+
             var clientAppAssemblyPath = Path.Combine(clientBinDir, assemblyName);
             var entrypointAssembly = LoadAssemblyFromPath(clientAppAssemblyPath);
             var entrypoint = entrypointAssembly.EntryPoint;

@@ -7,7 +7,7 @@
 
         public static Window Window => new Window(_windowHandle);
 
-        public static Document Document => new Document(_documentHandle);
+        public static Document2 Document => new Document2(_documentHandle);
 
         public static JavaScriptInvocation Global => new JavaScriptInvocation(JSObjectHandle.Global);
     }
