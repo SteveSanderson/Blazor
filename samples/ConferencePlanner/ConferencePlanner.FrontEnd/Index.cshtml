@@ -23,7 +23,7 @@
                         <form method="post">
                             <input type="hidden" name="sessionId" value="@session.ID" />
                             <p>
-                                <a authz-policy="Admin" href="~/EditSession" asp-route-id="@session.ID" class="btn btn-default btn-sm">Edit</a>
+                                <a authz-policy="Admin" asp-page="/Admin/EditSession" asp-route-id="@session.ID" class="btn btn-default btn-sm">Edit</a>
                                 @if (UserSessions.Contains(session.ID))
                                 {
                                     <button authz="true" type="submit" asp-page-handler="Remove" class="btn btn-default btn-sm"><span class="glyphicon glyphicon-star" aria-hidden="true"></span></button>
@@ -43,8 +43,6 @@
 </div>
 
 @functions {
-    private int _initCount = 0;
-
     public IEnumerable<ClientSessionResponse> Sessions { get; set; }
        = Enumerable.Empty<ClientSessionResponse>();
 
@@ -57,17 +55,11 @@
 
     public string TitleSuffix { get; set; } = "Initial";
 
-    override public async Task InitAsync()
+    override protected async Task InitAsync()
     {
-        var count = System.Threading.Interlocked.Increment(ref _initCount);
-
-        Console.WriteLine($"CALLED Index.InitAsync() [{count}]");
-
         var sessions = await GetSessionsAsync() ?? Enumerable.Empty<ClientSessionResponse>();
 
         Sessions = sessions;
-
-        Console.WriteLine($"RETURNING Index.InitAsync() [{count}]");
     }
 
     public async Task<ClientSessionResponse[]> GetSessionsAsync()

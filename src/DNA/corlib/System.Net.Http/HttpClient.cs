@@ -29,27 +29,24 @@ namespace System.Net.Http
             }
         }
 
-        private int _sendAsyncCount = 0;
-
         public Task<HttpResponseMessage> SendAsync(HttpRequestMessage request)
         {
-            var count = Interlocked.Increment(ref _sendAsyncCount);
-            Console.WriteLine($"CALLED SendAsync({request.Url}) [{count}]");
+            Console.WriteLine($"CALLED SendAsync({request.Url})");
 
             var tcs = new TaskCompletionSource<HttpResponseMessage>();
 
             var body = request.Content as StringContent;
 
-            Console.WriteLine($"CALLING BeginResponse({request.Method?.Method}, {request.Url}, ...) [{count}]");
+            Console.WriteLine($"CALLED SendAsync({request.Url}).BeginResponse");
             BeginResponse(request.Method?.Method ?? HttpMethod.Get.Method, request.Url, body?.Content, body?.MediaType, ar =>
             {
-                Console.WriteLine($"CALLED SendAsync({request.Url}).BeginResponse async callback [{count}]");
+                Console.WriteLine($"RUNNING SendAsync({request.Url}).BeginResponse callback");
 
                 try
                 {
-                    Console.WriteLine($"CALLING EndResponse({request.Url}) [{count}]");
+                    Console.WriteLine($"CALLING EndResponse({request.Url})");
                     var response = EndResponse(ar);
-                    Console.WriteLine($"RETURNED EndResponse({request.Url}) [{count}]");
+                    Console.WriteLine($"RETURNED EndResponse({request.Url})");
 
                     if ((int)response.StatusCode < 200 || (int)response.StatusCode >= 300)
                     {
@@ -62,12 +59,9 @@ namespace System.Net.Http
                 {
                     tcs.TrySetException(ex);
                 }
-
-                Console.WriteLine($"RETURNING SendAsync({request.Url}).BeginResponse async callback [{count}]");
             }, null);
-            Console.WriteLine($"RETURNED BeginResponse({request.Method?.Method}, {request.Url}, ...) [{count}]");
+            Console.WriteLine($"RETURNED SendAsync({request.Url}).BeginResponse");
 
-            Console.WriteLine($"RETURNING SendAsync({request.Url}) [{count}]");
             return tcs.Task;
         }
 
@@ -94,7 +88,6 @@ namespace System.Net.Http
                 { "asyncResultAddress", gcHandle.AddrOfPinnedObject().ToInt32() }
             };
             BeginFetch(Json.Serialize(descriptorDict));
-            Console.WriteLine($"RETURNING BeginResponse({method}, {url}, {body}, {mediaType}, ...)");
             return asyncResult;
         }
 

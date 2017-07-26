@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using ConferencePlanner.FrontEnd.Models;
 using ConferencePlanner.FrontEnd.Services;
 using Blazor.Util;
-using Blazor.Runtime.Components;
 
 namespace ConferencePlanner.FrontEnd
 {
@@ -22,10 +21,8 @@ namespace ConferencePlanner.FrontEnd
 
         public int SessionID { get; set; } = 1;
 
-        public async Task InitAsyncImpl()
+        public async Task InitAsync()
         {
-            Console.WriteLine($"CALLED EditSessionModel.InitAsync()");
-
             var http = new HttpClient();
 
             Console.WriteLine($"CALLING http.GetAsync()");
@@ -49,7 +46,7 @@ namespace ConferencePlanner.FrontEnd
             Console.WriteLine($"RETURNED response.Content.ReadAsStringAsync()");
             Session = JsonUtil.Deserialize<ClientSessionResponse>(session);
 
-            Console.WriteLine($"RETURNING EditSessionModel.InitAsync()");
+            Console.WriteLine($"RETURNED InitAsync()");
         }
 
         public async Task OnSaveClick()
@@ -78,7 +75,6 @@ namespace ConferencePlanner.FrontEnd
             {
                 Content = new StringContent(body)
             };
-
             Console.WriteLine($"RETURNED new HttpRequestMessage()");
 
             Console.WriteLine($"CALLING http.SendAsync({url})");

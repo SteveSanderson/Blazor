@@ -1,9 +1,5 @@
 ﻿@model ConferencePlanner.FrontEnd.EditSessionModel
 
-<h3>Edit Session</h3>
-
-<p><a href="~/">Back to session list</a></p>
-
 @if (Model.ShowMessage)
 {
     <div class="alert alert-success alert-dismissible" role="alert">
@@ -51,5 +47,5 @@
 </form>
 
 @functions {
-    public override Task InitAsync() => Model.InitAsyncImpl();
+    protected override Task InitAsync() => Model.InitAsync();
 }
