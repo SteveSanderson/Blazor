@@ -12,14 +12,22 @@
 <h1>Hello, world!</h1>
 <p>Welcome to your new single-page application.</p>
 
-<button @onclick(() => NavigationHelper("/Counter"))>Navigate to Counter</button>
+@*<button @onclick(() => NavigationHelper("/Counter"))>Navigate to Counter</button>*@
 
 <p>
     @* This shows an error at dev time but will work at runtime #hacky *@
     <input type="text" @bind(Text) />
-    <button @onclick(() => Blazor.Runtime.Interop.JavaScript.Window["alert"].Invoke(Browser.jQuery.trim(Text)))>Trim some text</button>
+    <button @onclick(() => Trim())>Trim some text</button>
 </p>
 
+@functions {
+    public void Trim()
+    {
+        var str = $@"Before trimming: '{Text}'
+ After trimming: '{Browser.jQuery.trim(Text)}'";
+        Blazor.Runtime.Interop.JavaScript.Window["alert"].Invoke(str);
+    }
+}
 
 @{
     Context.Items["hello"] = "This shows BlazorContext is persistent across pages.";
