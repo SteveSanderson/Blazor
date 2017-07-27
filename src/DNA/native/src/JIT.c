@@ -259,8 +259,28 @@ static U32* JITit(tMD_MethodDef *pMethodDef, U8 *pCIL, U32 codeSize, tParameter 
 	tMD_TypeDef *pTypeA, *pTypeB;
 	PTR pMem;
 	tMetaData *pMetaData;
+    tDebugMetaData* pDebugMetadata;
+    tDebugMetaDataEntry* pDebugMetadataEntry;
+    U32 sequencePointIndex;
 
 	pMetaData = pMethodDef->pMetaData;
+    pDebugMetadata = pMetaData->debugMetadata;
+
+    // TODO: Use a hash table as this is super slow
+    if (pDebugMetadata != NULL) {
+        tDebugMetaDataEntry* pEntry = pDebugMetadata->entries;
+
+        while (pEntry != NULL)
+        {
+            // TODO: Compare namespace and type name
+            if (strcmp(pEntry->pMethodName, pMethodDef->name) == 0) {
+                pDebugMetadataEntry = pEntry;
+                break;
+            }
+            pEntry = pEntry->next;
+        }
+    }
+    
 	pJITOffsets = malloc(codeSize * sizeof(U32));
 	// + 1 to handle cases where the stack is being restored at the last instruction in a method
 	ppTypeStacks = malloc((codeSize + 1) * sizeof(tTypeStack*));
@@ -268,6 +288,7 @@ static U32* JITit(tMD_MethodDef *pMethodDef, U8 *pCIL, U32 codeSize, tParameter 
 	typeStack.maxBytes = 0;
 	typeStack.ofs = 0;
 	typeStack.ppTypes = malloc(maxStack * sizeof(tMD_TypeDef*));
+    sequencePointIndex = 0;
 
 	// Set up all exception 'catch' blocks with the correct stack information,
 	// So they'll have just the exception type on the stack when entered
@@ -305,34 +326,41 @@ static U32* JITit(tMD_MethodDef *pMethodDef, U8 *pCIL, U32 codeSize, tParameter 
 		op = pCIL[cilOfs++];
 		//printf("Opcode: 0x%02x\n", op);
 
+        if (pDebugMetadataEntry != NULL && sequencePointIndex < pDebugMetadataEntry->sequencePointsCount) {
+            U32 spOffset = pDebugMetadataEntry->sequencePoints[sequencePointIndex];
+            if (spOffset == pcilOfs) {
+                printf("Adding break point at sequence point at IL offset %d in method %s\n", spOffset, pMethodDef->name);
+
+                // This can be cached
+                tMD_MethodDef *pDebuggerBreakPointMethod;
+                tMetaData *pCorelibMetadata;
+                tMD_TypeDef *pDebuggerTypeDef;
+
+                pCorelibMetadata = CLIFile_GetMetaDataForAssembly("corlib");
+                pDebuggerTypeDef = MetaData_GetTypeDefFromName(pCorelibMetadata, "System.Diagnostics", "Debugger", NULL, /* assertExists */ 1);
+                MetaData_Fill_TypeDef(pDebuggerTypeDef, NULL, NULL);
+                for (int i = 0; i < pDebuggerTypeDef->numMethods; i++) {
+                    if (strcmp(pDebuggerTypeDef->ppMethods[i]->name, "Internal_BreakPoint") == 0) {
+                        pDebuggerBreakPointMethod = pDebuggerTypeDef->ppMethods[i];
+                        break;
+                    }
+                }
+
+                PushOp(JIT_LOAD_I32);
+                PushI32((int)pMethodDef);
+                PushOp(JIT_LOAD_I32);
+                PushI32(pcilOfs);
+                PushOp(JIT_CALL_O);
+                PushPTR(pDebuggerBreakPointMethod);
+
+                sequencePointIndex++;
+            }
+        }
+        
 		switch (op) {
 			case CIL_NOP:
                 {
                     PushOp(JIT_NOP);
-
-                    // This can be cached
-                    //tMD_MethodDef *pDebuggerBreakPointMethod;
-                    //tMetaData *pCorelibMetadata;
-                    //tMD_TypeDef *pDebuggerTypeDef;
-
-                    //pCorelibMetadata = CLIFile_GetMetaDataForAssembly("corlib");
-                    //pDebuggerTypeDef = MetaData_GetTypeDefFromName(pCorelibMetadata, "System.Diagnostics", "Debugger", NULL, /* assertExists */ 1);
-                    //MetaData_Fill_TypeDef(pDebuggerTypeDef, NULL, NULL);
-                    //for (int i = 0; i < pDebuggerTypeDef->numMethods; i++) {
-                    //    if (strcmp(pDebuggerTypeDef->ppMethods[i]->name, "Internal_BreakPoint") == 0) {
-                    //        pDebuggerBreakPointMethod = pDebuggerTypeDef->ppMethods[i];
-                    //        break;
-                    //    }
-                    //}
-
-                    //PushOp(JIT_LOAD_I32);
-                    //PushI32((int)pMethodDef);
-                    //PushOp(JIT_LOAD_I32);
-                    //PushI32(pcilOfs);
-                    //PushOp(JIT_CALL_O);
-                    //PushPTR(pDebuggerBreakPointMethod);
-
-                    //PushOp(JIT_NOP);
                 }
 				break;
 

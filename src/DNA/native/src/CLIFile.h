@@ -29,6 +29,8 @@ typedef struct tCLIFile_ tCLIFile;
 struct tCLIFile_ {
 	// The filename
 	char *pFileName;
+    // The debug filename
+    char* pDebugFileName;
 	// The RVA sections of this file
 	tRVA *pRVA;
 	// NULL-terminated UTF8 string of file version

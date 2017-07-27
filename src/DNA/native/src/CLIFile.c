@@ -155,6 +155,66 @@ static void* LoadFileFromDisk(char *pFileName) {
 	return pData;
 }
 
+char* GetNullTerminatedString(PTR pData, int* length)
+{
+    *length = strlen(pData) + 1;
+    return pData;
+}
+
+static unsigned int GetU32(unsigned char *pSource, int* length) {
+    unsigned int a, b, c, d;
+
+    a = pSource[0];
+    b = pSource[1];
+    c = pSource[2];
+    d = pSource[3];
+
+    *length = 4;
+
+    return (a >> 24) | (b >> 16) | (c >> 8) | d;
+}
+
+static tDebugMetaData* LoadDebugFile(PTR pData) {
+    tDebugMetaData *pRet = TMALLOC(tDebugMetaData);
+    tDebugMetaDataEntry* pPrevious = NULL;
+    tDebugMetaDataEntry* pFirst = NULL;
+
+    int length;
+    while (*pData) {
+        tDebugMetaDataEntry* pEntry = TMALLOC(tDebugMetaDataEntry);
+        pEntry->sequencePointsCount = 0;
+        pEntry->pModuleName = GetNullTerminatedString(pData, &length);
+        pData += length;
+        pEntry->pNamespaceName = GetNullTerminatedString(pData, &length);
+        pData += length;
+        pEntry->pClassName = GetNullTerminatedString(pData, &length);
+        pData += length;
+        pEntry->pMethodName = GetNullTerminatedString(pData, &length);
+        pData += length;
+        pEntry->sequencePointsCount = GetU32(pData, &length);
+        pData += length;
+        for (int i = 0; i < pEntry->sequencePointsCount; i++) {
+            int offset = GetU32(pData, &length);
+            pEntry->sequencePoints[i] = offset;
+            pData += length;
+        }
+
+        if (pPrevious != NULL) {
+            pPrevious->next = pEntry;
+        }
+
+        if (pFirst == NULL) {
+            pFirst = pEntry;
+        }
+        pPrevious = pEntry;
+    }
+
+    pPrevious->next = NULL;
+    pRet->entries = pFirst;
+
+    return pRet;
+}
+
 static tCLIFile* LoadPEFile(void *pData) {
 	tCLIFile *pRet = TMALLOC(tCLIFile);
 
@@ -286,6 +346,7 @@ static tCLIFile* LoadPEFile(void *pData) {
 
 tCLIFile* CLIFile_Load(char *pFileName) {
 	void *pRawFile;
+    void* pRawDebugFile;
 	tCLIFile *pRet;
 	tFilesLoaded *pNewFile;
 
@@ -300,6 +361,23 @@ tCLIFile* CLIFile_Load(char *pFileName) {
 	pRet = LoadPEFile(pRawFile);
 	pRet->pFileName = (char*)mallocForever((U32)strlen(pFileName) + 1);
 	strcpy(pRet->pFileName, pFileName);
+
+    // Assume it ends in .dll
+    char* pDebugFileName = (char*)mallocForever((U32)strlen(pFileName) + 1);
+    U32 fileLengthWithoutExt = strlen(pFileName) - 3;
+    strncpy(pDebugFileName, pFileName, fileLengthWithoutExt);
+    strncpy(pDebugFileName + fileLengthWithoutExt, "wdb", 3);
+    *(pDebugFileName + fileLengthWithoutExt + 3) = '\0';
+
+    pRawDebugFile = LoadFileFromDisk(pDebugFileName);
+    if (pRawDebugFile == NULL) {
+        log_f(1, "\nUnable to load debug file: %s\n", pDebugFileName);
+    }
+    else {
+        log_f(1, "\nLoaded debug file: %s\n", pDebugFileName);
+        pRet->pDebugFileName = pDebugFileName;
+        pRet->pMetaData->debugMetadata = LoadDebugFile(pRawDebugFile);
+    }
 
 	// Record that we've loaded this file
 	pNewFile = TMALLOCFOREVER(tFilesLoaded);
