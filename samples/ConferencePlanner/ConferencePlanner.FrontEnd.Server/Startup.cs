@@ -38,6 +38,7 @@ namespace ConferencePlanner.FrontEnd.Server
             app.UseBlazorUI(Path.Combine("..", "ConferencePlanner.FrontEnd"), opts =>
             {
                 opts.EnableServerSidePrerendering = true;
+                opts.EnableDeubugging = true;
                 opts.ClientAssemblyName = "ConferencePlanner.FrontEnd.dll";
             });
         }

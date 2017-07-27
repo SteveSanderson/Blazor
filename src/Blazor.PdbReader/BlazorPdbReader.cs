@@ -1,22 +1,24 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Linq;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
 using System.Text;
 
-namespace PdbReader
+namespace Blazor.PdbReader
 {
-    class Program
+    public static class BlazorPdbReader
     {
-        static void Main(string[] args)
+        /// <summary>
+        /// The output file format looks something like this
+        /// "Module.dll\0Namspace.SubNamespace\0Class\0Method\0"
+        /// + 32-bit big-endian sequence point count
+        /// + (32-bit big-endian sequence point offset) * sequence point count
+        /// </summary>
+        public static void WriteSequencePointsToFile(string modulePath, string outputPath)
         {
-            var pePath = args[0];
-            var outputPath = args[1];
-
-            var peStream = File.OpenRead(pePath);
-            var pdbStream = File.OpenRead(Path.ChangeExtension(pePath, "pdb"));
+            var peStream = File.OpenRead(modulePath);
+            var pdbStream = File.OpenRead(Path.ChangeExtension(modulePath, "pdb"));
             var peReader = new PEReader(peStream);
             var pdbProvider = MetadataReaderProvider.FromPortablePdbStream(pdbStream);
             var peMetadataReader = peReader.GetMetadataReader();
@@ -34,12 +36,13 @@ namespace PdbReader
                     var document = pdbMetadataReader.GetDocument(methodDebugInfo.Document);
                     var methodDefToken = MetadataTokens.GetToken(methodDefHandle);
                     var methodDebugInfoToken = MetadataTokens.GetToken(methodDefHandle);
-                    var sequencePoints = methodDebugInfo.GetSequencePoints().ToArray();
-
                     var declaringType = peMetadataReader.GetTypeDefinition(methodDef.GetDeclaringType());
+
                     var namespaceNameBytes = Encoding.UTF8.GetBytes(peMetadataReader.GetString(declaringType.Namespace));
                     var classNameBytes = Encoding.UTF8.GetBytes(peMetadataReader.GetString(declaringType.Name));
                     var methodNameBytes = Encoding.UTF8.GetBytes(peMetadataReader.GetString(methodDef.Name));
+
+                    var sequencePoints = methodDebugInfo.GetSequencePoints().ToArray();
 
                     outputFile.Write(moduleNameBytes, 0, moduleNameBytes.Length);
                     outputFile.WriteByte(0);
@@ -54,13 +57,13 @@ namespace PdbReader
                     foreach (var sequencePoint in sequencePoints)
                     {
                         WriteInt32(outputFile, sequencePoint.Offset);
-                        Console.WriteLine($"document name: {pdbMetadataReader.GetString(document.Name)} namespace: {peMetadataReader.GetString(declaringType.Namespace)} class name: {peMetadataReader.GetString(declaringType.Name)} method name: {peMetadataReader.GetString(methodDef.Name)} method def token: {methodDefToken} method debug info token: {methodDebugInfoToken} start line: {sequencePoint.StartLine} offset: {sequencePoint.Offset}");
+                        //Console.WriteLine($"document name: {pdbMetadataReader.GetString(document.Name)} namespace: {peMetadataReader.GetString(declaringType.Namespace)} class name: {peMetadataReader.GetString(declaringType.Name)} method name: {peMetadataReader.GetString(methodDef.Name)} method def token: {methodDefToken} method debug info token: {methodDebugInfoToken} start line: {sequencePoint.StartLine} offset: {sequencePoint.Offset}");
                     }
                 }
             }
         }
 
-        public static void WriteInt32(Stream output, int value)
+        private static void WriteInt32(Stream output, int value)
         {
             output.Write(new byte[]
             {

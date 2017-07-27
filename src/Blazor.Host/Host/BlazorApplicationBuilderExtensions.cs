@@ -7,6 +7,7 @@ using System.Net.WebSockets;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using Blazor.PdbReader;
 using Blazor.Sdk.Host;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -19,6 +20,7 @@ namespace Blazor.Host
     public class BlazorUIOptions
     {
         public bool EnableServerSidePrerendering { get; set; }
+        public bool EnableDeubugging { get; set; }
         public string ClientAssemblyName { get; set; }
     }
 
@@ -27,9 +29,13 @@ namespace Blazor.Host
         private readonly static Assembly _hostAssembly = typeof(BlazorApplicationBuilderExtensions).GetTypeInfo().Assembly;
         private readonly static string _embeddedResourceProjectName = "Blazor.Host"; // Note: Not the same as _hostAssembly.Name
 
-        public static IApplicationBuilder UseBlazorDebugger(this IApplicationBuilder app)
+        public static IApplicationBuilder UseBlazorDebugger(this IApplicationBuilder app, string clientBinDir, string clientAssemblyName)
         {
+            var clientAssemblyPath = Path.Combine(clientBinDir, clientAssemblyName);
+            BlazorPdbReader.WriteSequencePointsToFile(clientAssemblyPath, Path.ChangeExtension(clientAssemblyPath, "wpdb"));
+
             app.UseWebSockets();
+
             return app.UseRouter(routes =>
             {
                 var sessions = new ConcurrentDictionary<string, DebugSession>();
@@ -238,8 +244,7 @@ namespace Blazor.Host
             contentTypeProvider.Mappings.Add(".dll", "application/octet-stream");
             contentTypeProvider.Mappings.Add(".exe", "application/octet-stream");
             contentTypeProvider.Mappings.Add(".wasm", "application/octet-stream");
-
-            app.UseBlazorDebugger();
+            contentTypeProvider.Mappings.Add(".wpdb", "application/octet-stream");
 
             app.UseStaticFiles(new StaticFileOptions
             {
@@ -288,6 +293,16 @@ namespace Blazor.Host
                 RequestPath = new PathString("/_bin"),
                 ContentTypeProvider = contentTypeProvider
             });
+
+            if (options.EnableDeubugging)
+            {
+                if (string.IsNullOrEmpty(options.ClientAssemblyName))
+                {
+                    throw new ArgumentException($"If {nameof(options.EnableDeubugging)} is true, then you must specify a value for {nameof(options.ClientAssemblyName)}.");
+                }
+
+                app.UseBlazorDebugger(clientBinDir, options.ClientAssemblyName);
+            }
 
             app.UseLiveReloading();
 
