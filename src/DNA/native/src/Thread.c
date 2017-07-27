@@ -72,7 +72,10 @@ tThread* Thread() {
 
     pThread = pAllThreads;
 
-    if (pThread == NULL) {
+    log_f(1, "Creating thread %d\n.", (int)pThis->threadID);
+
+    // FIFO
+    /*if (pThread == NULL) {
         pAllThreads = pThis;
     }
     else {
@@ -80,11 +83,12 @@ tThread* Thread() {
             pThread = pThread->pNextThread;
         }
         pThread->pNextThread = pThis;
-    }
+    }*/
 
+    // LIFO
 	// Add to list of all thread
-	// pThis->pNextThread = pAllThreads;
-	// pAllThreads = pThis;
+	 pThis->pNextThread = pAllThreads;
+	 pAllThreads = pThis;
 
 	return pThis;
 }
@@ -201,6 +205,7 @@ I32 Thread_Execute() {
 					pThread = pThread->pNextThread;
 				}
 				if (canExit) {
+                    log_f(1, "No more threads to run. Quitting\n.", (int)pThread->threadID);
 					return threadExitValue;
 				}
 			}
