@@ -869,7 +869,7 @@ window['jsobject.js'] = (function () {
             url: '/_bin/' + viewsAssemblyFilename + '?type=razorviews&' + referencesQueryStringSegments
         });
 
-        var wpdbFileName = entryPoint.replace(/\.dll$/, '.wpdb');
+        var wpdbFileName = entryPoint.replace(/\.dll$/, '.wdb');
         preloadAssemblies.push({ assemblyName: wpdbFileName, url: '/_bin/' + wpdbFileName });
 
         window.Module = {

@@ -32,7 +32,7 @@ namespace Blazor.Host
         public static IApplicationBuilder UseBlazorDebugger(this IApplicationBuilder app, string clientBinDir, string clientAssemblyName)
         {
             var clientAssemblyPath = Path.Combine(clientBinDir, clientAssemblyName);
-            BlazorPdbReader.WriteSequencePointsToFile(clientAssemblyPath, Path.ChangeExtension(clientAssemblyPath, "wpdb"));
+            BlazorPdbReader.WriteSequencePointsToFile(clientAssemblyPath, Path.ChangeExtension(clientAssemblyPath, "wdb"));
 
             app.UseWebSockets();
 
@@ -244,7 +244,7 @@ namespace Blazor.Host
             contentTypeProvider.Mappings.Add(".dll", "application/octet-stream");
             contentTypeProvider.Mappings.Add(".exe", "application/octet-stream");
             contentTypeProvider.Mappings.Add(".wasm", "application/octet-stream");
-            contentTypeProvider.Mappings.Add(".wpdb", "application/octet-stream");
+            contentTypeProvider.Mappings[".wdb"] = "application/octet-stream";
 
             app.UseStaticFiles(new StaticFileOptions
             {
