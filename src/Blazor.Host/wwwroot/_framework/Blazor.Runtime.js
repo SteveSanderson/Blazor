@@ -14,6 +14,7 @@
         SendDebuggerMessage: function (message) {
             console.log('Sending debugger message: ' + message);
             window.debuggerSocket.send(message);
+            Module.ccall('Debugger_Continue', 'number', [], []);
         },
         ResolveRelativeUrl: function (url) {
             var a = document.createElement('a');

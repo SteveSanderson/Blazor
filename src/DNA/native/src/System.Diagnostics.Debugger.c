@@ -28,6 +28,23 @@
 #include "Type.h"
 #include "PInvoke.h"
 
+static int stepping = 0;
+
+int Debugger_Continue() {
+    stepping = 1;
+    printf("DEBUGGER_CONTINUE\n");
+    return 1;
+}
+
+static U32 Internal_Debugger_Resume_Check(PTR pThis_, PTR pParams, PTR pReturnValue, tAsyncCall *pAsync) {
+    if (stepping == 1) {
+        stepping = 0;
+        return 1;
+    }
+    return 0;
+}
+
+
 tAsyncCall* System_Diagnostics_Debugger_Break(PTR pThis_, PTR pParams, PTR pReturnValue) {
     printf("BREAK\n");
 #if defined(_WIN32) && defined(_DEBUG)
@@ -45,11 +62,17 @@ tAsyncCall* System_Diagnostics_Debugger_Internal_Break_Point(PTR pThis_, PTR pPa
     printf("BREAK_POINT at (%s, %d) \n", pMethodDef->name, offset);
 
     unsigned char payload[1024];
-    sprintf(payload, "{\"offset\":%d,\"method\": \"%s\"}", offset, pMethodDef->name);
+    sprintf(payload, "{\"command\":\"breakpoint\", \"offset\":%d,\"method\":\"%s\"}", offset, pMethodDef->name);
 #ifndef _WIN32
     invokeJsFunc("browser.js", "SendDebuggerMessage", payload);
 #else
     printf("%s\n", payload);
 #endif
-    return NULL;
+    tAsyncCall *pAsync = TMALLOC(tAsyncCall);
+
+    pAsync->sleepTime = -1;
+    pAsync->checkFn = Internal_Debugger_Resume_Check;
+    pAsync->state = NULL;
+
+    return pAsync;
 }

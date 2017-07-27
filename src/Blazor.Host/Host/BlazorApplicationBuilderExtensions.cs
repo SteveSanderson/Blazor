@@ -13,7 +13,9 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Logging;
 
 namespace Blazor.Host
 {
@@ -34,6 +36,8 @@ namespace Blazor.Host
             var clientAssemblyPath = Path.Combine(clientBinDir, clientAssemblyName);
             BlazorPdbReader.WriteSequencePointsToFile(clientAssemblyPath, Path.ChangeExtension(clientAssemblyPath, "wdb"));
 
+            var logger = app.ApplicationServices.GetRequiredService<ILoggerFactory>().CreateLogger("BlazorDebugger");
+
             app.UseWebSockets();
 
             return app.UseRouter(routes =>
@@ -51,6 +55,7 @@ namespace Blazor.Host
                     // No session id, this is a bad connection
                     if (string.IsNullOrEmpty(sessionId))
                     {
+                        logger.LogWarning("Missing session id from debugger request");
                         context.Response.StatusCode = 400;
                         return;
                     }
@@ -59,6 +64,7 @@ namespace Blazor.Host
                     // fail
                     if (isDebugger && !sessions.ContainsKey(sessionId))
                     {
+                        logger.LogWarning("Debugger failed to connect to non existent session id {sessionId}", sessionId);
                         context.Response.StatusCode = 400;
                         return;
                     }
@@ -84,6 +90,8 @@ namespace Blazor.Host
                                 sessions[sessionId] = session;
                                 var state = new DebugSession.State();
 
+                                logger.LogInformation("Creating a new debug session {sessionId}.", sessionId);
+
                                 while (true)
                                 {
                                     session.DebugeeSource = new CancellationTokenSource();
@@ -96,6 +104,8 @@ namespace Blazor.Host
                                     // The debuggee closed so shutdown the debugger because the session is toast
                                     if (debugee == completed)
                                     {
+                                        logger.LogInformation("Debugee detached for {sessionId}.", sessionId);
+
                                         // Kill the loop and remove the session from the list
                                         sessions.TryRemove(sessionId, out _);
 
@@ -124,6 +134,8 @@ namespace Blazor.Host
 
                                 if (completed == debugger)
                                 {
+                                    logger.LogInformation("Debugger detached for {sessionId}.", sessionId);
+
                                     // Reset the tcs
                                     session.WaitForDebugger = new TaskCompletionSource<WebSocket>();
 
