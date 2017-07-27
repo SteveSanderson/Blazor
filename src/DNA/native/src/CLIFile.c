@@ -178,25 +178,47 @@ static tDebugMetaData* LoadDebugFile(PTR pData) {
     tDebugMetaData *pRet = TMALLOC(tDebugMetaData);
     tDebugMetaDataEntry* pPrevious = NULL;
     tDebugMetaDataEntry* pFirst = NULL;
+    int moduleLength;
+    int namespaceLength;
+    int classLength;
+    int methodLength;
+    int intLength;
+    int IdLength;
 
-    int length;
     while (*pData) {
         tDebugMetaDataEntry* pEntry = TMALLOC(tDebugMetaDataEntry);
+        IdLength = 0;
         pEntry->sequencePointsCount = 0;
-        pEntry->pModuleName = GetNullTerminatedString(pData, &length);
-        pData += length;
-        pEntry->pNamespaceName = GetNullTerminatedString(pData, &length);
-        pData += length;
-        pEntry->pClassName = GetNullTerminatedString(pData, &length);
-        pData += length;
-        pEntry->pMethodName = GetNullTerminatedString(pData, &length);
-        pData += length;
-        pEntry->sequencePointsCount = GetU32(pData, &length);
-        pData += length;
+        pEntry->pModuleName = GetNullTerminatedString(pData, &moduleLength);
+        pData += moduleLength;
+        IdLength += moduleLength;
+        pEntry->pNamespaceName = GetNullTerminatedString(pData, &namespaceLength);
+        pData += namespaceLength;
+        IdLength += namespaceLength;
+        pEntry->pClassName = GetNullTerminatedString(pData, &classLength);
+        pData += classLength;
+        IdLength += classLength;
+        pEntry->pMethodName = GetNullTerminatedString(pData, &methodLength);
+        pData += methodLength;
+        IdLength += methodLength;
+
+        pEntry->pID = (char*)mallocForever((U32)IdLength + 1);
+        IdLength = 0;
+        strncpy(pEntry->pID, pEntry->pModuleName, moduleLength - 1);
+        IdLength += moduleLength - 1;
+        strncpy(pEntry->pID + IdLength, pEntry->pNamespaceName, namespaceLength - 1);
+        IdLength += namespaceLength - 1;
+        strncpy(pEntry->pID + IdLength, pEntry->pClassName, classLength - 1);
+        IdLength += classLength - 1;
+        strncpy(pEntry->pID + IdLength, pEntry->pMethodName, methodLength);
+        IdLength += methodLength;
+
+        pEntry->sequencePointsCount = GetU32(pData, &intLength);
+        pData += intLength;
         for (int i = 0; i < pEntry->sequencePointsCount; i++) {
-            int offset = GetU32(pData, &length);
+            int offset = GetU32(pData, &intLength);
             pEntry->sequencePoints[i] = offset;
-            pData += length;
+            pData += intLength;
         }
 
         if (pPrevious != NULL) {

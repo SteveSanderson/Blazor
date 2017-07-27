@@ -73,6 +73,7 @@ struct tDebugMetaDataEntry_ {
     char* pNamespaceName;
     char* pClassName;
     char* pMethodName;
+    char* pID;
     int sequencePointsCount;
     int sequencePoints[100];
     tDebugMetaDataEntry* next;

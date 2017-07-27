@@ -270,12 +270,19 @@ static U32* JITit(tMD_MethodDef *pMethodDef, U8 *pCIL, U32 codeSize, tParameter 
     if (pDebugMetadata != NULL) {
         tDebugMetaDataEntry* pEntry = pDebugMetadata->entries;
 
-        while (pEntry != NULL)
-        {
-            // TODO: Compare namespace and type name
+        while (pEntry != NULL) {
+            // TODO: Compare namespace, type and module name
             if (strcmp(pEntry->pMethodName, pMethodDef->name) == 0) {
-                pDebugMetadataEntry = pEntry;
-                break;
+                if (pMethodDef->pParentType != NULL) {
+                    if (strcmp(pEntry->pClassName, pMethodDef->pParentType->name) == 0 && strcmp(pEntry->pNamespaceName, pMethodDef->pParentType->nameSpace) == 0) {
+                        pDebugMetadataEntry = pEntry;
+                        break;
+                    }
+                }
+                else {
+                    pDebugMetadataEntry = pEntry;
+                    break;
+                }
             }
             pEntry = pEntry->next;
         }
@@ -329,7 +336,7 @@ static U32* JITit(tMD_MethodDef *pMethodDef, U8 *pCIL, U32 codeSize, tParameter 
         if (pDebugMetadataEntry != NULL && sequencePointIndex < pDebugMetadataEntry->sequencePointsCount) {
             U32 spOffset = pDebugMetadataEntry->sequencePoints[sequencePointIndex];
             if (spOffset == pcilOfs) {
-                printf("Adding break point at sequence point at IL offset %d in method %s\n", spOffset, pMethodDef->name);
+                log_f(1, "Injecting break at sequence point at IL offset %d, ID: %s\n", spOffset, pMethodDef->name, pDebugMetadataEntry->pID);
 
                 // This can be cached
                 tMD_MethodDef *pDebuggerBreakPointMethod;
@@ -347,7 +354,7 @@ static U32* JITit(tMD_MethodDef *pMethodDef, U8 *pCIL, U32 codeSize, tParameter 
                 }
 
                 PushOp(JIT_LOAD_I32);
-                PushI32((int)pMethodDef);
+                PushI32((int)pDebugMetadataEntry);
                 PushOp(JIT_LOAD_I32);
                 PushI32(pcilOfs);
                 PushOp(JIT_CALL_O);

@@ -11,7 +11,7 @@ set emccOptions= %sourceFiles% ^
 	-s NO_EXIT_RUNTIME=1 ^
 	-s RESERVED_FUNCTION_POINTERS=20 ^
 	-s ASSERTIONS=1 ^
-	-s EXPORTED_FUNCTIONS="['_main', '_JSInterop_CallDotNet', '_Debugger_Continue', '_Thread_Execute']" ^
+	-s EXPORTED_FUNCTIONS="['_main', '_JSInterop_CallDotNet', '_Debugger_Continue', '_Debugger_SetBreakPoint']" ^
 	-s WASM=1 ^
 	--js-library js-interop.js
 

@@ -28,6 +28,20 @@
 #include "Type.h"
 #include "PInvoke.h"
 
+
+typedef struct tBreakPoint_ tBreakPoint;
+
+struct tBreakPoint_ {
+    char* pID;
+    // MAX breakpoints in a single method
+    int ILOffsets[100];
+    int offset;
+
+    tBreakPoint* next;
+};
+
+static tBreakPoint* pBreakpoints;
+
 int Debugger_Continue() {
     log_f(1, "Debugger_Continue called\n");
     if (waitingOnBreakPoint) {
@@ -40,6 +54,38 @@ int Debugger_Continue() {
     return 1;
 }
 
+int Debugger_SetBreakPoint(char* pID, int ILOffset)
+{
+    log_f(1, "Debugger_SetBreakPoint(%s, %d) called\n", pID, ILOffset);
+    tBreakPoint* pNode = pBreakpoints;
+
+    // Search for method node
+    while (pNode != NULL) {
+        if (strcmp(pNode->pID, pID) == 0) {
+            break;
+        }
+        pNode = pNode->next;
+    }
+
+    // Didn't find the node
+    if (pNode == NULL) {
+        pNode = TMALLOC(tBreakPoint);
+        pNode->pID = pID;
+        pNode->offset = 0;
+    }
+
+    if (pBreakpoints == NULL) {
+        pBreakpoints = pNode;
+    }
+    
+    if (pNode->offset < 100) {
+        log_f(1, "Breakpoint successfully set\n", pID, ILOffset);
+        pNode->ILOffsets[pNode->offset++] = ILOffset;
+    }
+
+    return 0;
+}
+
 tAsyncCall* System_Diagnostics_Debugger_Break(PTR pThis_, PTR pParams, PTR pReturnValue) {
     printf("BREAK\n");
 #if defined(_WIN32) && defined(_DEBUG)
@@ -49,22 +95,42 @@ tAsyncCall* System_Diagnostics_Debugger_Break(PTR pThis_, PTR pParams, PTR pRetu
 }
 
 tAsyncCall* System_Diagnostics_Debugger_Internal_Break_Point(PTR pThis_, PTR pParams, PTR pReturnValue) {
+    tBreakPoint* pHead;
+    int doBreakpoint;
+
     U32 arg0 = INTERNALCALL_PARAM(0, U32);
     U32 offset = INTERNALCALL_PARAM(4, U32);
 
-    tMD_MethodDef* pMethodDef = (tMD_MethodDef*)arg0;
+    tDebugMetaDataEntry* pDebugEntry = (tDebugMetaDataEntry*)arg0;
+
+    doBreakpoint = 0;
+    pHead = pBreakpoints;
+
+    while (pHead != NULL) {
+        if (strcmp(pHead->pID, pDebugEntry->pID) == 0) {
+            for (int i = 0; i < pHead->offset; i++) {
+                if (pHead->ILOffsets[i] == offset) {
+                    doBreakpoint = 1;
+                    break;
+                }
+            }
+        }
+        pHead = pHead->next;
+    }
+
 
     // Only break on methods that start with _
-    if (*pMethodDef->name != '_') {
+    if (doBreakpoint == 0) {
         return NULL;
     }
 
-    printf("BREAK_POINT hit (%s, %d) \n", pMethodDef->name, offset);
+    printf("BREAK_POINT hit (%s, %d) \n", pDebugEntry->pMethodName, offset);
 
     waitingOnBreakPoint = 1;
 
+    // TODO: Handle overflow
     unsigned char payload[1024];
-    sprintf(payload, "{\"command\":\"breakpoint\", \"offset\":%d,\"method\":\"%s\"}", offset, pMethodDef->name);
+    sprintf(payload, "{\"command\":\"breakpoint\", \"offset\":%d,\"ID\":\"%s\"}", offset, pDebugEntry->pID);
 #ifndef _WIN32
     invokeJsFunc("browser.js", "SendDebuggerMessage", payload);
 #else
