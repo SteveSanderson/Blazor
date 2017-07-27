@@ -35,7 +35,7 @@ static tThread *pCurrentThread;
 
 U32 Internal_Debugger_Resume_Check(PTR pThis_, PTR pParams, PTR pReturnValue, tAsyncCall *pAsync) {
     if (releaseBreakPoint) {
-        log_f(1, "Resetting breakpoint state.");
+        log_f(1, "Resetting breakpoint state.\n");
 
         releaseBreakPoint = 0;
         waitingOnBreakPoint = 0;
@@ -48,6 +48,7 @@ U32 Internal_Debugger_Resume_Check(PTR pThis_, PTR pParams, PTR pReturnValue, tA
 tThread* Thread() {
 	static U32 threadID = 0;
 	tThread *pThis;
+    tThread *pThread;
 
 	// Create thread and initial method state. This is allocated on the managed heap, and
 	// mark as undeletable. When the thread exits, it was marked as deletable.
@@ -69,9 +70,21 @@ tThread* Thread() {
 	pThis->pThreadStack->ofs = 0;
 	pThis->pThreadStack->pNext = NULL;
 
+    pThread = pAllThreads;
+
+    if (pThread == NULL) {
+        pAllThreads = pThis;
+    }
+    else {
+        while (pThread->pNextThread != NULL) {
+            pThread = pThread->pNextThread;
+        }
+        pThread->pNextThread = pThis;
+    }
+
 	// Add to list of all thread
-	pThis->pNextThread = pAllThreads;
-	pAllThreads = pThis;
+	// pThis->pNextThread = pAllThreads;
+	// pAllThreads = pThis;
 
 	return pThis;
 }
@@ -282,7 +295,7 @@ I32 Thread_Execute() {
 				break;
 			}
 			if (pThread == pPrevThread) {
-                log_f(1, "All threads blocked exiting exec loop.");
+                log_f(1, "All threads blocked exiting exec loop.\n");
 				// When it gets here, it means that all threads are currently blocked.
 				// printf("All blocked; sleep(%d)\n", minSleepTime);
                 // Execution needs to unwind if everything is blocked in javascript or it will

@@ -29,7 +29,7 @@
 #include "PInvoke.h"
 
 int Debugger_Continue() {
-    log_f(1, "Debugger_Continue called");
+    log_f(1, "Debugger_Continue called\n");
     if (waitingOnBreakPoint) {
         releaseBreakPoint = 1;
         printf("DEBUGGER_CONTINUE\n");
@@ -54,7 +54,7 @@ tAsyncCall* System_Diagnostics_Debugger_Internal_Break_Point(PTR pThis_, PTR pPa
 
     tMD_MethodDef* pMethodDef = (tMD_MethodDef*)arg0;
 
-    printf("BREAK_POINT at (%s, %d) \n", pMethodDef->name, offset);
+    printf("BREAK_POINT hit (%s, %d) \n", pMethodDef->name, offset);
 
     waitingOnBreakPoint = 1;
 
@@ -70,8 +70,6 @@ tAsyncCall* System_Diagnostics_Debugger_Internal_Break_Point(PTR pThis_, PTR pPa
     pAsync->sleepTime = -1;
     pAsync->checkFn = Internal_Debugger_Resume_Check;
     pAsync->state = NULL;
-
-    log_f(1, "Waiting on breakpoint %d\n.", waitingOnBreakPoint);
 
     return pAsync;
 }
