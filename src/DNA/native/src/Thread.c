@@ -205,7 +205,7 @@ I32 Thread_Execute() {
 					pThread = pThread->pNextThread;
 				}
 				if (canExit) {
-                    log_f(1, "No more threads to run. Quitting\n.", (int)pThread->threadID);
+                    log_f(1, "No more threads to run. Quitting\n.");
 					return threadExitValue;
 				}
 			}

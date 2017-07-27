@@ -54,6 +54,11 @@ tAsyncCall* System_Diagnostics_Debugger_Internal_Break_Point(PTR pThis_, PTR pPa
 
     tMD_MethodDef* pMethodDef = (tMD_MethodDef*)arg0;
 
+    // Only break on methods that start with _
+    if (*pMethodDef->name != '_') {
+        return NULL;
+    }
+
     printf("BREAK_POINT hit (%s, %d) \n", pMethodDef->name, offset);
 
     waitingOnBreakPoint = 1;
