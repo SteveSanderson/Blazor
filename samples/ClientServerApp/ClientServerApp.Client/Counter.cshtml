@@ -7,18 +7,32 @@
 <p>This is a simple example of a component.</p>
 
 <p>
-    Current count: <strong>@Model.MyProperty</strong> &nbsp;
-    <button @onclick(Model.IncrementCount)>Increment</button>
+    Current count: <strong>@currentCount</strong> &nbsp;
+    <button @onclick(Increment)>Increment</button>
 </p>
 
 <p>It's also possible to include child components, pass data to them, and receive callbacks from them:</p>
 
-<counter-display current-count=@Model.MyProperty
-                 on-reset=@((Action)Model.OnResetCounter) />
+<counter-display current-count=@currentCount
+                 on-reset=@((Action)Reset) />
 
 <p>@Context.Items["hello"]</p>
 
 
 @section Scripts {
     <p> More render section goodness. </p>
+}
+
+@functions {
+    public int currentCount;
+    public void Increment()
+    {
+        currentCount++;
+    }
+
+    public void Reset()
+    {
+        currentCount = 0;
+        Render();
+    }
 }

@@ -368,8 +368,6 @@ using System.ComponentModel.DataAnnotations; " + generatedCode;
                     codeDoc.Items["DetectedPage"] = detectedPage;
                     codeDoc.Items["DetectedPageMatches"] = detectedPageGroup;
 
-                    Console.WriteLine($"{sourceFileName} => DetectedModel={detectedModel}");
-
                     return codeDoc;
                 }
             }
