@@ -27,8 +27,23 @@
 #include "Heap.h"
 #include "Type.h"
 
+int releaseBreakPoint = 0;
+int waitingOnBreakPoint = 0;
+
 static tThread *pAllThreads = NULL;
 static tThread *pCurrentThread;
+
+U32 Internal_Debugger_Resume_Check(PTR pThis_, PTR pParams, PTR pReturnValue, tAsyncCall *pAsync) {
+    if (releaseBreakPoint) {
+        log_f(1, "Resetting breakpoint state.");
+
+        releaseBreakPoint = 0;
+        waitingOnBreakPoint = 0;
+        return 1;
+    }
+    return 0;
+}
+
 
 tThread* Thread() {
 	static U32 threadID = 0;
@@ -123,11 +138,24 @@ I32 Thread_Execute() {
 		U32 minSleepTime = 0xffffffff;
 		I32 threadExitValue;
 
-		status = JIT_Execute(pThread, 100);
+        //if (waitingOnBreakPoint && pThread->pAsync == NULL)
+        //{
+        //    // We're waiting on a break point, we're ok running methods that have an async, but everything else
+        //    // should be paused (don't JIT Execute the current thread)
+        //    status = THREAD_STATUS_ASYNC;
+        //    pThread->pAsync = TMALLOC(tAsyncCall);
+        //    pThread->pAsync->checkFn = Internal_Debugger_Resume_Check;
+        //}
+        //else {
+        //    
+        //}
+        log_f(1, "Executing thread %d\n.", (int)pThread->threadID);
+        status = JIT_Execute(pThread, 100);
+
 		switch (status) {
 		case THREAD_STATUS_EXIT:
 			threadExitValue = pThread->threadExitValue;
-			log_f(1, "Thread ID#%d exited. Return value: %d\n", (int)pThread->threadID, (int)threadExitValue);
+			log_f(1, "Thread ID#:%d exited. Return value: %d\n", (int)pThread->threadID, (int)threadExitValue);
 			// Remove the current thread from the running threads list.
 			// Note that this list may have changed since before the call to JIT_Execute().
 			{
@@ -203,7 +231,27 @@ I32 Thread_Execute() {
 					if ((U32)msSleepRemaining < minSleepTime) {
 						minSleepTime = msSleepRemaining;
 					}
-				} else {
+				}
+                else if (pThread->pAsync->checkFn == Internal_Debugger_Resume_Check) {
+                    U32 unblocked;
+
+                    // Forced debugger break
+                    unblocked = pAsync->checkFn(NULL, NULL, NULL, pAsync);
+                    if (unblocked) {
+                        // The IO has unblocked, and the return value is ready.
+                        // So delete the async object.
+                        // TODO: The async->state object needs to be deleted somehow (maybe)
+                        free(pAsync);
+                        // And remove it from the thread
+                        pThread->pAsync = NULL;
+                        break;
+                    }
+
+                    log_f(1, "Thread ID#%d is blocked on the debugger. Exiting the loop.\n", (int)pThread->threadID);
+
+                    return 0;
+                }
+                else {
 					// This is blocking IO, or a lock
 					tMethodState *pMethodState = pThread->pCurrentMethodState;
 					PTR pThis;
@@ -234,9 +282,13 @@ I32 Thread_Execute() {
 				break;
 			}
 			if (pThread == pPrevThread) {
+                log_f(1, "All threads blocked exiting exec loop.");
 				// When it gets here, it means that all threads are currently blocked.
-				//printf("All blocked; sleep(%d)\n", minSleepTime);
-				SleepMS(minSleepTime);
+				// printf("All blocked; sleep(%d)\n", minSleepTime);
+                // Execution needs to unwind if everything is blocked in javascript or it will
+                // hang the browser's main thread, we need to schedule a call back into this method at a later time
+                return minSleepTime;
+				// SleepMS(minSleepTime);
 			}
 		}
 	}

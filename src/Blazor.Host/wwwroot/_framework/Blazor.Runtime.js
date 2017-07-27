@@ -14,7 +14,7 @@
         SendDebuggerMessage: function (message) {
             console.log('Sending debugger message: ' + message);
             window.debuggerSocket.send(message);
-            Module.ccall('Debugger_Continue', 'number', [], []);
+            // Module.ccall('Debugger_Continue', 'number', [], []);
         },
         ResolveRelativeUrl: function (url) {
             var a = document.createElement('a');
@@ -819,6 +819,7 @@ window['jsobject.js'] = (function () {
             };
             ws.onmessage = function (event) {
                 console.log('Received message from debugger: ' + event.data);
+                // Module.ccall('Debugger_Continue', 'number', [], []);
             };
             ws.onclose = function (event) {
                 console.log('Debugger connection closed!');
@@ -882,7 +883,7 @@ window['jsobject.js'] = (function () {
         window.Module = {
             wasmBinaryFile: '/_framework/wasm/dna.wasm',
             asmjsCodeFile: '/_framework/asmjs/dna.asm.js',
-            arguments: [entryPoint],
+            arguments: ["-vv", entryPoint],
             preRun: function () {
                 // Preload corlib.dll and other assemblies
                 Module.readAsync = FetchArrayBuffer;

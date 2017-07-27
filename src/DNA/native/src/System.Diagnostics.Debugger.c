@@ -28,22 +28,17 @@
 #include "Type.h"
 #include "PInvoke.h"
 
-static int stepping = 0;
-
 int Debugger_Continue() {
-    stepping = 1;
-    printf("DEBUGGER_CONTINUE\n");
+    log_f(1, "Debugger_Continue called");
+    if (waitingOnBreakPoint) {
+        releaseBreakPoint = 1;
+        printf("DEBUGGER_CONTINUE\n");
+
+        // Resume execution
+        return Thread_Execute();
+    }
     return 1;
 }
-
-static U32 Internal_Debugger_Resume_Check(PTR pThis_, PTR pParams, PTR pReturnValue, tAsyncCall *pAsync) {
-    if (stepping == 1) {
-        stepping = 0;
-        return 1;
-    }
-    return 0;
-}
-
 
 tAsyncCall* System_Diagnostics_Debugger_Break(PTR pThis_, PTR pParams, PTR pReturnValue) {
     printf("BREAK\n");
@@ -61,6 +56,8 @@ tAsyncCall* System_Diagnostics_Debugger_Internal_Break_Point(PTR pThis_, PTR pPa
 
     printf("BREAK_POINT at (%s, %d) \n", pMethodDef->name, offset);
 
+    waitingOnBreakPoint = 1;
+
     unsigned char payload[1024];
     sprintf(payload, "{\"command\":\"breakpoint\", \"offset\":%d,\"method\":\"%s\"}", offset, pMethodDef->name);
 #ifndef _WIN32
@@ -73,6 +70,8 @@ tAsyncCall* System_Diagnostics_Debugger_Internal_Break_Point(PTR pThis_, PTR pPa
     pAsync->sleepTime = -1;
     pAsync->checkFn = Internal_Debugger_Resume_Check;
     pAsync->state = NULL;
+
+    log_f(1, "Waiting on breakpoint %d\n.", waitingOnBreakPoint);
 
     return pAsync;
 }

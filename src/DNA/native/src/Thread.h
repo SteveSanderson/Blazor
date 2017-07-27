@@ -98,6 +98,10 @@ struct tThread_ {
 #define THREADSTATE_STOPPED			0x0010
 #define THREADSTATE_SUSPENDED		0x0040
 
+extern int releaseBreakPoint;
+extern int waitingOnBreakPoint;
+
+U32 Internal_Debugger_Resume_Check(PTR pThis_, PTR pParams, PTR pReturnValue, tAsyncCall *pAsync);
 tThread* Thread();
 void Thread_SetEntryPoint(tThread *pThis, tMetaData *pMetaData, IDX_TABLE entryPointToken, PTR params, U32 paramBytes);
 I32 Thread_Execute();
