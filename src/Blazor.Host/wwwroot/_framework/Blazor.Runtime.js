@@ -1,5 +1,6 @@
 ﻿(function () {
     var nextElemId = 0;
+    var debuggerSocket;
 
     window['browser.js'] = {
         JSEval: function (code) {
@@ -10,6 +11,10 @@
             alert(message);
         },
 
+        SendDebuggerMessage: function (message) {
+            console.log('Sending debugger message: ' + message);
+            window.debuggerSocket.send(message);
+        },
         ResolveRelativeUrl: function (url) {
             var a = document.createElement('a');
             a.href = url;
@@ -809,6 +814,7 @@ window['jsobject.js'] = (function () {
             var ws = new WebSocket(url);
             ws.onopen = function () {
                 console.log('Opened debugger connection: Use ' + sessionId + ' to attach to this session');
+                debuggerSocket = ws;
             };
             ws.onmessage = function (event) {
                 console.log('Received message from debugger: ' + event.data);

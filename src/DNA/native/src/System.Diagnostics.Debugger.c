@@ -26,13 +26,14 @@
 #include "MetaData.h"
 #include "Types.h"
 #include "Type.h"
+#include "PInvoke.h"
 
 tAsyncCall* System_Diagnostics_Debugger_Break(PTR pThis_, PTR pParams, PTR pReturnValue) {
-	printf("BREAK\n");
+    printf("BREAK\n");
 #if defined(_WIN32) && defined(_DEBUG)
-	__debugbreak();
+    __debugbreak();
 #endif
-	return NULL;
+    return NULL;
 }
 
 tAsyncCall* System_Diagnostics_Debugger_Internal_Break_Point(PTR pThis_, PTR pParams, PTR pReturnValue) {
@@ -43,5 +44,12 @@ tAsyncCall* System_Diagnostics_Debugger_Internal_Break_Point(PTR pThis_, PTR pPa
 
     printf("BREAK_POINT at (%s, %d) \n", pMethodDef->name, offset);
 
+    unsigned char payload[1024];
+    sprintf(payload, "{\"offset\":%d,\"method\": \"%s\"}", offset, pMethodDef->name);
+#ifndef _WIN32
+    invokeJsFunc("browser.js", "SendDebuggerMessage", payload);
+#else
+    printf("%s\n", payload);
+#endif
     return NULL;
 }
