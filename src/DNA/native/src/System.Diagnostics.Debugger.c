@@ -111,25 +111,15 @@ tAsyncCall* System_Diagnostics_Debugger_Break(PTR pThis_, PTR pParams, PTR pRetu
     return NULL;
 }
 
-tAsyncCall* System_Diagnostics_Debugger_Internal_Break_Point(PTR pThis_, PTR pParams, PTR pReturnValue) {
-    tBreakPoint* pHead;
-    int doBreakpoint;
-
-    tDebugMetaDataEntry* pDebugEntry = INTERNALCALL_PARAM(0, tDebugMetaDataEntry*);
-    I32 spOffset = INTERNALCALL_PARAM(4, I32);
-
-    log_f(1, "System_Diagnostics_Debugger_Internal_Break_Point(%d, %d) \n", pDebugEntry, spOffset);
-
+int CheckIfBreakpointWasHit(tDebugMetaDataEntry* pDebugEntry, I32 spOffset) {
+	tBreakPoint* pHead;
+	int doBreakpoint;
     int offset = pDebugEntry->sequencePoints[spOffset];
 
     doBreakpoint = 0;
     pHead = pBreakpoints;
 
-    log_f(1, "Scanning break point matching (%s, %d, %04X) \n", pDebugEntry->pID, offset, offset);
-
     while (pHead != NULL) {
-        log_f(1, "Found entry for (%s) \n", pHead->pID);
-
         if (strcmp(pHead->pID, pDebugEntry->pID) == 0) {
             for (int i = 0; i < pHead->offset; i++) {
                 if (pHead->ILOffsets[i] == offset) {
@@ -137,16 +127,12 @@ tAsyncCall* System_Diagnostics_Debugger_Internal_Break_Point(PTR pThis_, PTR pPa
                     break;
                 }
             }
-
-            if (!doBreakpoint) {
-                log_f(1, "No break point set at (%s, %d) \n", pHead->pID, offset);
-            }
         }
         pHead = pHead->next;
     }
 
     if (doBreakpoint == 0) {
-        return NULL;
+        return 0;
     }
 
     log_f(1, "BREAK_POINT hit (%s, %d) \n", pDebugEntry->pMethodName, offset);
@@ -161,11 +147,5 @@ tAsyncCall* System_Diagnostics_Debugger_Internal_Break_Point(PTR pThis_, PTR pPa
 #else
     printf("%s\n", payload);
 #endif
-    tAsyncCall *pAsync = TMALLOC(tAsyncCall);
-
-    pAsync->sleepTime = -1;
-    pAsync->checkFn = Internal_Debugger_Resume_Check;
-    pAsync->state = NULL;
-
-    return pAsync;
+	return 1;
 }
