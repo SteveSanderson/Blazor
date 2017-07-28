@@ -24,6 +24,6 @@
 #include "Types.h"
 
 tAsyncCall* System_Diagnostics_Debugger_Break(PTR pThis_, PTR pParams, PTR pReturnValue);
-int CheckIfBreakpointWasHit(tDebugMetaDataEntry* pDebugEntry, I32 spOffset);
+int CheckIfSequencePointIsBreakpoint(tDebugMetaDataEntry* pDebugEntry, I32 spOffset);
 
 #endif

@@ -128,19 +128,14 @@ tJITCodeInfo jitCodeGoNext;
 
 #define THROW(exType) heapPtr = Heap_AllocType(exType); goto throwHeapPtr
 
-static int CurrentInstructionHasBreakpoint(tMD_MethodDef *pMethodDef, U32 opOffset, I32* pOpSequencePoints)
+static void CheckIfCurrentInstructionHasBreakpoint(tMD_MethodDef *pMethodDef, U32 opOffset, I32* pOpSequencePoints)
 {
 	if (pOpSequencePoints != NULL) {
 		I32 currentOpSequencePoint = pOpSequencePoints[opOffset];
 		if (currentOpSequencePoint >= 0) {
-			if(CheckIfBreakpointWasHit(pMethodDef->pJITted->pDebugMetadataEntry, currentOpSequencePoint)) {
-				printf("****** SHOULD HIT BREAKPOINT IN METHOD %s, SEQ POINT %d\n", pMethodDef->name, currentOpSequencePoint);
-				return 1;
-			}
+			CheckIfSequencePointIsBreakpoint(pMethodDef->pJITted->pDebugMetadataEntry, currentOpSequencePoint);
 		}
 	}
-
-	return 0;
 }
 
 // Note: newObj is only set if a constructor is being called
@@ -200,10 +195,7 @@ U32 opcodeNumUses[JIT_OPCODE_MAXNUM];
 #endif
 
 #define CHECK_FOR_BREAKPOINT() \
-	tempOpOffset = pCurOp - pOps; \
-	if (CurrentInstructionHasBreakpoint(pCurrentMethodState->pMethod, tempOpOffset, pOpSequencePoints)) { \
-		goto exitAtBreakpoint; \
-	}
+	CheckIfCurrentInstructionHasBreakpoint(pCurrentMethodState->pMethod, pCurOp - pOps, pOpSequencePoints);
 
 #ifdef __GNUC__
 
@@ -263,7 +255,6 @@ U32 JIT_Execute(tThread *pThread, U32 numInst) {
 	// Pointer to eval-stack position
 	register PTR pCurEvalStack;
 	PTR pTempPtr;
-	U32 tempOpOffset;
 
 	U32 op;
 	// General purpose variables
@@ -3266,19 +3257,6 @@ JIT_END_FINALLY_start:
 	}
 JIT_END_FINALLY_end:
 	GO_NEXT_CHECK();
-
-exitAtBreakpoint:
-	{
-		tAsyncCall *pAsync = TMALLOC(tAsyncCall);
-		pAsync->sleepTime = -1;
-		pAsync->checkFn = Internal_Debugger_Resume_Check;
-		pAsync->state = NULL;
-
-		SAVE_METHOD_STATE();
-		pCurrentMethodState->ipOffset++; // Resume at next instruction
-		pThread->pAsync = pAsync;
-		return THREAD_STATUS_ASYNC;
-	}
 
 done:
 	SAVE_METHOD_STATE();
