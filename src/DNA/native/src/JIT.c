@@ -336,7 +336,7 @@ static U32* JITit(tMD_MethodDef *pMethodDef, U8 *pCIL, U32 codeSize, tParameter 
         if (pDebugMetadataEntry != NULL && sequencePointIndex < pDebugMetadataEntry->sequencePointsCount) {
             U32 spOffset = pDebugMetadataEntry->sequencePoints[sequencePointIndex];
             if (spOffset == pcilOfs) {
-                log_f(1, "Injecting break at sequence point at IL offset %d, ID: %s\n", spOffset, pMethodDef->name, pDebugMetadataEntry->pID);
+                log_f(1, "Injecting break at sequence point at IL offset %d, ID: %s\n", spOffset, pDebugMetadataEntry->pID);
 
                 // This can be cached
                 tMD_MethodDef *pDebuggerBreakPointMethod;

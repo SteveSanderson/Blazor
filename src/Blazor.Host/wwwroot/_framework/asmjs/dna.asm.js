@@ -7478,73 +7478,75 @@ function _JIT_Execute(i19, i1) {
  return i18 | 0;
 }
 
-function _JITit(i6, i30, i56, i35, i5, i57) {
+function _JITit(i6, i31, i55, i35, i5, i56) {
  i6 = i6 | 0;
- i30 = i30 | 0;
- i56 = i56 | 0;
+ i31 = i31 | 0;
+ i55 = i55 | 0;
  i35 = i35 | 0;
  i5 = i5 | 0;
- i57 = i57 | 0;
- var i1 = 0, i2 = 0, i3 = 0, i4 = 0, i7 = 0, i8 = 0, i9 = 0, i10 = 0, i11 = 0, i12 = 0, i13 = 0, i14 = 0, i15 = 0, i16 = 0, i17 = 0, i18 = 0, i19 = 0, i20 = 0, i21 = 0, i22 = 0, i23 = 0, i24 = 0, i25 = 0, i26 = 0, i27 = 0, i28 = 0, i29 = 0, i31 = 0, i32 = 0, i33 = 0, i34 = 0, i36 = 0, i37 = 0, i38 = 0, i39 = 0, i40 = 0, i41 = 0, i42 = 0, i43 = 0, i44 = 0, i45 = 0, i46 = 0, i47 = 0, i48 = 0, i49 = 0, i50 = 0, i51 = 0, i52 = 0, i53 = 0, i54 = 0, i55 = 0, i58 = 0, i59 = 0, i60 = 0;
- i60 = STACKTOP;
- STACKTOP = STACKTOP + 144 | 0;
- if ((STACKTOP | 0) >= (STACK_MAX | 0)) abortStackOverflow(144);
- i47 = i60 + 88 | 0;
- i46 = i60 + 80 | 0;
- i44 = i60 + 72 | 0;
- i43 = i60 + 64 | 0;
- i42 = i60 + 56 | 0;
- i41 = i60 + 48 | 0;
- i40 = i60 + 40 | 0;
- i39 = i60 + 32 | 0;
- i48 = i60 + 24 | 0;
- i45 = i60 + 16 | 0;
- i38 = i60;
- i37 = i60 + 132 | 0;
- i59 = i60 + 120 | 0;
- i50 = i60 + 108 | 0;
- i55 = i60 + 96 | 0;
- i58 = i60 + 92 | 0;
- i54 = i5 + 4 | 0;
- i3 = HEAP32[i54 >> 2] | 0;
- i31 = i6 + 4 | 0;
- i32 = HEAP32[i31 >> 2] | 0;
- i1 = HEAP32[i32 >> 2] | 0;
- i33 = i6 + 16 | 0;
+ i56 = i56 | 0;
+ var i1 = 0, i2 = 0, i3 = 0, i4 = 0, i7 = 0, i8 = 0, i9 = 0, i10 = 0, i11 = 0, i12 = 0, i13 = 0, i14 = 0, i15 = 0, i16 = 0, i17 = 0, i18 = 0, i19 = 0, i20 = 0, i21 = 0, i22 = 0, i23 = 0, i24 = 0, i25 = 0, i26 = 0, i27 = 0, i28 = 0, i29 = 0, i30 = 0, i32 = 0, i33 = 0, i34 = 0, i36 = 0, i37 = 0, i38 = 0, i39 = 0, i40 = 0, i41 = 0, i42 = 0, i43 = 0, i44 = 0, i45 = 0, i46 = 0, i47 = 0, i48 = 0, i49 = 0, i50 = 0, i51 = 0, i52 = 0, i53 = 0, i54 = 0, i57 = 0, i58 = 0, i59 = 0;
+ i59 = STACKTOP;
+ STACKTOP = STACKTOP + 128 | 0;
+ if ((STACKTOP | 0) >= (STACK_MAX | 0)) abortStackOverflow(128);
+ i45 = i59 + 80 | 0;
+ i44 = i59 + 72 | 0;
+ i43 = i59 + 64 | 0;
+ i42 = i59 + 56 | 0;
+ i40 = i59 + 48 | 0;
+ i39 = i59 + 40 | 0;
+ i38 = i59 + 32 | 0;
+ i47 = i59 + 24 | 0;
+ i46 = i59 + 16 | 0;
+ i41 = i59 + 8 | 0;
+ i37 = i59;
+ i36 = i59 + 124 | 0;
+ i58 = i59 + 112 | 0;
+ i50 = i59 + 100 | 0;
+ i54 = i59 + 88 | 0;
+ i57 = i59 + 84 | 0;
+ i53 = i5 + 4 | 0;
+ i4 = HEAP32[i53 >> 2] | 0;
+ i32 = i6 + 4 | 0;
+ i33 = HEAP32[i32 >> 2] | 0;
+ i1 = HEAP32[i33 >> 2] | 0;
  i34 = i6 + 48 | 0;
- L1 : do if (!i1) i1 = 0; else while (1) {
-  i1 = HEAP32[i1 >> 2] | 0;
-  if (!i1) {
-   i1 = 0;
-   break L1;
+ L1 : do if (!i1) i1 = 0; else {
+  i3 = i6 + 16 | 0;
+  while (1) {
+   i1 = HEAP32[i1 >> 2] | 0;
+   if (!i1) {
+    i1 = 0;
+    break L1;
+   }
+   if (!(_strcmp(HEAP32[i1 + 12 >> 2] | 0, HEAP32[i3 >> 2] | 0) | 0)) {
+    i2 = HEAP32[i34 >> 2] | 0;
+    if (!i2) break L1;
+    if (!(_strcmp(HEAP32[i1 + 8 >> 2] | 0, HEAP32[i2 + 12 >> 2] | 0) | 0)) if (!(_strcmp(HEAP32[i1 + 4 >> 2] | 0, HEAP32[i2 + 16 >> 2] | 0) | 0)) break L1;
+   }
+   i1 = i1 + 424 | 0;
   }
-  if (!(_strcmp(HEAP32[i1 + 12 >> 2] | 0, HEAP32[i33 >> 2] | 0) | 0)) {
-   i2 = HEAP32[i34 >> 2] | 0;
-   if (!i2) break L1;
-   if (!(_strcmp(HEAP32[i1 + 8 >> 2] | 0, HEAP32[i2 + 12 >> 2] | 0) | 0)) if (!(_strcmp(HEAP32[i1 + 4 >> 2] | 0, HEAP32[i2 + 16 >> 2] | 0) | 0)) break L1;
-  }
-  i1 = i1 + 424 | 0;
  } while (0);
- i51 = i56 << 2;
- i52 = _malloc(i51) | 0;
- i51 = i51 + 4 | 0;
- i53 = _malloc(i51) | 0;
- _memset(i53 | 0, 0, i51 | 0) | 0;
- i51 = i55 + 8 | 0;
- HEAP32[i51 >> 2] = 0;
- i27 = i55 + 4 | 0;
+ i49 = i55 << 2;
+ i51 = _malloc(i49) | 0;
+ i49 = i49 + 4 | 0;
+ i52 = _malloc(i49) | 0;
+ _memset(i52 | 0, 0, i49 | 0) | 0;
+ i49 = i54 + 8 | 0;
+ HEAP32[i49 >> 2] = 0;
+ i27 = i54 + 4 | 0;
  HEAP32[i27 >> 2] = 0;
- HEAP32[i55 >> 2] = _malloc(i3 << 2) | 0;
+ HEAP32[i54 >> 2] = _malloc(i4 << 2) | 0;
  i28 = i5 + 12 | 0;
  i4 = HEAP32[i28 >> 2] | 0;
- i36 = i5 + 16 | 0;
+ i30 = i5 + 16 | 0;
  i2 = 0;
  while (1) {
   if ((i2 | 0) == (i4 | 0)) break;
-  i3 = HEAP32[i36 >> 2] | 0;
+  i3 = HEAP32[i30 >> 2] | 0;
   if (!(HEAP32[i3 + (i2 * 24 | 0) >> 2] | 0)) {
    i26 = _malloc(12) | 0;
-   HEAP32[i53 + (HEAP32[i3 + (i2 * 24 | 0) + 12 >> 2] << 2) >> 2] = i26;
+   HEAP32[i52 + (HEAP32[i3 + (i2 * 24 | 0) + 12 >> 2] << 2) >> 2] = i26;
    HEAP32[i26 + 8 >> 2] = 4;
    HEAP32[i26 + 4 >> 2] = 1;
    i29 = _malloc(4) | 0;
@@ -7553,15 +7555,15 @@ function _JITit(i6, i30, i56, i35, i5, i57) {
   }
   i2 = i2 + 1 | 0;
  }
- HEAP32[i59 + 4 >> 2] = 32;
- i29 = i59 + 8 | 0;
+ HEAP32[i58 + 4 >> 2] = 32;
+ i29 = i58 + 8 | 0;
  HEAP32[i29 >> 2] = 0;
- HEAP32[i59 >> 2] = _malloc(128) | 0;
+ HEAP32[i58 >> 2] = _malloc(128) | 0;
  HEAP32[i50 + 4 >> 2] = 16;
  i23 = i50 + 8 | 0;
  HEAP32[i23 >> 2] = 0;
  HEAP32[i50 >> 2] = _malloc(64) | 0;
- HEAP32[i37 >> 2] = 0;
+ HEAP32[i36 >> 2] = 0;
  i24 = (i1 | 0) == 0;
  i25 = i6 + 36 | 0;
  i26 = i6 + 40 | 0;
@@ -7579,19 +7581,17 @@ function _JITit(i6, i30, i56, i35, i5, i57) {
  i9 = 0;
  i2 = 0;
  L19 : while (1) {
-  HEAP32[i52 + (i9 << 2) >> 2] = i2;
-  HEAP32[i37 >> 2] = i9 + 1;
-  i10 = HEAP8[i30 + i9 >> 0] | 0;
+  HEAP32[i51 + (i9 << 2) >> 2] = i2;
+  HEAP32[i36 >> 2] = i9 + 1;
+  i10 = HEAP8[i31 + i9 >> 0] | 0;
   if (i24) {
    i18 = i12;
    i17 = i11;
   } else if (i12 >>> 0 < (HEAP32[i20 >> 2] | 0) >>> 0) if ((HEAP32[i1 + 24 + (i12 << 2) >> 2] | 0) == (i9 | 0)) {
-   i18 = HEAP32[i33 >> 2] | 0;
    i2 = HEAP32[i21 >> 2] | 0;
-   HEAP32[i38 >> 2] = i9;
-   HEAP32[i38 + 4 >> 2] = i18;
-   HEAP32[i38 + 8 >> 2] = i2;
-   _log_f(1, 13640, i38);
+   HEAP32[i37 >> 2] = i9;
+   HEAP32[i37 + 4 >> 2] = i2;
+   _log_f(1, 13640, i37);
    i2 = _MetaData_GetTypeDefFromName(_CLIFile_GetMetaDataForAssembly(13699) | 0, 13706, 13725, 0, 1) | 0;
    if (!(HEAP8[i2 + 32 >> 0] | 0)) _MetaData_Fill_TypeDef_(i2, 0, 0);
    i8 = i2 + 116 | 0;
@@ -7605,12 +7605,12 @@ function _JITit(i6, i30, i56, i35, i5, i57) {
     i2 = HEAP32[(HEAP32[i8 >> 2] | 0) + (i4 << 2) >> 2] | 0;
     if (!(_strcmp(HEAP32[i2 + 16 >> 2] | 0, 13734) | 0)) break; else i4 = i4 + 1 | 0;
    }
-   _PushU32_(i59, _Translate(2) | 0);
-   _PushU32_(i59, i22);
-   _PushU32_(i59, _Translate(2) | 0);
-   _PushU32_(i59, i9);
-   _PushU32_(i59, _Translate(7) | 0);
-   _PushU32_(i59, i2);
+   _PushU32_(i58, _Translate(2) | 0);
+   _PushU32_(i58, i22);
+   _PushU32_(i58, _Translate(2) | 0);
+   _PushU32_(i58, i9);
+   _PushU32_(i58, _Translate(7) | 0);
+   _PushU32_(i58, i2);
    i18 = i12 + 1 | 0;
    i17 = i2;
   } else {
@@ -7624,45 +7624,45 @@ function _JITit(i6, i30, i56, i35, i5, i57) {
   L33 : do switch (i10 << 24 >> 24) {
   case 0:
    {
-    _PushU32_(i59, _Translate(0) | 0);
+    _PushU32_(i58, _Translate(0) | 0);
     i4 = i16;
     i7 = i13;
     break;
    }
   case 20:
    {
-    _PushU32_(i59, _Translate(16) | 0);
-    _PushStackType_(i55, HEAP32[HEAP32[8770] >> 2] | 0);
+    _PushU32_(i58, _Translate(16) | 0);
+    _PushStackType_(i54, HEAP32[HEAP32[8770] >> 2] | 0);
     i4 = i16;
     i7 = i13;
     break;
    }
   case 37:
    {
-    i2 = HEAP32[i55 >> 2] | 0;
+    i2 = HEAP32[i54 >> 2] | 0;
     i4 = (HEAP32[i27 >> 2] | 0) + -1 | 0;
     HEAP32[i27 >> 2] = i4;
     i4 = HEAP32[i2 + (i4 << 2) >> 2] | 0;
-    _PushStackType_(i55, i4);
-    _PushStackType_(i55, i4);
+    _PushStackType_(i54, i4);
+    _PushStackType_(i54, i4);
     i2 = i4 + 68 | 0;
     switch (HEAP32[i2 >> 2] | 0) {
     case 4:
      {
-      _PushU32_(i59, _Translate(43) | 0);
+      _PushU32_(i58, _Translate(43) | 0);
       i7 = i13;
       break L33;
      }
     case 8:
      {
-      _PushU32_(i59, _Translate(44) | 0);
+      _PushU32_(i58, _Translate(44) | 0);
       i7 = i13;
       break L33;
      }
     default:
      {
-      _PushU32_(i59, _Translate(20) | 0);
-      _PushU32_(i59, HEAP32[i2 >> 2] | 0);
+      _PushU32_(i58, _Translate(20) | 0);
+      _PushU32_(i58, HEAP32[i2 >> 2] | 0);
       i7 = i13;
       break L33;
      }
@@ -7670,18 +7670,18 @@ function _JITit(i6, i30, i56, i35, i5, i57) {
    }
   case 38:
    {
-    i2 = HEAP32[i55 >> 2] | 0;
+    i2 = HEAP32[i54 >> 2] | 0;
     i4 = (HEAP32[i27 >> 2] | 0) + -1 | 0;
     HEAP32[i27 >> 2] = i4;
     i4 = HEAP32[i2 + (i4 << 2) >> 2] | 0;
     i2 = i4 + 68 | 0;
     if ((HEAP32[i2 >> 2] | 0) == 4) {
-     _PushU32_(i59, _Translate(46) | 0);
+     _PushU32_(i58, _Translate(46) | 0);
      i7 = i13;
      break L33;
     } else {
-     _PushU32_(i59, _Translate(21) | 0);
-     _PushU32_(i59, HEAP32[i2 >> 2] | 0);
+     _PushU32_(i58, _Translate(21) | 0);
+     _PushU32_(i58, HEAP32[i2 >> 2] | 0);
      i7 = i13;
      break L33;
     }
@@ -7698,55 +7698,55 @@ function _JITit(i6, i30, i56, i35, i5, i57) {
   case 21:
    {
     i2 = (i10 << 24 >> 24) + -22 | 0;
-    i49 = 37;
+    i48 = 37;
     break;
    }
   case 31:
    {
-    i2 = HEAP32[i37 >> 2] | 0;
-    HEAP32[i37 >> 2] = i2 + 1;
-    i2 = HEAP8[i30 + i2 >> 0] | 0;
-    i49 = 37;
+    i2 = HEAP32[i36 >> 2] | 0;
+    HEAP32[i36 >> 2] = i2 + 1;
+    i2 = HEAP8[i31 + i2 >> 0] | 0;
+    i48 = 37;
     break;
    }
   case 32:
    {
-    i2 = _GetUnalignedU32(i30, i37) | 0;
-    i49 = 37;
+    i2 = _GetUnalignedU32(i31, i36) | 0;
+    i48 = 37;
     break;
    }
   case 33:
    {
-    _PushU32_(i59, _Translate(41) | 0);
-    i4 = _GetUnalignedU32(i30, i37) | 0;
-    HEAP32[i58 >> 2] = i4;
-    _PushU32_(i59, i4);
-    i4 = _GetUnalignedU32(i30, i37) | 0;
-    HEAP32[i58 >> 2] = i4;
-    _PushU32_(i59, i4);
-    _PushStackType_(i55, HEAP32[(HEAP32[8770] | 0) + 96 >> 2] | 0);
+    _PushU32_(i58, _Translate(41) | 0);
+    i4 = _GetUnalignedU32(i31, i36) | 0;
+    HEAP32[i57 >> 2] = i4;
+    _PushU32_(i58, i4);
+    i4 = _GetUnalignedU32(i31, i36) | 0;
+    HEAP32[i57 >> 2] = i4;
+    _PushU32_(i58, i4);
+    _PushStackType_(i54, HEAP32[(HEAP32[8770] | 0) + 96 >> 2] | 0);
     i4 = i16;
     i7 = i13;
     break;
    }
   case 34:
    {
-    i4 = _GetUnalignedU32(i30, i37) | 0;
-    _PushStackType_(i55, HEAP32[(HEAP32[8770] | 0) + 88 >> 2] | 0);
-    _PushU32_(i59, _Translate(47) | 0);
-    _PushU32_(i59, i4);
+    i4 = _GetUnalignedU32(i31, i36) | 0;
+    _PushStackType_(i54, HEAP32[(HEAP32[8770] | 0) + 88 >> 2] | 0);
+    _PushU32_(i58, _Translate(47) | 0);
+    _PushU32_(i58, i4);
     i4 = i16;
     i7 = i13;
     break;
    }
   case 35:
    {
-    i7 = _GetUnalignedU32(i30, i37) | 0;
-    i4 = _GetUnalignedU32(i30, i37) | 0;
-    _PushStackType_(i55, HEAP32[(HEAP32[8770] | 0) + 92 >> 2] | 0);
-    _PushU32_(i59, _Translate(143) | 0);
-    _PushU32_(i59, i7);
-    _PushU32_(i59, i4);
+    i7 = _GetUnalignedU32(i31, i36) | 0;
+    i4 = _GetUnalignedU32(i31, i36) | 0;
+    _PushStackType_(i54, HEAP32[(HEAP32[8770] | 0) + 92 >> 2] | 0);
+    _PushU32_(i58, _Translate(143) | 0);
+    _PushU32_(i58, i7);
+    _PushU32_(i58, i4);
     i4 = i16;
     i7 = i13;
     break;
@@ -7757,50 +7757,50 @@ function _JITit(i6, i30, i56, i35, i5, i57) {
   case 2:
    {
     i2 = i12 + -2 | 0;
-    i49 = 46;
+    i48 = 46;
     break;
    }
   case 14:
    {
-    i2 = HEAP32[i37 >> 2] | 0;
-    HEAP32[i37 >> 2] = i2 + 1;
-    i2 = HEAPU8[i30 + i2 >> 0] | 0;
-    i49 = 46;
+    i2 = HEAP32[i36 >> 2] | 0;
+    HEAP32[i36 >> 2] = i2 + 1;
+    i2 = HEAPU8[i31 + i2 >> 0] | 0;
+    i48 = 46;
     break;
    }
   case 15:
    {
-    i4 = HEAP32[i37 >> 2] | 0;
-    HEAP32[i37 >> 2] = i4 + 1;
-    HEAP32[i58 >> 2] = HEAPU8[i30 + i4 >> 0];
-    _PushU32_(i59, _Translate(9) | 0);
-    _PushU32_(i59, HEAP32[(HEAP32[i25 >> 2] | 0) + ((HEAP32[i58 >> 2] | 0) * 12 | 0) + 4 >> 2] | 0);
-    _PushStackType_(i55, HEAP32[(HEAP32[8770] | 0) + 40 >> 2] | 0);
+    i4 = HEAP32[i36 >> 2] | 0;
+    HEAP32[i36 >> 2] = i4 + 1;
+    HEAP32[i57 >> 2] = HEAPU8[i31 + i4 >> 0];
+    _PushU32_(i58, _Translate(9) | 0);
+    _PushU32_(i58, HEAP32[(HEAP32[i25 >> 2] | 0) + ((HEAP32[i57 >> 2] | 0) * 12 | 0) + 4 >> 2] | 0);
+    _PushStackType_(i54, HEAP32[(HEAP32[8770] | 0) + 40 >> 2] | 0);
     i4 = i16;
     i7 = i13;
     break;
    }
   case 16:
    {
-    i2 = HEAP32[i37 >> 2] | 0;
-    HEAP32[i37 >> 2] = i2 + 1;
-    i2 = HEAPU8[i30 + i2 >> 0] | 0;
-    HEAP32[i58 >> 2] = i2;
-    i16 = HEAP32[i55 >> 2] | 0;
+    i2 = HEAP32[i36 >> 2] | 0;
+    HEAP32[i36 >> 2] = i2 + 1;
+    i2 = HEAPU8[i31 + i2 >> 0] | 0;
+    HEAP32[i57 >> 2] = i2;
+    i16 = HEAP32[i54 >> 2] | 0;
     i4 = (HEAP32[i27 >> 2] | 0) + -1 | 0;
     HEAP32[i27 >> 2] = i4;
     i4 = HEAP32[i16 + (i4 << 2) >> 2] | 0;
     i2 = HEAP32[(HEAP32[i25 >> 2] | 0) + (i2 * 12 | 0) + 4 >> 2] | 0;
     if (i2 >>> 0 < 32 ? (HEAP32[i4 + 68 >> 2] | 0) == 4 : 0) {
-     _PushU32_(i59, _Translate((i2 >>> 2) + 303 | 0) | 0);
+     _PushU32_(i58, _Translate((i2 >>> 2) + 303 | 0) | 0);
      i7 = i13;
      break L33;
     }
     i16 = i4 + 35 | 0;
-    _PushU32_(i59, _Translate((HEAPU8[i16 >> 0] | 0) + 56 | 0) | 0);
-    _PushU32_(i59, i2);
+    _PushU32_(i58, _Translate((HEAPU8[i16 >> 0] | 0) + 56 | 0) | 0);
+    _PushU32_(i58, i2);
     if ((HEAP8[i16 >> 0] | 0) == 7) {
-     _PushU32_(i59, i4);
+     _PushU32_(i58, i4);
      i7 = i13;
     } else i7 = i13;
     break;
@@ -7811,15 +7811,15 @@ function _JITit(i6, i30, i56, i35, i5, i57) {
   case 6:
    {
     i2 = i12 + -6 | 0;
-    i49 = 58;
+    i48 = 58;
     break;
    }
   case 17:
    {
-    i2 = HEAP32[i37 >> 2] | 0;
-    HEAP32[i37 >> 2] = i2 + 1;
-    i2 = HEAPU8[i30 + i2 >> 0] | 0;
-    i49 = 58;
+    i2 = HEAP32[i36 >> 2] | 0;
+    HEAP32[i36 >> 2] = i2 + 1;
+    i2 = HEAPU8[i31 + i2 >> 0] | 0;
+    i48 = 58;
     break;
    }
   case 13:
@@ -7828,93 +7828,93 @@ function _JITit(i6, i30, i56, i35, i5, i57) {
   case 10:
    {
     i2 = i12 + -10 | 0;
-    i49 = 65;
+    i48 = 65;
     break;
    }
   case 19:
    {
-    i2 = HEAP32[i37 >> 2] | 0;
-    HEAP32[i37 >> 2] = i2 + 1;
-    i2 = HEAPU8[i30 + i2 >> 0] | 0;
-    i49 = 65;
+    i2 = HEAP32[i36 >> 2] | 0;
+    HEAP32[i36 >> 2] = i2 + 1;
+    i2 = HEAPU8[i31 + i2 >> 0] | 0;
+    i48 = 65;
     break;
    }
   case 18:
    {
-    i4 = HEAP32[i37 >> 2] | 0;
-    HEAP32[i37 >> 2] = i4 + 1;
-    HEAP32[i58 >> 2] = HEAPU8[i30 + i4 >> 0];
-    _PushU32_(i59, _Translate(9) | 0);
-    _PushU32_(i59, (HEAP32[i35 + ((HEAP32[i58 >> 2] | 0) * 12 | 0) + 4 >> 2] | 0) + (HEAP32[i26 >> 2] | 0) | 0);
-    _PushStackType_(i55, HEAP32[(HEAP32[8770] | 0) + 40 >> 2] | 0);
+    i4 = HEAP32[i36 >> 2] | 0;
+    HEAP32[i36 >> 2] = i4 + 1;
+    HEAP32[i57 >> 2] = HEAPU8[i31 + i4 >> 0];
+    _PushU32_(i58, _Translate(9) | 0);
+    _PushU32_(i58, (HEAP32[i35 + ((HEAP32[i57 >> 2] | 0) * 12 | 0) + 4 >> 2] | 0) + (HEAP32[i26 >> 2] | 0) | 0);
+    _PushStackType_(i54, HEAP32[(HEAP32[8770] | 0) + 40 >> 2] | 0);
     i4 = i16;
     i7 = i13;
     break;
    }
   case 70:
    {
-    HEAP32[i58 >> 2] = 5;
-    i49 = 81;
+    HEAP32[i57 >> 2] = 5;
+    i48 = 81;
     break;
    }
   case 71:
    {
-    HEAP32[i58 >> 2] = 4;
-    i49 = 81;
+    HEAP32[i57 >> 2] = 4;
+    i48 = 81;
     break;
    }
   case 72:
    {
-    HEAP32[i58 >> 2] = 7;
-    i49 = 81;
+    HEAP32[i57 >> 2] = 7;
+    i48 = 81;
     break;
    }
   case 73:
    {
-    HEAP32[i58 >> 2] = 14;
-    i49 = 81;
+    HEAP32[i57 >> 2] = 14;
+    i48 = 81;
     break;
    }
   case 74:
    {
-    HEAP32[i58 >> 2] = 8;
-    i49 = 81;
+    HEAP32[i57 >> 2] = 8;
+    i48 = 81;
     break;
    }
   case 75:
    {
-    HEAP32[i58 >> 2] = 13;
-    i49 = 81;
+    HEAP32[i57 >> 2] = 13;
+    i48 = 81;
     break;
    }
   case 76:
    {
-    HEAP32[i58 >> 2] = 24;
-    i49 = 81;
+    HEAP32[i57 >> 2] = 24;
+    i48 = 81;
     break;
    }
   case 78:
    {
-    HEAP32[i58 >> 2] = 22;
-    i49 = 81;
+    HEAP32[i57 >> 2] = 22;
+    i48 = 81;
     break;
    }
   case 79:
    {
-    HEAP32[i58 >> 2] = 23;
-    i49 = 81;
+    HEAP32[i57 >> 2] = 23;
+    i48 = 81;
     break;
    }
   case 80:
    {
-    HEAP32[i58 >> 2] = 0;
-    i49 = 81;
+    HEAP32[i57 >> 2] = 0;
+    i48 = 81;
     break;
    }
   case 77:
    {
-    HEAP32[i58 >> 2] = 10;
-    i49 = 81;
+    HEAP32[i57 >> 2] = 10;
+    i48 = 81;
     break;
    }
   case 84:
@@ -7923,15 +7923,15 @@ function _JITit(i6, i30, i56, i35, i5, i57) {
   case 81:
    {
     HEAP32[i27 >> 2] = (HEAP32[i27 >> 2] | 0) + -2;
-    _PushU32_(i59, _Translate(i12 + 109 | 0) | 0);
+    _PushU32_(i58, _Translate(i12 + 109 | 0) | 0);
     i4 = i16;
     i7 = i13;
     break;
    }
   case 42:
    {
-    _PushU32_(i59, _Translate(1) | 0);
-    _RestoreTypeStack(i55, HEAP32[i53 + (HEAP32[i37 >> 2] << 2) >> 2] | 0);
+    _PushU32_(i58, _Translate(1) | 0);
+    _RestoreTypeStack(i54, HEAP32[i52 + (HEAP32[i36 >> 2] << 2) >> 2] | 0);
     i4 = i16;
     i7 = i13;
     break;
@@ -7942,32 +7942,32 @@ function _JITit(i6, i30, i56, i35, i5, i57) {
     i4 = 0;
     i15 = i10;
     i7 = 0;
-    i49 = 84;
+    i48 = 84;
     break;
    }
   case 43:
    {
-    i4 = HEAP32[i37 >> 2] | 0;
+    i4 = HEAP32[i36 >> 2] | 0;
     i2 = i4 + 1 | 0;
-    HEAP32[i37 >> 2] = i2;
-    i4 = HEAP8[i30 + i4 >> 0] | 0;
-    i49 = 129;
+    HEAP32[i36 >> 2] = i2;
+    i4 = HEAP8[i31 + i4 >> 0] | 0;
+    i48 = 129;
     break;
    }
   case 56:
    {
-    i4 = _GetUnalignedU32(i30, i37) | 0;
-    i2 = HEAP32[i37 >> 2] | 0;
-    i49 = 129;
+    i4 = _GetUnalignedU32(i31, i36) | 0;
+    i2 = HEAP32[i36 >> 2] | 0;
+    i48 = 129;
     break;
    }
   case 69:
    {
     HEAP32[i27 >> 2] = (HEAP32[i27 >> 2] | 0) + -1;
-    i7 = _GetUnalignedU32(i30, i37) | 0;
-    i8 = (HEAP32[i37 >> 2] | 0) + (i7 << 2) | 0;
-    _PushU32_(i59, _Translate(31) | 0);
-    _PushU32_(i59, i7);
+    i7 = _GetUnalignedU32(i31, i36) | 0;
+    i8 = (HEAP32[i36 >> 2] | 0) + (i7 << 2) | 0;
+    _PushU32_(i58, _Translate(31) | 0);
+    _PushU32_(i58, i7);
     i4 = 0;
     while (1) {
      if ((i4 | 0) == (i7 | 0)) {
@@ -7975,36 +7975,36 @@ function _JITit(i6, i30, i56, i35, i5, i57) {
       i7 = i13;
       break L33;
      }
-     HEAP32[i58 >> 2] = i8 + (_GetUnalignedU32(i30, i37) | 0);
+     HEAP32[i57 >> 2] = i8 + (_GetUnalignedU32(i31, i36) | 0);
      _PushU32_(i50, HEAP32[i29 >> 2] | 0);
-     i2 = HEAP32[i58 >> 2] | 0;
-     if (i2 >>> 0 > (HEAP32[i37 >> 2] | 0) >>> 0) {
-      i15 = _DeepCopyTypeStack(i55) | 0;
-      i2 = HEAP32[i58 >> 2] | 0;
-      HEAP32[i53 + (i2 << 2) >> 2] = i15;
+     i2 = HEAP32[i57 >> 2] | 0;
+     if (i2 >>> 0 > (HEAP32[i36 >> 2] | 0) >>> 0) {
+      i15 = _DeepCopyTypeStack(i54) | 0;
+      i2 = HEAP32[i57 >> 2] | 0;
+      HEAP32[i52 + (i2 << 2) >> 2] = i15;
      }
-     _PushU32_(i59, i2);
+     _PushU32_(i58, i2);
      i4 = i4 + 1 | 0;
     }
    }
   case 45:
   case 44:
    {
-    i7 = HEAP32[i37 >> 2] | 0;
+    i7 = HEAP32[i36 >> 2] | 0;
     i4 = i7 + 1 | 0;
-    HEAP32[i37 >> 2] = i4;
+    HEAP32[i36 >> 2] = i4;
     i2 = 130;
-    i7 = HEAP8[i30 + i7 >> 0] | 0;
-    i49 = 139;
+    i7 = HEAP8[i31 + i7 >> 0] | 0;
+    i48 = 139;
     break;
    }
   case 58:
   case 57:
    {
-    i7 = _GetUnalignedU32(i30, i37) | 0;
+    i7 = _GetUnalignedU32(i31, i36) | 0;
     i2 = 117;
-    i4 = HEAP32[i37 >> 2] | 0;
-    i49 = 139;
+    i4 = HEAP32[i36 >> 2] | 0;
+    i48 = 139;
     break;
    }
   case 55:
@@ -8018,12 +8018,12 @@ function _JITit(i6, i30, i56, i35, i5, i57) {
   case 47:
   case 46:
    {
-    i7 = HEAP32[i37 >> 2] | 0;
+    i7 = HEAP32[i36 >> 2] | 0;
     i4 = i7 + 1 | 0;
-    HEAP32[i37 >> 2] = i4;
+    HEAP32[i36 >> 2] = i4;
     i8 = 46;
-    i7 = HEAP8[i30 + i7 >> 0] | 0;
-    i49 = 144;
+    i7 = HEAP8[i31 + i7 >> 0] | 0;
+    i48 = 144;
     break;
    }
   case 68:
@@ -8037,10 +8037,10 @@ function _JITit(i6, i30, i56, i35, i5, i57) {
   case 60:
   case 59:
    {
-    i7 = _GetUnalignedU32(i30, i37) | 0;
+    i7 = _GetUnalignedU32(i31, i36) | 0;
     i8 = 59;
-    i4 = HEAP32[i37 >> 2] | 0;
-    i49 = 144;
+    i4 = HEAP32[i36 >> 2] | 0;
+    i48 = 144;
     break;
    }
   case -37:
@@ -8051,7 +8051,7 @@ function _JITit(i6, i30, i56, i35, i5, i57) {
   case -42:
    {
     i2 = 132;
-    i49 = 158;
+    i48 = 158;
     break;
    }
   case 97:
@@ -8066,36 +8066,36 @@ function _JITit(i6, i30, i56, i35, i5, i57) {
   case 88:
    {
     i2 = 0;
-    i49 = 158;
+    i48 = 158;
     break;
    }
   case 102:
   case 101:
    {
-    i15 = HEAP32[i55 >> 2] | 0;
+    i15 = HEAP32[i54 >> 2] | 0;
     i2 = (HEAP32[i27 >> 2] | 0) + -1 | 0;
     HEAP32[i27 >> 2] = i2;
     i2 = HEAP8[(HEAP32[i15 + (i2 << 2) >> 2] | 0) + 35 >> 0] | 0;
     switch (i2 << 24 >> 24) {
     case 1:
      {
-      _PushU32_(i59, _Translate(i12 + 37 | 0) | 0);
-      _PushStackType_(i55, HEAP32[(HEAP32[8770] | 0) + 32 >> 2] | 0);
+      _PushU32_(i58, _Translate(i12 + 37 | 0) | 0);
+      _PushStackType_(i54, HEAP32[(HEAP32[8770] | 0) + 32 >> 2] | 0);
       i4 = i16;
       i7 = i13;
       break L33;
      }
     case 0:
      {
-      _PushU32_(i59, _Translate(i12 + 39 | 0) | 0);
-      _PushStackType_(i55, HEAP32[(HEAP32[8770] | 0) + 96 >> 2] | 0);
+      _PushU32_(i58, _Translate(i12 + 39 | 0) | 0);
+      _PushStackType_(i54, HEAP32[(HEAP32[8770] | 0) + 96 >> 2] | 0);
       i4 = i16;
       i7 = i13;
       break L33;
      }
     default:
      {
-      i49 = 170;
+      i48 = 170;
       break L19;
      }
     }
@@ -8104,30 +8104,30 @@ function _JITit(i6, i30, i56, i35, i5, i57) {
   case 99:
   case 98:
    {
-    i15 = HEAP32[i55 >> 2] | 0;
+    i15 = HEAP32[i54 >> 2] | 0;
     i2 = (HEAP32[i27 >> 2] | 0) + -2 | 0;
     HEAP32[i27 >> 2] = i2;
     i2 = HEAP32[i15 + (i2 << 2) >> 2] | 0;
     switch (HEAP8[i2 + 35 >> 0] | 0) {
     case 1:
      {
-      _PushU32_(i59, _Translate(i12 + 70 | 0) | 0);
-      _PushStackType_(i55, HEAP32[(HEAP32[8770] | 0) + 32 >> 2] | 0);
+      _PushU32_(i58, _Translate(i12 + 70 | 0) | 0);
+      _PushStackType_(i54, HEAP32[(HEAP32[8770] | 0) + 32 >> 2] | 0);
       i4 = i16;
       i7 = i13;
       break L33;
      }
     case 0:
      {
-      _PushU32_(i59, _Translate(i12 + 73 | 0) | 0);
-      _PushStackType_(i55, HEAP32[(HEAP32[8770] | 0) + 96 >> 2] | 0);
+      _PushU32_(i58, _Translate(i12 + 73 | 0) | 0);
+      _PushStackType_(i54, HEAP32[(HEAP32[8770] | 0) + 96 >> 2] | 0);
       i4 = i16;
       i7 = i13;
       break L33;
      }
     default:
      {
-      i49 = 174;
+      i48 = 174;
       break L19;
      }
     }
@@ -8139,7 +8139,7 @@ function _JITit(i6, i30, i56, i35, i5, i57) {
     i8 = 0;
     i2 = 5;
     i3 = 8;
-    i49 = 184;
+    i48 = 184;
     break;
    }
   case -125:
@@ -8149,7 +8149,7 @@ function _JITit(i6, i30, i56, i35, i5, i57) {
     i8 = 0;
     i2 = 7;
     i3 = 16;
-    i49 = 184;
+    i48 = 184;
     break;
    }
   case -118:
@@ -8161,7 +8161,7 @@ function _JITit(i6, i30, i56, i35, i5, i57) {
     i8 = 0;
     i2 = 8;
     i3 = 32;
-    i49 = 184;
+    i48 = 184;
     break;
    }
   case -122:
@@ -8170,7 +8170,7 @@ function _JITit(i6, i30, i56, i35, i5, i57) {
    {
     i2 = 4;
     i3 = 8;
-    i49 = 179;
+    i48 = 179;
     break;
    }
   case -121:
@@ -8179,7 +8179,7 @@ function _JITit(i6, i30, i56, i35, i5, i57) {
    {
     i2 = 14;
     i3 = 16;
-    i49 = 179;
+    i48 = 179;
     break;
    }
   case -117:
@@ -8190,7 +8190,7 @@ function _JITit(i6, i30, i56, i35, i5, i57) {
    {
     i2 = 13;
     i3 = 32;
-    i49 = 179;
+    i48 = 179;
     break;
    }
   case -123:
@@ -8199,7 +8199,7 @@ function _JITit(i6, i30, i56, i35, i5, i57) {
    {
     i8 = 2;
     i2 = 24;
-    i49 = 184;
+    i48 = 184;
     break;
    }
   case -119:
@@ -8208,14 +8208,14 @@ function _JITit(i6, i30, i56, i35, i5, i57) {
    {
     i8 = 3;
     i2 = 25;
-    i49 = 184;
+    i48 = 184;
     break;
    }
   case 107:
    {
     i8 = 4;
     i2 = 22;
-    i49 = 184;
+    i48 = 184;
     break;
    }
   case 118:
@@ -8223,102 +8223,102 @@ function _JITit(i6, i30, i56, i35, i5, i57) {
    {
     i8 = 5;
     i2 = 23;
-    i49 = 184;
+    i48 = 184;
     break;
    }
   case 113:
    {
     HEAP32[i27 >> 2] = (HEAP32[i27 >> 2] | 0) + -1;
-    i4 = _GetUnalignedU32(i30, i37) | 0;
-    HEAP32[i58 >> 2] = i4;
-    i4 = _MetaData_GetTypeDefFromDefRefOrSpec(HEAP32[i31 >> 2] | 0, i4, HEAP32[(HEAP32[i34 >> 2] | 0) + 92 >> 2] | 0, HEAP32[i19 >> 2] | 0) | 0;
-    _PushU32_(i59, _Translate(29) | 0);
-    _PushU32_(i59, i4);
-    _PushStackType_(i55, i4);
+    i4 = _GetUnalignedU32(i31, i36) | 0;
+    HEAP32[i57 >> 2] = i4;
+    i4 = _MetaData_GetTypeDefFromDefRefOrSpec(HEAP32[i32 >> 2] | 0, i4, HEAP32[(HEAP32[i34 >> 2] | 0) + 92 >> 2] | 0, HEAP32[i19 >> 2] | 0) | 0;
+    _PushU32_(i58, _Translate(29) | 0);
+    _PushU32_(i58, i4);
+    _PushStackType_(i54, i4);
     i4 = i16;
     i7 = i13;
     break;
    }
   case -127:
    {
-    i2 = _GetUnalignedU32(i30, i37) | 0;
-    HEAP32[i58 >> 2] = i2;
-    i2 = _MetaData_GetTypeDefFromDefRefOrSpec(HEAP32[i31 >> 2] | 0, i2, HEAP32[(HEAP32[i34 >> 2] | 0) + 92 >> 2] | 0, HEAP32[i19 >> 2] | 0) | 0;
+    i2 = _GetUnalignedU32(i31, i36) | 0;
+    HEAP32[i57 >> 2] = i2;
+    i2 = _MetaData_GetTypeDefFromDefRefOrSpec(HEAP32[i32 >> 2] | 0, i2, HEAP32[(HEAP32[i34 >> 2] | 0) + 92 >> 2] | 0, HEAP32[i19 >> 2] | 0) | 0;
     HEAP32[i27 >> 2] = (HEAP32[i27 >> 2] | 0) + -2;
     if (HEAP8[i2 + 34 >> 0] | 0) {
      i2 = i2 + 64 | 0;
      if ((HEAP32[i2 >> 2] | 0) != 4) {
-      _PushU32_(i59, _Translate(22) | 0);
-      _PushU32_(i59, HEAP32[i2 >> 2] | 0);
+      _PushU32_(i58, _Translate(22) | 0);
+      _PushU32_(i58, HEAP32[i2 >> 2] | 0);
       i4 = i16;
       i7 = i13;
       break L33;
      }
     }
-    _PushU32_(i59, _Translate(190) | 0);
+    _PushU32_(i58, _Translate(190) | 0);
     i4 = i16;
     i7 = i13;
     break;
    }
   case 114:
    {
-    HEAP32[i58 >> 2] = (_GetUnalignedU32(i30, i37) | 0) & 16777215;
-    _PushU32_(i59, _Translate(4) | 0);
-    _PushU32_(i59, HEAP32[i58 >> 2] | 0);
-    _PushStackType_(i55, HEAP32[(HEAP32[8770] | 0) + 36 >> 2] | 0);
+    HEAP32[i57 >> 2] = (_GetUnalignedU32(i31, i36) | 0) & 16777215;
+    _PushU32_(i58, _Translate(4) | 0);
+    _PushU32_(i58, HEAP32[i57 >> 2] | 0);
+    _PushStackType_(i54, HEAP32[(HEAP32[8770] | 0) + 36 >> 2] | 0);
     i4 = i16;
     i7 = i13;
     break;
    }
   case 115:
    {
-    i4 = _GetUnalignedU32(i30, i37) | 0;
-    HEAP32[i58 >> 2] = i4;
-    i4 = _MetaData_GetMethodDefFromDefRefOrSpec(i32, i4, HEAP32[(HEAP32[i34 >> 2] | 0) + 92 >> 2] | 0, HEAP32[i19 >> 2] | 0) | 0;
+    i4 = _GetUnalignedU32(i31, i36) | 0;
+    HEAP32[i57 >> 2] = i4;
+    i4 = _MetaData_GetMethodDefFromDefRefOrSpec(i33, i4, HEAP32[(HEAP32[i34 >> 2] | 0) + 92 >> 2] | 0, HEAP32[i19 >> 2] | 0) | 0;
     if (!(HEAP8[i4 + 32 >> 0] | 0)) {
      i2 = _MetaData_GetTypeDefFromMethodDef(i4) | 0;
      if (!(HEAP8[i2 + 32 >> 0] | 0)) _MetaData_Fill_TypeDef_(i2, 0, 0);
     }
     i2 = i4 + 48 | 0;
-    if (!(HEAP8[(HEAP32[i2 >> 2] | 0) + 34 >> 0] | 0)) _PushU32_(i59, _Translate(8) | 0); else _PushU32_(i59, _Translate(14) | 0);
+    if (!(HEAP8[(HEAP32[i2 >> 2] | 0) + 34 >> 0] | 0)) _PushU32_(i58, _Translate(8) | 0); else _PushU32_(i58, _Translate(14) | 0);
     HEAP32[i27 >> 2] = 1 - (HEAPU16[i4 + 34 >> 1] | 0) + (HEAP32[i27 >> 2] | 0);
-    _PushU32_(i59, i4);
-    _PushStackType_(i55, HEAP32[i2 >> 2] | 0);
+    _PushU32_(i58, i4);
+    _PushStackType_(i54, HEAP32[i2 >> 2] | 0);
     i4 = i16;
     i7 = i13;
     break;
    }
   case 116:
    {
-    _PushU32_(i59, _Translate(34) | 0);
-    i4 = _GetUnalignedU32(i30, i37) | 0;
-    HEAP32[i58 >> 2] = i4;
-    _PushU32_(i59, _MetaData_GetTypeDefFromDefRefOrSpec(HEAP32[i31 >> 2] | 0, i4, HEAP32[(HEAP32[i34 >> 2] | 0) + 92 >> 2] | 0, HEAP32[i19 >> 2] | 0) | 0);
+    _PushU32_(i58, _Translate(34) | 0);
+    i4 = _GetUnalignedU32(i31, i36) | 0;
+    HEAP32[i57 >> 2] = i4;
+    _PushU32_(i58, _MetaData_GetTypeDefFromDefRefOrSpec(HEAP32[i32 >> 2] | 0, i4, HEAP32[(HEAP32[i34 >> 2] | 0) + 92 >> 2] | 0, HEAP32[i19 >> 2] | 0) | 0);
     i4 = i16;
     i7 = i13;
     break;
    }
   case 117:
    {
-    _PushU32_(i59, _Translate(15) | 0);
-    i4 = _GetUnalignedU32(i30, i37) | 0;
-    HEAP32[i58 >> 2] = i4;
-    _PushU32_(i59, _MetaData_GetTypeDefFromDefRefOrSpec(HEAP32[i31 >> 2] | 0, i4, HEAP32[(HEAP32[i34 >> 2] | 0) + 92 >> 2] | 0, HEAP32[i19 >> 2] | 0) | 0);
+    _PushU32_(i58, _Translate(15) | 0);
+    i4 = _GetUnalignedU32(i31, i36) | 0;
+    HEAP32[i57 >> 2] = i4;
+    _PushU32_(i58, _MetaData_GetTypeDefFromDefRefOrSpec(HEAP32[i32 >> 2] | 0, i4, HEAP32[(HEAP32[i34 >> 2] | 0) + 92 >> 2] | 0, HEAP32[i19 >> 2] | 0) | 0);
     i4 = i16;
     i7 = i13;
     break;
    }
   case -115:
    {
-    i2 = _GetUnalignedU32(i30, i37) | 0;
-    HEAP32[i58 >> 2] = i2;
-    i2 = _MetaData_GetTypeDefFromDefRefOrSpec(HEAP32[i31 >> 2] | 0, i2, HEAP32[(HEAP32[i34 >> 2] | 0) + 92 >> 2] | 0, HEAP32[i19 >> 2] | 0) | 0;
+    i2 = _GetUnalignedU32(i31, i36) | 0;
+    HEAP32[i57 >> 2] = i2;
+    i2 = _MetaData_GetTypeDefFromDefRefOrSpec(HEAP32[i32 >> 2] | 0, i2, HEAP32[(HEAP32[i34 >> 2] | 0) + 92 >> 2] | 0, HEAP32[i19 >> 2] | 0) | 0;
     HEAP32[i27 >> 2] = (HEAP32[i27 >> 2] | 0) + -1;
-    _PushU32_(i59, _Translate(13) | 0);
+    _PushU32_(i58, _Translate(13) | 0);
     if (!(HEAP8[i2 + 32 >> 0] | 0)) _MetaData_Fill_TypeDef_(i2, 0, 0);
     i4 = _Type_GetArrayTypeDef(i2, HEAP32[(HEAP32[i34 >> 2] | 0) + 92 >> 2] | 0, HEAP32[i19 >> 2] | 0) | 0;
-    _PushU32_(i59, i4);
-    _PushStackType_(i55, i4);
+    _PushU32_(i58, i4);
+    _PushStackType_(i54, i4);
     i4 = i16;
     i7 = i13;
     break;
@@ -8326,8 +8326,8 @@ function _JITit(i6, i30, i56, i35, i5, i57) {
   case -114:
    {
     HEAP32[i27 >> 2] = (HEAP32[i27 >> 2] | 0) + -1;
-    _PushU32_(i59, _Translate(30) | 0);
-    _PushStackType_(i55, HEAP32[(HEAP32[8770] | 0) + 32 >> 2] | 0);
+    _PushU32_(i58, _Translate(30) | 0);
+    _PushStackType_(i54, HEAP32[(HEAP32[8770] | 0) + 32 >> 2] | 0);
     i4 = i16;
     i7 = i13;
     break;
@@ -8340,8 +8340,8 @@ function _JITit(i6, i30, i56, i35, i5, i57) {
   case -112:
    {
     HEAP32[i27 >> 2] = (HEAP32[i27 >> 2] | 0) + -2;
-    _PushU32_(i59, _Translate(i12 + 80 | 0) | 0);
-    _PushStackType_(i55, HEAP32[(HEAP32[8770] | 0) + 32 >> 2] | 0);
+    _PushU32_(i58, _Translate(i12 + 80 | 0) | 0);
+    _PushStackType_(i54, HEAP32[(HEAP32[8770] | 0) + 32 >> 2] | 0);
     i4 = i16;
     i7 = i13;
     break;
@@ -8349,8 +8349,8 @@ function _JITit(i6, i30, i56, i35, i5, i57) {
   case -106:
    {
     HEAP32[i27 >> 2] = (HEAP32[i27 >> 2] | 0) + -2;
-    _PushU32_(i59, _Translate(230) | 0);
-    _PushStackType_(i55, HEAP32[(HEAP32[8770] | 0) + 96 >> 2] | 0);
+    _PushU32_(i58, _Translate(230) | 0);
+    _PushStackType_(i54, HEAP32[(HEAP32[8770] | 0) + 96 >> 2] | 0);
     i4 = i16;
     i7 = i13;
     break;
@@ -8358,8 +8358,8 @@ function _JITit(i6, i30, i56, i35, i5, i57) {
   case -104:
    {
     HEAP32[i27 >> 2] = (HEAP32[i27 >> 2] | 0) + -2;
-    _PushU32_(i59, _Translate(231) | 0);
-    _PushStackType_(i55, HEAP32[(HEAP32[8770] | 0) + 88 >> 2] | 0);
+    _PushU32_(i58, _Translate(231) | 0);
+    _PushStackType_(i54, HEAP32[(HEAP32[8770] | 0) + 88 >> 2] | 0);
     i4 = i16;
     i7 = i13;
     break;
@@ -8367,8 +8367,8 @@ function _JITit(i6, i30, i56, i35, i5, i57) {
   case -103:
    {
     HEAP32[i27 >> 2] = (HEAP32[i27 >> 2] | 0) + -2;
-    _PushU32_(i59, _Translate(232) | 0);
-    _PushStackType_(i55, HEAP32[(HEAP32[8770] | 0) + 92 >> 2] | 0);
+    _PushU32_(i58, _Translate(232) | 0);
+    _PushStackType_(i54, HEAP32[(HEAP32[8770] | 0) + 92 >> 2] | 0);
     i4 = i16;
     i7 = i13;
     break;
@@ -8376,30 +8376,30 @@ function _JITit(i6, i30, i56, i35, i5, i57) {
   case -102:
    {
     HEAP32[i27 >> 2] = (HEAP32[i27 >> 2] | 0) + -2;
-    _PushU32_(i59, _Translate(229) | 0);
-    _PushStackType_(i55, HEAP32[HEAP32[8770] >> 2] | 0);
+    _PushU32_(i58, _Translate(229) | 0);
+    _PushStackType_(i54, HEAP32[HEAP32[8770] >> 2] | 0);
     i4 = i16;
     i7 = i13;
     break;
    }
   case -93:
    {
-    i4 = _GetUnalignedU32(i30, i37) | 0;
-    HEAP32[i58 >> 2] = i4;
-    i4 = _MetaData_GetTypeDefFromDefRefOrSpec(i32, i4, HEAP32[(HEAP32[i34 >> 2] | 0) + 92 >> 2] | 0, HEAP32[i19 >> 2] | 0) | 0;
+    i4 = _GetUnalignedU32(i31, i36) | 0;
+    HEAP32[i57 >> 2] = i4;
+    i4 = _MetaData_GetTypeDefFromDefRefOrSpec(i33, i4, HEAP32[(HEAP32[i34 >> 2] | 0) + 92 >> 2] | 0, HEAP32[i19 >> 2] | 0) | 0;
     HEAP32[i27 >> 2] = (HEAP32[i27 >> 2] | 0) + -2;
-    _PushU32_(i59, _Translate(35) | 0);
-    _PushU32_(i59, HEAP32[i4 + 68 >> 2] | 0);
-    _PushStackType_(i55, i4);
+    _PushU32_(i58, _Translate(35) | 0);
+    _PushU32_(i58, HEAP32[i4 + 68 >> 2] | 0);
+    _PushStackType_(i54, i4);
     i7 = i13;
     break;
    }
   case -113:
    {
     HEAP32[i27 >> 2] = (HEAP32[i27 >> 2] | 0) + -2;
-    _GetUnalignedU32(i30, i37) | 0;
-    _PushU32_(i59, _Translate(32) | 0);
-    _PushStackType_(i55, HEAP32[(HEAP32[8770] | 0) + 40 >> 2] | 0);
+    _GetUnalignedU32(i31, i36) | 0;
+    _PushU32_(i58, _Translate(32) | 0);
+    _PushStackType_(i54, HEAP32[(HEAP32[8770] | 0) + 40 >> 2] | 0);
     i4 = i16;
     i7 = i13;
     break;
@@ -8411,7 +8411,7 @@ function _JITit(i6, i30, i56, i35, i5, i57) {
   case -100:
    {
     HEAP32[i27 >> 2] = (HEAP32[i27 >> 2] | 0) + -3;
-    _PushU32_(i59, _Translate(222) | 0);
+    _PushU32_(i58, _Translate(222) | 0);
     i4 = i16;
     i7 = i13;
     break;
@@ -8420,75 +8420,75 @@ function _JITit(i6, i30, i56, i35, i5, i57) {
   case -97:
    {
     HEAP32[i27 >> 2] = (HEAP32[i27 >> 2] | 0) + -3;
-    _PushU32_(i59, _Translate(223) | 0);
+    _PushU32_(i58, _Translate(223) | 0);
     i4 = i16;
     i7 = i13;
     break;
    }
   case -92:
    {
-    _GetUnalignedU32(i30, i37) | 0;
+    _GetUnalignedU32(i31, i36) | 0;
     i7 = HEAP32[i27 >> 2] | 0;
-    i4 = HEAP32[(HEAP32[i55 >> 2] | 0) + (i7 + -1 << 2) >> 2] | 0;
+    i4 = HEAP32[(HEAP32[i54 >> 2] | 0) + (i7 + -1 << 2) >> 2] | 0;
     HEAP32[i27 >> 2] = i7 + -3;
-    _PushU32_(i59, _Translate(24) | 0);
-    _PushU32_(i59, HEAP32[i4 + 68 >> 2] | 0);
+    _PushU32_(i58, _Translate(24) | 0);
+    _PushU32_(i58, HEAP32[i4 + 68 >> 2] | 0);
     i7 = i13;
     break;
    }
   case 125:
    {
-    i7 = HEAP32[i55 >> 2] | 0;
+    i7 = HEAP32[i54 >> 2] | 0;
     i4 = (HEAP32[i27 >> 2] | 0) + -1 | 0;
     HEAP32[i27 >> 2] = i4;
     i4 = HEAP32[i7 + (i4 << 2) >> 2] | 0;
-    _PushU32_(i59, _Translate((HEAPU8[i4 + 35 >> 0] | 0) + 72 | 0) | 0);
-    i7 = _GetUnalignedU32(i30, i37) | 0;
-    HEAP32[i58 >> 2] = i7;
-    _PushU32_(i59, _MetaData_GetFieldDefFromDefOrRef(HEAP32[i31 >> 2] | 0, i7, HEAP32[(HEAP32[i34 >> 2] | 0) + 92 >> 2] | 0, HEAP32[i19 >> 2] | 0) | 0);
+    _PushU32_(i58, _Translate((HEAPU8[i4 + 35 >> 0] | 0) + 72 | 0) | 0);
+    i7 = _GetUnalignedU32(i31, i36) | 0;
+    HEAP32[i57 >> 2] = i7;
+    _PushU32_(i58, _MetaData_GetFieldDefFromDefOrRef(HEAP32[i32 >> 2] | 0, i7, HEAP32[(HEAP32[i34 >> 2] | 0) + 92 >> 2] | 0, HEAP32[i19 >> 2] | 0) | 0);
     HEAP32[i27 >> 2] = (HEAP32[i27 >> 2] | 0) + -1;
     i7 = i13;
     break;
    }
   case 123:
    {
-    i2 = _GetUnalignedU32(i30, i37) | 0;
-    HEAP32[i58 >> 2] = i2;
-    i2 = _MetaData_GetFieldDefFromDefOrRef(HEAP32[i31 >> 2] | 0, i2, HEAP32[(HEAP32[i34 >> 2] | 0) + 92 >> 2] | 0, HEAP32[i19 >> 2] | 0) | 0;
-    i4 = HEAP32[i55 >> 2] | 0;
+    i2 = _GetUnalignedU32(i31, i36) | 0;
+    HEAP32[i57 >> 2] = i2;
+    i2 = _MetaData_GetFieldDefFromDefOrRef(HEAP32[i32 >> 2] | 0, i2, HEAP32[(HEAP32[i34 >> 2] | 0) + 92 >> 2] | 0, HEAP32[i19 >> 2] | 0) | 0;
+    i4 = HEAP32[i54 >> 2] | 0;
     i7 = (HEAP32[i27 >> 2] | 0) + -1 | 0;
     HEAP32[i27 >> 2] = i7;
     i7 = HEAP32[i4 + (i7 << 2) >> 2] | 0;
     i4 = i2;
     do if ((HEAP8[i7 + 35 >> 0] | 0) == 7) {
-     _PushU32_(i59, _Translate(36) | 0);
-     _PushU32_(i59, HEAP32[i7 + 68 >> 2] | 0);
-     _PushU32_(i59, i4);
+     _PushU32_(i58, _Translate(36) | 0);
+     _PushU32_(i58, HEAP32[i7 + 68 >> 2] | 0);
+     _PushU32_(i58, i4);
     } else if ((HEAP32[i2 + 32 >> 2] | 0) >>> 0 < 5) {
-     _PushU32_(i59, _Translate(315) | 0);
-     _PushU32_(i59, HEAP32[i2 + 28 >> 2] | 0);
+     _PushU32_(i58, _Translate(315) | 0);
+     _PushU32_(i58, HEAP32[i2 + 28 >> 2] | 0);
      break;
     } else {
-     _PushU32_(i59, _Translate(37) | 0);
-     _PushU32_(i59, i4);
+     _PushU32_(i58, _Translate(37) | 0);
+     _PushU32_(i58, i4);
      break;
     } while (0);
-    _PushStackType_(i55, HEAP32[i2 + 20 >> 2] | 0);
+    _PushStackType_(i54, HEAP32[i2 + 20 >> 2] | 0);
     i4 = i7;
     i7 = i13;
     break;
    }
   case 124:
    {
-    i2 = _GetUnalignedU32(i30, i37) | 0;
-    HEAP32[i58 >> 2] = i2;
-    i2 = _MetaData_GetFieldDefFromDefOrRef(HEAP32[i31 >> 2] | 0, i2, HEAP32[(HEAP32[i34 >> 2] | 0) + 92 >> 2] | 0, HEAP32[i19 >> 2] | 0) | 0;
+    i2 = _GetUnalignedU32(i31, i36) | 0;
+    HEAP32[i57 >> 2] = i2;
+    i2 = _MetaData_GetFieldDefFromDefOrRef(HEAP32[i32 >> 2] | 0, i2, HEAP32[(HEAP32[i34 >> 2] | 0) + 92 >> 2] | 0, HEAP32[i19 >> 2] | 0) | 0;
     i4 = _MetaData_GetTypeDefFromFieldDef(i2) | 0;
     if (!(HEAP8[i4 + 32 >> 0] | 0)) _MetaData_Fill_TypeDef_(i4, 0, 0);
     HEAP32[i27 >> 2] = (HEAP32[i27 >> 2] | 0) + -1;
-    _PushU32_(i59, _Translate(19) | 0);
-    _PushU32_(i59, HEAP32[i2 + 28 >> 2] | 0);
-    _PushStackType_(i55, HEAP32[(HEAP32[8770] | 0) + 40 >> 2] | 0);
+    _PushU32_(i58, _Translate(19) | 0);
+    _PushU32_(i58, HEAP32[i2 + 28 >> 2] | 0);
+    _PushStackType_(i54, HEAP32[(HEAP32[8770] | 0) + 40 >> 2] | 0);
     i4 = i16;
     i7 = i13;
     break;
@@ -8496,96 +8496,96 @@ function _JITit(i6, i30, i56, i35, i5, i57) {
   case -128:
    {
     HEAP32[i27 >> 2] = (HEAP32[i27 >> 2] | 0) + -1;
-    i2 = _GetUnalignedU32(i30, i37) | 0;
-    HEAP32[i58 >> 2] = i2;
-    i2 = _MetaData_GetFieldDefFromDefOrRef(HEAP32[i31 >> 2] | 0, i2, HEAP32[(HEAP32[i34 >> 2] | 0) + 92 >> 2] | 0, HEAP32[i19 >> 2] | 0) | 0;
+    i2 = _GetUnalignedU32(i31, i36) | 0;
+    HEAP32[i57 >> 2] = i2;
+    i2 = _MetaData_GetFieldDefFromDefOrRef(HEAP32[i32 >> 2] | 0, i2, HEAP32[(HEAP32[i34 >> 2] | 0) + 92 >> 2] | 0, HEAP32[i19 >> 2] | 0) | 0;
     i4 = _MetaData_GetTypeDefFromFieldDef(i2) | 0;
     if (!(HEAP8[i4 + 32 >> 0] | 0)) _MetaData_Fill_TypeDef_(i4, 0, 0);
     i4 = HEAP32[i2 + 20 >> 2] | 0;
-    _PushU32_(i59, _Translate((HEAPU8[i4 + 35 >> 0] | 0) + 96 | 0) | 0);
-    _PushU32_(i59, i2);
+    _PushU32_(i58, _Translate((HEAPU8[i4 + 35 >> 0] | 0) + 96 | 0) | 0);
+    _PushU32_(i58, i2);
     i7 = i13;
     break;
    }
   case 126:
    {
-    i2 = _GetUnalignedU32(i30, i37) | 0;
-    HEAP32[i58 >> 2] = i2;
-    i2 = _MetaData_GetFieldDefFromDefOrRef(HEAP32[i31 >> 2] | 0, i2, HEAP32[(HEAP32[i34 >> 2] | 0) + 92 >> 2] | 0, HEAP32[i19 >> 2] | 0) | 0;
+    i2 = _GetUnalignedU32(i31, i36) | 0;
+    HEAP32[i57 >> 2] = i2;
+    i2 = _MetaData_GetFieldDefFromDefOrRef(HEAP32[i32 >> 2] | 0, i2, HEAP32[(HEAP32[i34 >> 2] | 0) + 92 >> 2] | 0, HEAP32[i19 >> 2] | 0) | 0;
     i4 = _MetaData_GetTypeDefFromFieldDef(i2) | 0;
     if (!(HEAP8[i4 + 32 >> 0] | 0)) _MetaData_Fill_TypeDef_(i4, 0, 0);
     i4 = HEAP32[i2 + 20 >> 2] | 0;
-    _PushU32_(i59, _Translate((HEAPU8[i4 + 35 >> 0] | 0) + 80 | 0) | 0);
-    _PushU32_(i59, i2);
-    _PushStackType_(i55, i4);
+    _PushU32_(i58, _Translate((HEAPU8[i4 + 35 >> 0] | 0) + 80 | 0) | 0);
+    _PushU32_(i58, i2);
+    _PushStackType_(i54, i4);
     i7 = i13;
     break;
    }
   case 127:
    {
-    i2 = _GetUnalignedU32(i30, i37) | 0;
-    HEAP32[i58 >> 2] = i2;
-    i2 = _MetaData_GetFieldDefFromDefOrRef(HEAP32[i31 >> 2] | 0, i2, HEAP32[(HEAP32[i34 >> 2] | 0) + 92 >> 2] | 0, HEAP32[i19 >> 2] | 0) | 0;
+    i2 = _GetUnalignedU32(i31, i36) | 0;
+    HEAP32[i57 >> 2] = i2;
+    i2 = _MetaData_GetFieldDefFromDefOrRef(HEAP32[i32 >> 2] | 0, i2, HEAP32[(HEAP32[i34 >> 2] | 0) + 92 >> 2] | 0, HEAP32[i19 >> 2] | 0) | 0;
     i4 = _MetaData_GetTypeDefFromFieldDef(i2) | 0;
     if (!(HEAP8[i4 + 32 >> 0] | 0)) _MetaData_Fill_TypeDef_(i4, 0, 0);
-    _PushU32_(i59, _Translate(45) | 0);
-    _PushU32_(i59, i2);
-    _PushStackType_(i55, HEAP32[(HEAP32[8770] | 0) + 40 >> 2] | 0);
+    _PushU32_(i58, _Translate(45) | 0);
+    _PushU32_(i58, i2);
+    _PushStackType_(i54, HEAP32[(HEAP32[8770] | 0) + 40 >> 2] | 0);
     i4 = i16;
     i7 = i13;
     break;
    }
   case -116:
    {
-    i2 = HEAP32[i55 >> 2] | 0;
+    i2 = HEAP32[i54 >> 2] | 0;
     i4 = (HEAP32[i27 >> 2] | 0) + -1 | 0;
     HEAP32[i27 >> 2] = i4;
     i4 = HEAP32[i2 + (i4 << 2) >> 2] | 0;
-    i2 = _GetUnalignedU32(i30, i37) | 0;
-    HEAP32[i58 >> 2] = i2;
-    i2 = _MetaData_GetTypeDefFromDefRefOrSpec(HEAP32[i31 >> 2] | 0, i2, HEAP32[(HEAP32[i34 >> 2] | 0) + 92 >> 2] | 0, HEAP32[i19 >> 2] | 0) | 0;
+    i2 = _GetUnalignedU32(i31, i36) | 0;
+    HEAP32[i57 >> 2] = i2;
+    i2 = _MetaData_GetTypeDefFromDefRefOrSpec(HEAP32[i32 >> 2] | 0, i2, HEAP32[(HEAP32[i34 >> 2] | 0) + 92 >> 2] | 0, HEAP32[i19 >> 2] | 0) | 0;
     if (!(HEAP8[i2 + 32 >> 0] | 0)) _MetaData_Fill_TypeDef_(i2, 0, 0);
     if ((HEAP32[i2 + 88 >> 2] | 0) == (HEAP32[(HEAP32[8770] | 0) + 184 >> 2] | 0)) {
-     _PushU32_(i59, _Translate(142) | 0);
-     _PushU32_(i59, HEAP32[HEAP32[i2 + 92 >> 2] >> 2] | 0);
+     _PushU32_(i58, _Translate(142) | 0);
+     _PushU32_(i58, HEAP32[HEAP32[i2 + 92 >> 2] >> 2] | 0);
     } else {
-     _PushU32_(i59, _Translate((HEAPU8[i4 + 35 >> 0] | 0) + 104 | 0) | 0);
-     _PushU32_(i59, i2);
+     _PushU32_(i58, _Translate((HEAPU8[i4 + 35 >> 0] | 0) + 104 | 0) | 0);
+     _PushU32_(i58, i2);
     }
-    _PushStackType_(i55, HEAP32[HEAP32[8770] >> 2] | 0);
+    _PushStackType_(i54, HEAP32[HEAP32[8770] >> 2] | 0);
     i7 = i13;
     break;
    }
   case -91:
    {
     HEAP32[i27 >> 2] = (HEAP32[i27 >> 2] | 0) + -1;
-    i2 = _GetUnalignedU32(i30, i37) | 0;
-    HEAP32[i58 >> 2] = i2;
-    i2 = _MetaData_GetTypeDefFromDefRefOrSpec(HEAP32[i31 >> 2] | 0, i2, HEAP32[(HEAP32[i34 >> 2] | 0) + 92 >> 2] | 0, HEAP32[i19 >> 2] | 0) | 0;
+    i2 = _GetUnalignedU32(i31, i36) | 0;
+    HEAP32[i57 >> 2] = i2;
+    i2 = _MetaData_GetTypeDefFromDefRefOrSpec(HEAP32[i32 >> 2] | 0, i2, HEAP32[(HEAP32[i34 >> 2] | 0) + 92 >> 2] | 0, HEAP32[i19 >> 2] | 0) | 0;
     do if ((HEAP32[i2 + 88 >> 2] | 0) == (HEAP32[(HEAP32[8770] | 0) + 184 >> 2] | 0)) {
-     _PushU32_(i59, _Translate(218) | 0);
-     _PushU32_(i59, HEAP32[HEAP32[i2 + 92 >> 2] >> 2] | 0);
+     _PushU32_(i58, _Translate(218) | 0);
+     _PushU32_(i58, HEAP32[HEAP32[i2 + 92 >> 2] >> 2] | 0);
     } else if (!(HEAP8[i2 + 34 >> 0] | 0)) {
-     _PushU32_(i59, _Translate(18) | 0);
+     _PushU32_(i58, _Translate(18) | 0);
      break;
     } else {
-     _PushU32_(i59, _Translate(17) | 0);
+     _PushU32_(i58, _Translate(17) | 0);
      break;
     } while (0);
-    _PushStackType_(i55, i2);
+    _PushStackType_(i54, i2);
     i4 = i16;
     i7 = i13;
     break;
    }
   case -48:
    {
-    i4 = _GetUnalignedU32(i30, i37) | 0;
-    HEAP32[i58 >> 2] = i4;
-    i4 = _MetaData_GetTypeMethodField(HEAP32[i31 >> 2] | 0, i4, i58, HEAP32[(HEAP32[i34 >> 2] | 0) + 92 >> 2] | 0, HEAP32[i19 >> 2] | 0) | 0;
-    _PushU32_(i59, _Translate((HEAP32[i58 >> 2] | 0) + 176 | 0) | 0);
-    _PushU32_(i59, i4);
-    i4 = HEAP32[i58 >> 2] | 0;
-    _PushStackType_(i55, HEAP32[(HEAP32[8770] | 0) + (((i4 | 0) == 0 ? 28 : (i4 | 0) == 1 ? 11 : 29) << 2) >> 2] | 0);
+    i4 = _GetUnalignedU32(i31, i36) | 0;
+    HEAP32[i57 >> 2] = i4;
+    i4 = _MetaData_GetTypeMethodField(HEAP32[i32 >> 2] | 0, i4, i57, HEAP32[(HEAP32[i34 >> 2] | 0) + 92 >> 2] | 0, HEAP32[i19 >> 2] | 0) | 0;
+    _PushU32_(i58, _Translate((HEAP32[i57 >> 2] | 0) + 176 | 0) | 0);
+    _PushU32_(i58, i4);
+    i4 = HEAP32[i57 >> 2] | 0;
+    _PushStackType_(i54, HEAP32[(HEAP32[8770] | 0) + (((i4 | 0) == 0 ? 28 : (i4 | 0) == 1 ? 11 : 29) << 2) >> 2] | 0);
     i4 = i16;
     i7 = i13;
     break;
@@ -8593,41 +8593,41 @@ function _JITit(i6, i30, i56, i35, i5, i57) {
   case 122:
    {
     HEAP32[i27 >> 2] = (HEAP32[i27 >> 2] | 0) + -1;
-    _PushU32_(i59, _Translate(27) | 0);
-    _RestoreTypeStack(i55, HEAP32[i53 + (HEAP32[i37 >> 2] << 2) >> 2] | 0);
+    _PushU32_(i58, _Translate(27) | 0);
+    _RestoreTypeStack(i54, HEAP32[i52 + (HEAP32[i36 >> 2] << 2) >> 2] | 0);
     i4 = i16;
     i7 = i13;
     break;
    }
   case -34:
    {
-    i4 = HEAP32[i37 >> 2] | 0;
+    i4 = HEAP32[i36 >> 2] | 0;
     i2 = i4 + 1 | 0;
-    HEAP32[i37 >> 2] = i2;
-    i4 = HEAP8[i30 + i4 >> 0] | 0;
-    i49 = 264;
+    HEAP32[i36 >> 2] = i2;
+    i4 = HEAP8[i31 + i4 >> 0] | 0;
+    i48 = 264;
     break;
    }
   case -35:
    {
-    i4 = _GetUnalignedU32(i30, i37) | 0;
-    i2 = HEAP32[i37 >> 2] | 0;
-    i49 = 264;
+    i4 = _GetUnalignedU32(i31, i36) | 0;
+    i2 = HEAP32[i36 >> 2] | 0;
+    i48 = 264;
     break;
    }
   case -36:
    {
-    _PushU32_(i59, _Translate(26) | 0);
-    _RestoreTypeStack(i55, HEAP32[i53 + (HEAP32[i37 >> 2] << 2) >> 2] | 0);
+    _PushU32_(i58, _Translate(26) | 0);
+    _RestoreTypeStack(i54, HEAP32[i52 + (HEAP32[i36 >> 2] << 2) >> 2] | 0);
     i4 = i16;
     i7 = i13;
     break;
    }
   case -2:
    {
-    i15 = HEAP32[i37 >> 2] | 0;
-    HEAP32[i37 >> 2] = i15 + 1;
-    i15 = HEAP8[i30 + i15 >> 0] | 0;
+    i15 = HEAP32[i36 >> 2] | 0;
+    HEAP32[i36 >> 2] = i15 + 1;
+    i15 = HEAP8[i31 + i15 >> 0] | 0;
     i2 = i15 & 255;
     switch (i15 << 24 >> 24) {
     case 30:
@@ -8639,17 +8639,17 @@ function _JITit(i6, i30, i56, i35, i5, i57) {
     case 21:
      {
       HEAP32[i27 >> 2] = (HEAP32[i27 >> 2] | 0) + -1;
-      i2 = _GetUnalignedU32(i30, i37) | 0;
-      HEAP32[i58 >> 2] = i2;
-      i2 = _MetaData_GetTypeDefFromDefRefOrSpec(HEAP32[i31 >> 2] | 0, i2, HEAP32[(HEAP32[i34 >> 2] | 0) + 92 >> 2] | 0, HEAP32[i19 >> 2] | 0) | 0;
+      i2 = _GetUnalignedU32(i31, i36) | 0;
+      HEAP32[i57 >> 2] = i2;
+      i2 = _MetaData_GetTypeDefFromDefRefOrSpec(HEAP32[i32 >> 2] | 0, i2, HEAP32[(HEAP32[i34 >> 2] | 0) + 92 >> 2] | 0, HEAP32[i19 >> 2] | 0) | 0;
       if (!(HEAP8[i2 + 34 >> 0] | 0)) {
-       _PushU32_(i59, _Translate(42) | 0);
+       _PushU32_(i58, _Translate(42) | 0);
        i4 = i16;
        i7 = i13;
        break L33;
       } else {
-       _PushU32_(i59, _Translate(12) | 0);
-       _PushU32_(i59, i2);
+       _PushU32_(i58, _Translate(12) | 0);
+       _PushU32_(i58, i2);
        i4 = i16;
        i7 = i13;
        break L33;
@@ -8657,12 +8657,12 @@ function _JITit(i6, i30, i56, i35, i5, i57) {
      }
     case 6:
      {
-      i4 = _GetUnalignedU32(i30, i37) | 0;
-      HEAP32[i58 >> 2] = i4;
-      i4 = _MetaData_GetMethodDefFromDefRefOrSpec(HEAP32[i31 >> 2] | 0, i4, HEAP32[(HEAP32[i34 >> 2] | 0) + 92 >> 2] | 0, HEAP32[i19 >> 2] | 0) | 0;
-      _PushU32_(i59, _Translate(38) | 0);
-      _PushU32_(i59, i4);
-      _PushStackType_(i55, HEAP32[(HEAP32[8770] | 0) + 40 >> 2] | 0);
+      i4 = _GetUnalignedU32(i31, i36) | 0;
+      HEAP32[i57 >> 2] = i4;
+      i4 = _MetaData_GetMethodDefFromDefRefOrSpec(HEAP32[i32 >> 2] | 0, i4, HEAP32[(HEAP32[i34 >> 2] | 0) + 92 >> 2] | 0, HEAP32[i19 >> 2] | 0) | 0;
+      _PushU32_(i58, _Translate(38) | 0);
+      _PushU32_(i58, i4);
+      _PushStackType_(i54, HEAP32[(HEAP32[8770] | 0) + 40 >> 2] | 0);
       i4 = i16;
       i7 = i13;
       break L33;
@@ -8673,7 +8673,7 @@ function _JITit(i6, i30, i56, i35, i5, i57) {
     case 2:
     case 1:
      {
-      i8 = HEAP32[i55 >> 2] | 0;
+      i8 = HEAP32[i54 >> 2] | 0;
       i7 = HEAP32[i27 >> 2] | 0;
       i4 = HEAP32[i8 + (i7 + -1 << 2) >> 2] | 0;
       i7 = i7 + -2 | 0;
@@ -8683,24 +8683,24 @@ function _JITit(i6, i30, i56, i35, i5, i57) {
       switch (HEAP8[i7 + 35 >> 0] | 0) {
       case 1:
        {
-        if ((HEAP8[i8 >> 0] | 0) == 1) i49 = 277; else {
-         i49 = 284;
+        if ((HEAP8[i8 >> 0] | 0) == 1) i48 = 277; else {
+         i48 = 284;
          break L19;
         }
         break;
        }
       case 5:
        {
-        if ((HEAP8[i8 >> 0] | 0) == 5) i49 = 277; else {
-         i49 = 284;
+        if ((HEAP8[i8 >> 0] | 0) == 5) i48 = 277; else {
+         i48 = 284;
          break L19;
         }
         break;
        }
       case 4:
        {
-        if ((HEAP8[i8 >> 0] | 0) == 4) i49 = 277; else {
-         i49 = 284;
+        if ((HEAP8[i8 >> 0] | 0) == 4) i48 = 277; else {
+         i48 = 284;
          break L19;
         }
         break;
@@ -8708,159 +8708,159 @@ function _JITit(i6, i30, i56, i35, i5, i57) {
       case 0:
        {
         if (HEAP8[i8 >> 0] | 0) {
-         i49 = 284;
+         i48 = 284;
          break L19;
         }
-        _PushU32_(i59, _Translate(i2 + 116 | 0) | 0);
+        _PushU32_(i58, _Translate(i2 + 116 | 0) | 0);
         break;
        }
       case 6:
        {
         if ((HEAP8[i8 >> 0] | 0) != 6) {
-         i49 = 284;
+         i48 = 284;
          break L19;
         }
-        _PushU32_(i59, _Translate(i2 + 249 | 0) | 0);
+        _PushU32_(i58, _Translate(i2 + 249 | 0) | 0);
         break;
        }
       case 3:
        {
         if ((HEAP8[i8 >> 0] | 0) != 3) {
-         i49 = 284;
+         i48 = 284;
          break L19;
         }
-        _PushU32_(i59, _Translate(i2 + 271 | 0) | 0);
+        _PushU32_(i58, _Translate(i2 + 271 | 0) | 0);
         break;
        }
       default:
        {
-        i49 = 284;
+        i48 = 284;
         break L19;
        }
       }
-      if ((i49 | 0) == 277) {
-       i49 = 0;
-       _PushU32_(i59, _Translate(i2 + 111 | 0) | 0);
+      if ((i48 | 0) == 277) {
+       i48 = 0;
+       _PushU32_(i58, _Translate(i2 + 111 | 0) | 0);
       }
-      _PushStackType_(i55, HEAP32[(HEAP32[8770] | 0) + 32 >> 2] | 0);
+      _PushStackType_(i54, HEAP32[(HEAP32[8770] | 0) + 32 >> 2] | 0);
       i4 = i16;
       i7 = i13;
       break L33;
      }
     case 26:
      {
-      _PushU32_(i59, _Translate(28) | 0);
+      _PushU32_(i58, _Translate(28) | 0);
       i4 = i16;
       i7 = i13;
       break L33;
      }
     case 22:
      {
-      i4 = _GetUnalignedU32(i30, i37) | 0;
-      HEAP32[i37 >> 2] = (HEAP32[i37 >> 2] | 0) + 1;
+      i4 = _GetUnalignedU32(i31, i36) | 0;
+      HEAP32[i36 >> 2] = (HEAP32[i36 >> 2] | 0) + 1;
       i15 = 22;
       i7 = i13;
-      i49 = 84;
+      i48 = 84;
       break L33;
      }
     default:
      {
-      i49 = 288;
+      i48 = 288;
       break L19;
      }
     }
    }
   default:
    {
-    i49 = 289;
+    i48 = 289;
     break L19;
    }
   } while (0);
-  switch (i49 | 0) {
+  switch (i48 | 0) {
   case 37:
    {
-    i49 = 0;
-    if ((i2 + 1 | 0) >>> 0 < 4) _PushU32_(i59, _Translate(i2 + 312 | 0) | 0); else {
-     _PushU32_(i59, _Translate(2) | 0);
-     _PushU32_(i59, i2);
+    i48 = 0;
+    if ((i2 + 1 | 0) >>> 0 < 4) _PushU32_(i58, _Translate(i2 + 312 | 0) | 0); else {
+     _PushU32_(i58, _Translate(2) | 0);
+     _PushU32_(i58, i2);
     }
-    _PushStackType_(i55, HEAP32[(HEAP32[8770] | 0) + 32 >> 2] | 0);
+    _PushStackType_(i54, HEAP32[(HEAP32[8770] | 0) + 32 >> 2] | 0);
     i4 = i16;
     i7 = i13;
     break;
    }
   case 46:
    {
-    i49 = 0;
-    HEAP32[i58 >> 2] = i2;
+    i48 = 0;
+    HEAP32[i57 >> 2] = i2;
     i16 = HEAP32[i25 >> 2] | 0;
     i4 = HEAP32[i16 + (i2 * 12 | 0) >> 2] | 0;
     i2 = HEAP32[i16 + (i2 * 12 | 0) + 4 >> 2] | 0;
-    if (i2 >>> 0 < 32 ? (HEAP32[i4 + 68 >> 2] | 0) == 4 : 0) _PushU32_(i59, _Translate((i2 >>> 2) + 295 | 0) | 0); else {
+    if (i2 >>> 0 < 32 ? (HEAP32[i4 + 68 >> 2] | 0) == 4 : 0) _PushU32_(i58, _Translate((i2 >>> 2) + 295 | 0) | 0); else {
      i16 = i4 + 35 | 0;
-     _PushU32_(i59, _Translate((HEAPU8[i16 >> 0] | 0) + 48 | 0) | 0);
-     _PushU32_(i59, i2);
-     if ((HEAP8[i16 >> 0] | 0) == 7) _PushU32_(i59, i4);
+     _PushU32_(i58, _Translate((HEAPU8[i16 >> 0] | 0) + 48 | 0) | 0);
+     _PushU32_(i58, i2);
+     if ((HEAP8[i16 >> 0] | 0) == 7) _PushU32_(i58, i4);
     }
-    _PushStackType_(i55, i4);
+    _PushStackType_(i54, i4);
     i7 = i13;
     break;
    }
   case 58:
    {
-    i49 = 0;
-    HEAP32[i58 >> 2] = i2;
+    i48 = 0;
+    HEAP32[i57 >> 2] = i2;
     i4 = HEAP32[i35 + (i2 * 12 | 0) >> 2] | 0;
     i2 = (HEAP32[i35 + (i2 * 12 | 0) + 4 >> 2] | 0) + (HEAP32[i26 >> 2] | 0) | 0;
-    if (i2 >>> 0 < 32 ? (HEAP32[i4 + 68 >> 2] | 0) == 4 : 0) _PushU32_(i59, _Translate((i2 >>> 2) + 295 | 0) | 0); else {
+    if (i2 >>> 0 < 32 ? (HEAP32[i4 + 68 >> 2] | 0) == 4 : 0) _PushU32_(i58, _Translate((i2 >>> 2) + 295 | 0) | 0); else {
      i16 = i4 + 35 | 0;
-     _PushU32_(i59, _Translate((HEAPU8[i16 >> 0] | 0) + 48 | 0) | 0);
-     _PushU32_(i59, i2);
-     if ((HEAP8[i16 >> 0] | 0) == 7) _PushU32_(i59, i4);
+     _PushU32_(i58, _Translate((HEAPU8[i16 >> 0] | 0) + 48 | 0) | 0);
+     _PushU32_(i58, i2);
+     if ((HEAP8[i16 >> 0] | 0) == 7) _PushU32_(i58, i4);
     }
-    _PushStackType_(i55, i4);
+    _PushStackType_(i54, i4);
     i7 = i13;
     break;
    }
   case 65:
    {
-    i49 = 0;
-    HEAP32[i58 >> 2] = i2;
-    i16 = HEAP32[i55 >> 2] | 0;
+    i48 = 0;
+    HEAP32[i57 >> 2] = i2;
+    i16 = HEAP32[i54 >> 2] | 0;
     i4 = (HEAP32[i27 >> 2] | 0) + -1 | 0;
     HEAP32[i27 >> 2] = i4;
     i4 = HEAP32[i16 + (i4 << 2) >> 2] | 0;
     i2 = (HEAP32[i35 + (i2 * 12 | 0) + 4 >> 2] | 0) + (HEAP32[i26 >> 2] | 0) | 0;
     if (i2 >>> 0 < 32 ? (HEAP32[i4 + 68 >> 2] | 0) == 4 : 0) {
-     _PushU32_(i59, _Translate((i2 >>> 2) + 303 | 0) | 0);
+     _PushU32_(i58, _Translate((i2 >>> 2) + 303 | 0) | 0);
      i7 = i13;
      break;
     }
     i16 = i4 + 35 | 0;
-    _PushU32_(i59, _Translate((HEAPU8[i16 >> 0] | 0) + 56 | 0) | 0);
-    _PushU32_(i59, i2);
+    _PushU32_(i58, _Translate((HEAPU8[i16 >> 0] | 0) + 56 | 0) | 0);
+    _PushU32_(i58, i2);
     if ((HEAP8[i16 >> 0] | 0) == 7) {
-     _PushU32_(i59, i4);
+     _PushU32_(i58, i4);
      i7 = i13;
     } else i7 = i13;
     break;
    }
   case 81:
    {
-    i49 = 0;
+    i48 = 0;
     HEAP32[i27 >> 2] = (HEAP32[i27 >> 2] | 0) + -1;
-    _PushU32_(i59, _Translate(i12 + 109 | 0) | 0);
-    _PushStackType_(i55, HEAP32[(HEAP32[8770] | 0) + (HEAP32[i58 >> 2] << 2) >> 2] | 0);
+    _PushU32_(i58, _Translate(i12 + 109 | 0) | 0);
+    _PushStackType_(i54, HEAP32[(HEAP32[8770] | 0) + (HEAP32[i57 >> 2] << 2) >> 2] | 0);
     i4 = i16;
     i7 = i13;
     break;
    }
   case 84:
    {
-    i49 = 0;
-    i14 = _GetUnalignedU32(i30, i37) | 0;
-    HEAP32[i58 >> 2] = i14;
-    i14 = _MetaData_GetMethodDefFromDefRefOrSpec(i32, i14, HEAP32[(HEAP32[i34 >> 2] | 0) + 92 >> 2] | 0, HEAP32[i19 >> 2] | 0) | 0;
+    i48 = 0;
+    i14 = _GetUnalignedU32(i31, i36) | 0;
+    HEAP32[i57 >> 2] = i14;
+    i14 = _MetaData_GetMethodDefFromDefRefOrSpec(i33, i14, HEAP32[(HEAP32[i34 >> 2] | 0) + 92 >> 2] | 0, HEAP32[i19 >> 2] | 0) | 0;
     if (!(HEAP8[i14 + 32 >> 0] | 0)) {
      i2 = _MetaData_GetTypeDefFromMethodDef(i14) | 0;
      if (!(HEAP8[i2 + 32 >> 0] | 0)) _MetaData_Fill_TypeDef_(i2, 0, 0);
@@ -8870,7 +8870,7 @@ function _JITit(i6, i30, i56, i35, i5, i57) {
      i12 = 0;
      i13 = i15;
     } else {
-     i13 = _MetaData_GetTypeDefFromDefRefOrSpec(i32, i4, HEAP32[(HEAP32[i34 >> 2] | 0) + 92 >> 2] | 0, HEAP32[i19 >> 2] | 0) | 0;
+     i13 = _MetaData_GetTypeDefFromDefRefOrSpec(i33, i4, HEAP32[(HEAP32[i34 >> 2] | 0) + 92 >> 2] | 0, HEAP32[i19 >> 2] | 0) | 0;
      i4 = HEAP32[i14 + 48 >> 2] | 0;
      i8 = i14 + 56 | 0;
      i12 = i13 + 44 | 0;
@@ -8899,13 +8899,13 @@ function _JITit(i6, i30, i56, i35, i5, i57) {
       }
       i11 = HEAP32[i10 >> 2] | 0;
       if ((HEAP32[i11 + (i2 * 12 | 0) >> 2] | 0) == (i4 | 0)) {
-       i49 = 92;
+       i48 = 92;
        break;
       }
       i2 = i2 + 1 | 0;
      }
-     if ((i49 | 0) == 92) {
-      i49 = 0;
+     if ((i48 | 0) == 92) {
+      i48 = 0;
       i2 = HEAP32[(HEAP32[i11 + (i2 * 12 | 0) + 4 >> 2] | 0) + (HEAP32[i8 >> 2] << 2) >> 2] | 0;
      }
      i12 = HEAP32[(HEAP32[i12 >> 2] | 0) + (i2 << 2) >> 2] | 0;
@@ -8916,7 +8916,7 @@ function _JITit(i6, i30, i56, i35, i5, i57) {
      i13 = i13 ? 40 : i15;
     } while (0);
     i8 = HEAPU16[i14 + 34 >> 1] | 0;
-    i9 = HEAP32[i55 >> 2] | 0;
+    i9 = HEAP32[i54 >> 2] | 0;
     i4 = i16;
     i2 = 0;
     while (1) {
@@ -8929,14 +8929,14 @@ function _JITit(i6, i30, i56, i35, i5, i57) {
     if (HEAP16[i14 + 14 >> 1] & 16) i4 = HEAP32[HEAP32[8770] >> 2] | 0;
     if (!(HEAP8[i4 + 32 >> 0] | 0)) _MetaData_Fill_TypeDef_(i4, 0, 0);
     i2 = HEAP32[i14 + 48 >> 2] | 0;
-    L303 : do if (i13 << 24 >> 24 == 111 ? (HEAP32[i2 + 8 >> 2] & 32 | 0) != 0 : 0) _PushU32_(i59, _Translate(33) | 0); else {
+    L303 : do if (i13 << 24 >> 24 == 111 ? (HEAP32[i2 + 8 >> 2] & 32 | 0) != 0 : 0) _PushU32_(i58, _Translate(33) | 0); else {
      i8 = HEAP32[8770] | 0;
      if ((HEAP32[i2 + 40 >> 2] | 0) == (HEAP32[i8 + 80 >> 2] | 0)) {
-      _PushU32_(i59, _Translate(39) | 0);
+      _PushU32_(i58, _Translate(39) | 0);
       break;
      }
      if ((i2 | 0) == (HEAP32[i8 + 200 >> 2] | 0)) if (!(_strcmp(HEAP32[i14 + 16 >> 2] | 0, 13754) | 0)) {
-      _PushU32_(i59, _Translate(356) | 0);
+      _PushU32_(i58, _Translate(356) | 0);
       i7 = 1;
       break;
      }
@@ -8949,15 +8949,15 @@ function _JITit(i6, i30, i56, i35, i5, i57) {
      case 2:
       {
        if (i8) {
-        _PushU32_(i59, _Translate(23) | 0);
+        _PushU32_(i58, _Translate(23) | 0);
         break L303;
        }
        if (i2) {
-        _PushU32_(i59, _Translate(11) | 0);
-        _PushU32_(i59, i9);
+        _PushU32_(i58, _Translate(11) | 0);
+        _PushU32_(i58, i9);
         break L303;
        } else {
-        _PushU32_(i59, _Translate(i13 << 24 >> 24 == 40 ? 7 : 5) | 0);
+        _PushU32_(i58, _Translate(i13 << 24 >> 24 == 40 ? 7 : 5) | 0);
         break L303;
        }
       }
@@ -8965,115 +8965,115 @@ function _JITit(i6, i30, i56, i35, i5, i57) {
      case 4:
       {
        if (i8) {
-        _PushU32_(i59, _Translate(23) | 0);
+        _PushU32_(i58, _Translate(23) | 0);
         break L303;
        }
        if (i2) {
-        _PushU32_(i59, _Translate(11) | 0);
-        _PushU32_(i59, i9);
+        _PushU32_(i58, _Translate(11) | 0);
+        _PushU32_(i58, i9);
         break L303;
        } else {
-        _PushU32_(i59, _Translate(10) | 0);
+        _PushU32_(i58, _Translate(10) | 0);
         break L303;
        }
       }
      default:
       {
-       i49 = 122;
+       i48 = 122;
        break L19;
       }
      }
     } while (0);
-    _PushU32_(i59, i14);
+    _PushU32_(i58, i14);
     i2 = HEAP32[i14 + 44 >> 2] | 0;
-    if (i2 | 0) _PushStackType_(i55, i2);
-    if (!(i7 << 24 >> 24)) i7 = 0; else _PushU32_(i59, _Translate(357) | 0);
+    if (i2 | 0) _PushStackType_(i54, i2);
+    if (!(i7 << 24 >> 24)) i7 = 0; else _PushU32_(i58, _Translate(357) | 0);
     break;
    }
   case 129:
    {
-    i49 = 0;
+    i48 = 0;
     i15 = i2 + i4 | 0;
-    HEAP32[i58 >> 2] = i15;
+    HEAP32[i57 >> 2] = i15;
     if (i15 >>> 0 > i2 >>> 0) {
-     i15 = _DeepCopyTypeStack(i55) | 0;
-     HEAP32[i53 + (HEAP32[i58 >> 2] << 2) >> 2] = i15;
+     i15 = _DeepCopyTypeStack(i54) | 0;
+     HEAP32[i52 + (HEAP32[i57 >> 2] << 2) >> 2] = i15;
     }
-    _PushU32_(i59, _Translate(3) | 0);
+    _PushU32_(i58, _Translate(3) | 0);
     _PushU32_(i50, HEAP32[i29 >> 2] | 0);
-    _PushU32_(i59, HEAP32[i58 >> 2] | 0);
-    _RestoreTypeStack(i55, HEAP32[i53 + (HEAP32[i37 >> 2] << 2) >> 2] | 0);
+    _PushU32_(i58, HEAP32[i57 >> 2] | 0);
+    _RestoreTypeStack(i54, HEAP32[i52 + (HEAP32[i36 >> 2] << 2) >> 2] | 0);
     i4 = i16;
     i7 = i13;
     break;
    }
   case 139:
    {
-    i49 = 0;
+    i48 = 0;
     HEAP32[i27 >> 2] = (HEAP32[i27 >> 2] | 0) + -1;
     i15 = i4 + i7 | 0;
-    HEAP32[i58 >> 2] = i15;
+    HEAP32[i57 >> 2] = i15;
     if (i15 >>> 0 > i4 >>> 0) {
-     i15 = _DeepCopyTypeStack(i55) | 0;
-     HEAP32[i53 + (HEAP32[i58 >> 2] << 2) >> 2] = i15;
+     i15 = _DeepCopyTypeStack(i54) | 0;
+     HEAP32[i52 + (HEAP32[i57 >> 2] << 2) >> 2] = i15;
     }
-    _PushU32_(i59, _Translate(i2 + i12 | 0) | 0);
+    _PushU32_(i58, _Translate(i2 + i12 | 0) | 0);
     _PushU32_(i50, HEAP32[i29 >> 2] | 0);
-    _PushU32_(i59, HEAP32[i58 >> 2] | 0);
+    _PushU32_(i58, HEAP32[i57 >> 2] | 0);
     i4 = i16;
     i7 = i13;
     break;
    }
   case 144:
    {
-    i49 = 0;
-    i15 = HEAP32[i55 >> 2] | 0;
+    i48 = 0;
+    i15 = HEAP32[i54 >> 2] | 0;
     i2 = HEAP32[i27 >> 2] | 0;
     i11 = HEAP32[i15 + (i2 + -1 << 2) >> 2] | 0;
     i2 = i2 + -2 | 0;
     HEAP32[i27 >> 2] = i2;
     i2 = HEAP32[i15 + (i2 << 2) >> 2] | 0;
     i15 = i7 + i4 | 0;
-    HEAP32[i58 >> 2] = i15;
+    HEAP32[i57 >> 2] = i15;
     if (i15 >>> 0 > i4 >>> 0) {
-     i15 = _DeepCopyTypeStack(i55) | 0;
-     HEAP32[i53 + (HEAP32[i58 >> 2] << 2) >> 2] = i15;
+     i15 = _DeepCopyTypeStack(i54) | 0;
+     HEAP32[i52 + (HEAP32[i57 >> 2] << 2) >> 2] = i15;
     }
     i9 = HEAP8[i2 + 35 >> 0] | 0;
     i10 = i9 & 255;
     i7 = i12 - i8 | 0;
     i2 = HEAP8[i11 + 35 >> 0] | 0;
     i4 = i2 & 255;
-    do if (i9 << 24 >> 24 == 1 & i2 << 24 >> 24 == 1) i49 = 148; else if (i9 << 24 >> 24 == 5 & i2 << 24 >> 24 == 5) i49 = 148; else {
+    do if (i9 << 24 >> 24 == 1 & i2 << 24 >> 24 == 1) i48 = 148; else if (i9 << 24 >> 24 == 5 & i2 << 24 >> 24 == 5) i48 = 148; else {
      if (!((i2 | i9) << 24 >> 24)) {
-      _PushU32_(i59, _Translate(i7 + 154 | 0) | 0);
+      _PushU32_(i58, _Translate(i7 + 154 | 0) | 0);
       break;
      }
      if (i9 << 24 >> 24 == 6 & i2 << 24 >> 24 == 6) {
-      _PushU32_(i59, _Translate(i7 + 255 | 0) | 0);
+      _PushU32_(i58, _Translate(i7 + 255 | 0) | 0);
       break;
      }
      if (!(i9 << 24 >> 24 == 3 & i2 << 24 >> 24 == 3)) {
-      i49 = 155;
+      i48 = 155;
       break L19;
      }
-     _PushU32_(i59, _Translate(i7 + 277 | 0) | 0);
+     _PushU32_(i58, _Translate(i7 + 277 | 0) | 0);
     } while (0);
-    if ((i49 | 0) == 148) {
-     i49 = 0;
-     _PushU32_(i59, _Translate(i7 + 144 | 0) | 0);
+    if ((i48 | 0) == 148) {
+     i48 = 0;
+     _PushU32_(i58, _Translate(i7 + 144 | 0) | 0);
     }
     _PushU32_(i50, HEAP32[i29 >> 2] | 0);
-    _PushU32_(i59, HEAP32[i58 >> 2] | 0);
+    _PushU32_(i58, HEAP32[i57 >> 2] | 0);
     i4 = i16;
     i7 = i13;
     break;
    }
   case 158:
    {
-    i49 = 0;
-    HEAP32[i58 >> 2] = i2;
-    i7 = HEAP32[i55 >> 2] | 0;
+    i48 = 0;
+    HEAP32[i57 >> 2] = i2;
+    i7 = HEAP32[i54 >> 2] | 0;
     i4 = HEAP32[i27 >> 2] | 0;
     i9 = HEAP32[i7 + (i4 + -1 << 2) >> 2] | 0;
     i4 = i4 + -2 | 0;
@@ -9084,32 +9084,32 @@ function _JITit(i6, i30, i56, i35, i5, i57) {
     i9 = HEAP8[i9 + 35 >> 0] | 0;
     i10 = i9 & 255;
     if (i7 << 24 >> 24 == 1 & i9 << 24 >> 24 == 1) {
-     _PushU32_(i59, _Translate(i12 + 40 - i2 | 0) | 0);
-     _PushStackType_(i55, HEAP32[(HEAP32[8770] | 0) + 32 >> 2] | 0);
+     _PushU32_(i58, _Translate(i12 + 40 - i2 | 0) | 0);
+     _PushStackType_(i54, HEAP32[(HEAP32[8770] | 0) + 32 >> 2] | 0);
      i4 = i16;
      i7 = i13;
      break;
     }
     if (!((i9 | i7) << 24 >> 24)) {
-     _PushU32_(i59, _Translate(i12 + 152 - i2 | 0) | 0);
-     _PushStackType_(i55, HEAP32[(HEAP32[8770] | 0) + 96 >> 2] | 0);
+     _PushU32_(i58, _Translate(i12 + 152 - i2 | 0) | 0);
+     _PushStackType_(i54, HEAP32[(HEAP32[8770] | 0) + 96 >> 2] | 0);
      i4 = i16;
      i7 = i13;
      break;
     }
     if (i7 << 24 >> 24 == 6 & i9 << 24 >> 24 == 6) {
-     _PushU32_(i59, _Translate(i12 + 177 - i2 | 0) | 0);
-     _PushStackType_(i55, i4);
+     _PushU32_(i58, _Translate(i12 + 177 - i2 | 0) | 0);
+     _PushStackType_(i54, i4);
      i4 = i16;
      i7 = i13;
      break;
     }
     if (!(i7 << 24 >> 24 == 3 & i9 << 24 >> 24 == 3)) {
-     i49 = 166;
+     i48 = 166;
      break L19;
     }
-    _PushU32_(i59, _Translate(i12 + 199 - i2 | 0) | 0);
-    _PushStackType_(i55, i4);
+    _PushU32_(i58, _Translate(i12 + 199 - i2 | 0) | 0);
+    _PushStackType_(i54, i4);
     i4 = i16;
     i7 = i13;
     break;
@@ -9117,31 +9117,31 @@ function _JITit(i6, i30, i56, i35, i5, i57) {
   case 179:
    {
     i8 = 1;
-    i49 = 184;
+    i48 = 184;
     break;
    }
   case 264:
    {
-    i49 = 0;
+    i48 = 0;
     i15 = i2 + i4 | 0;
-    HEAP32[i58 >> 2] = i15;
+    HEAP32[i57 >> 2] = i15;
     if (i15 >>> 0 > i2 >>> 0) {
-     i2 = _DeepCopyTypeStack(i55) | 0;
-     HEAP32[i53 + (HEAP32[i58 >> 2] << 2) >> 2] = i2;
-     i2 = HEAP32[i37 >> 2] | 0;
+     i2 = _DeepCopyTypeStack(i54) | 0;
+     HEAP32[i52 + (HEAP32[i57 >> 2] << 2) >> 2] = i2;
+     i2 = HEAP32[i36 >> 2] | 0;
     }
-    _RestoreTypeStack(i55, HEAP32[i53 + (i2 << 2) >> 2] | 0);
-    _PushU32_(i59, _Translate(25) | 0);
+    _RestoreTypeStack(i54, HEAP32[i52 + (i2 << 2) >> 2] | 0);
+    _PushU32_(i58, _Translate(25) | 0);
     _PushU32_(i50, HEAP32[i29 >> 2] | 0);
-    _PushU32_(i59, HEAP32[i58 >> 2] | 0);
+    _PushU32_(i58, HEAP32[i57 >> 2] | 0);
     i4 = i16;
     i7 = i13;
     break;
    }
   }
-  if ((i49 | 0) == 184) {
-   i49 = 0;
-   i4 = HEAP32[i55 >> 2] | 0;
+  if ((i48 | 0) == 184) {
+   i48 = 0;
+   i4 = HEAP32[i54 >> 2] | 0;
    i7 = (HEAP32[i27 >> 2] | 0) + -1 | 0;
    HEAP32[i27 >> 2] = i7;
    i7 = HEAP32[i4 + (i7 << 2) >> 2] | 0;
@@ -9175,7 +9175,7 @@ function _JITit(i6, i30, i56, i35, i5, i57) {
     }
    default:
     {
-     i49 = 192;
+     i48 = 192;
      break L19;
     }
    } while (0);
@@ -9202,19 +9202,19 @@ function _JITit(i6, i30, i56, i35, i5, i57) {
     }
    default:
     {
-     i49 = 196;
+     i48 = 196;
      break L19;
     }
    }
-   _PushU32_(i59, _Translate(i5 + i8 | 0) | 0);
-   if (i4) _PushU32_(i59, i6);
-   _PushStackType_(i55, HEAP32[(HEAP32[8770] | 0) + (i2 << 2) >> 2] | 0);
+   _PushU32_(i58, _Translate(i5 + i8 | 0) | 0);
+   if (i4) _PushU32_(i58, i6);
+   _PushStackType_(i54, HEAP32[(HEAP32[8770] | 0) + (i2 << 2) >> 2] | 0);
    i4 = i7;
    i7 = i13;
   }
-  i2 = HEAP32[i37 >> 2] | 0;
-  if (i2 >>> 0 >= i56 >>> 0) {
-   i49 = 292;
+  i2 = HEAP32[i36 >> 2] | 0;
+  if (i2 >>> 0 >= i55 >>> 0) {
+   i48 = 292;
    break;
   }
   i16 = i4;
@@ -9224,121 +9224,121 @@ function _JITit(i6, i30, i56, i35, i5, i57) {
   i9 = i2;
   i2 = HEAP32[i29 >> 2] | 0;
  }
- switch (i49 | 0) {
+ switch (i48 | 0) {
  case 122:
   {
-   HEAP32[i45 >> 2] = i10 & 255;
-   _Crash(13761, i45);
+   HEAP32[i41 >> 2] = i10 & 255;
+   _Crash(13761, i41);
    break;
   }
  case 155:
   {
-   HEAP32[i48 >> 2] = i10;
-   HEAP32[i48 + 4 >> 2] = i4;
-   _Crash(13814, i48);
+   HEAP32[i46 >> 2] = i10;
+   HEAP32[i46 + 4 >> 2] = i4;
+   _Crash(13814, i46);
    break;
   }
  case 166:
   {
-   HEAP32[i39 >> 2] = i8;
-   HEAP32[i39 + 4 >> 2] = i10;
-   _Crash(13883, i39);
+   HEAP32[i47 >> 2] = i8;
+   HEAP32[i47 + 4 >> 2] = i10;
+   _Crash(13883, i47);
    break;
   }
  case 170:
   {
-   HEAP32[i40 >> 2] = i2 & 255;
-   _Crash(13956, i40);
+   HEAP32[i38 >> 2] = i2 & 255;
+   _Crash(13956, i38);
    break;
   }
  case 174:
   {
-   HEAP32[i41 >> 2] = HEAP32[i2 + 12 >> 2];
-   _Crash(14013, i41);
+   HEAP32[i39 >> 2] = HEAP32[i2 + 12 >> 2];
+   _Crash(14013, i39);
    break;
   }
  case 192:
   {
-   HEAP32[i42 >> 2] = i4 & 255;
-   _Crash(14065, i42);
+   HEAP32[i40 >> 2] = i4 & 255;
+   _Crash(14065, i40);
    break;
   }
  case 196:
   {
-   HEAP32[i43 >> 2] = i8;
-   _Crash(14106, i43);
+   HEAP32[i42 >> 2] = i8;
+   _Crash(14106, i42);
    break;
   }
  case 284:
   {
-   i60 = HEAP32[i4 + 12 >> 2] | 0;
-   HEAP32[i44 >> 2] = HEAP32[i7 + 12 >> 2];
-   HEAP32[i44 + 4 >> 2] = i60;
-   _Crash(14149, i44);
+   i59 = HEAP32[i4 + 12 >> 2] | 0;
+   HEAP32[i43 >> 2] = HEAP32[i7 + 12 >> 2];
+   HEAP32[i43 + 4 >> 2] = i59;
+   _Crash(14149, i43);
    break;
   }
  case 288:
   {
-   HEAP32[i46 >> 2] = i2;
-   _Crash(14218, i46);
+   HEAP32[i44 >> 2] = i2;
+   _Crash(14218, i44);
    break;
   }
  case 289:
   {
-   HEAP32[i47 >> 2] = i12;
-   _Crash(14272, i47);
+   HEAP32[i45 >> 2] = i12;
+   _Crash(14272, i45);
    break;
   }
  case 292:
   {
    i3 = HEAP32[i23 >> 2] | 0;
    i4 = HEAP32[i50 >> 2] | 0;
-   i2 = HEAP32[i59 >> 2] | 0;
+   i2 = HEAP32[i58 >> 2] | 0;
    i1 = 0;
    while (1) {
     if ((i1 | 0) == (i3 | 0)) break;
     i50 = i2 + (HEAP32[i4 + (i1 << 2) >> 2] << 2) | 0;
-    HEAP32[i50 >> 2] = HEAP32[i52 + (HEAP32[i50 >> 2] << 2) >> 2];
+    HEAP32[i50 >> 2] = HEAP32[i51 + (HEAP32[i50 >> 2] << 2) >> 2];
     i1 = i1 + 1 | 0;
    }
    i2 = HEAP32[i28 >> 2] | 0;
    i1 = 0;
    while (1) {
     if ((i1 | 0) == (i2 | 0)) break;
-    i48 = HEAP32[i36 >> 2] | 0;
-    i50 = i48 + (i1 * 24 | 0) + 4 | 0;
-    i49 = HEAP32[i50 >> 2] | 0;
-    i47 = i48 + (i1 * 24 | 0) + 8 | 0;
-    HEAP32[i47 >> 2] = HEAP32[i52 + ((HEAP32[i47 >> 2] | 0) + i49 << 2) >> 2];
-    HEAP32[i50 >> 2] = HEAP32[i52 + (i49 << 2) >> 2];
-    i50 = i48 + (i1 * 24 | 0) + 12 | 0;
-    i49 = HEAP32[i50 >> 2] | 0;
-    i48 = i48 + (i1 * 24 | 0) + 16 | 0;
-    HEAP32[i48 >> 2] = HEAP32[i52 + ((HEAP32[i48 >> 2] | 0) + i49 << 2) >> 2];
-    HEAP32[i50 >> 2] = HEAP32[i52 + (i49 << 2) >> 2];
+    i47 = HEAP32[i30 >> 2] | 0;
+    i50 = i47 + (i1 * 24 | 0) + 4 | 0;
+    i48 = HEAP32[i50 >> 2] | 0;
+    i46 = i47 + (i1 * 24 | 0) + 8 | 0;
+    HEAP32[i46 >> 2] = HEAP32[i51 + ((HEAP32[i46 >> 2] | 0) + i48 << 2) >> 2];
+    HEAP32[i50 >> 2] = HEAP32[i51 + (i48 << 2) >> 2];
+    i50 = i47 + (i1 * 24 | 0) + 12 | 0;
+    i48 = HEAP32[i50 >> 2] | 0;
+    i47 = i47 + (i1 * 24 | 0) + 16 | 0;
+    HEAP32[i47 >> 2] = HEAP32[i51 + ((HEAP32[i47 >> 2] | 0) + i48 << 2) >> 2];
+    HEAP32[i50 >> 2] = HEAP32[i51 + (i48 << 2) >> 2];
     i1 = i1 + 1 | 0;
    }
-   HEAP32[i54 >> 2] = HEAP32[i51 >> 2];
-   _free(HEAP32[i55 >> 2] | 0);
+   HEAP32[i53 >> 2] = HEAP32[i49 >> 2];
+   _free(HEAP32[i54 >> 2] | 0);
    i1 = 0;
    while (1) {
-    if ((i1 | 0) == (i56 | 0)) break;
-    i2 = HEAP32[i53 + (i1 << 2) >> 2] | 0;
+    if ((i1 | 0) == (i55 | 0)) break;
+    i2 = HEAP32[i52 + (i1 << 2) >> 2] | 0;
     if (i2 | 0) _free(HEAP32[i2 >> 2] | 0);
     i1 = i1 + 1 | 0;
    }
-   _free(i53);
-   _free(i4);
    _free(i52);
+   _free(i4);
+   _free(i51);
    i1 = HEAP32[i29 >> 2] << 2;
-   HEAP32[i58 >> 2] = i1;
-   if (!i57) {
+   HEAP32[i57 >> 2] = i1;
+   if (!i56) {
     i2 = _mallocForever(i1) | 0;
-    i1 = HEAP32[i58 >> 2] | 0;
+    i1 = HEAP32[i57 >> 2] | 0;
    } else i2 = _malloc(i1) | 0;
-   _memcpy(i2 | 0, HEAP32[i59 >> 2] | 0, i1 | 0) | 0;
-   _free(HEAP32[i59 >> 2] | 0);
-   STACKTOP = i60;
+   _memcpy(i2 | 0, HEAP32[i58 >> 2] | 0, i1 | 0) | 0;
+   _free(HEAP32[i58 >> 2] | 0);
+   STACKTOP = i59;
    return i2 | 0;
   }
  }
@@ -20018,6 +20018,7 @@ function _MetaData_DecodeSigEntryExt(i5, i2) {
  } while (0);
  return i1 | 0;
 }
+
 function _System_DateTime_InternalUtcNow(i1, i2, i3) {
  i1 = i1 | 0;
  i2 = i2 | 0;
@@ -22477,6 +22478,16 @@ function ___stdio_close(i1) {
  return i1 | 0;
 }
 
+function _System_Runtime_CompilerServices_InitializeArray(i1, i2, i3) {
+ i1 = i1 | 0;
+ i2 = i2 | 0;
+ i3 = i3 | 0;
+ i3 = HEAP32[i2 >> 2] | 0;
+ i1 = HEAP32[i2 + 4 >> 2] | 0;
+ i2 = _Heap_GetType(i3) | 0;
+ _memcpy(i3 + 4 | 0, i1 | 0, Math_imul(HEAP32[(HEAP32[i2 + 96 >> 2] | 0) + 64 >> 2] | 0, HEAP32[i3 >> 2] | 0) | 0) | 0;
+ return 0;
+}
 function _Debugger_Continue() {
  var i1 = 0, i2 = 0;
  i2 = STACKTOP;
@@ -22490,17 +22501,6 @@ function _Debugger_Continue() {
  }
  STACKTOP = i2;
  return i1 | 0;
-}
-
-function _System_Runtime_CompilerServices_InitializeArray(i1, i2, i3) {
- i1 = i1 | 0;
- i2 = i2 | 0;
- i3 = i3 | 0;
- i3 = HEAP32[i2 >> 2] | 0;
- i1 = HEAP32[i2 + 4 >> 2] | 0;
- i2 = _Heap_GetType(i3) | 0;
- _memcpy(i3 + 4 | 0, i1 | 0, Math_imul(HEAP32[(HEAP32[i2 + 96 >> 2] | 0) + 64 >> 2] | 0, HEAP32[i3 >> 2] | 0) | 0) | 0;
- return 0;
 }
 
 function _System_Threading_Interlocked_CompareExchange_Int32(i1, i3, i4) {
