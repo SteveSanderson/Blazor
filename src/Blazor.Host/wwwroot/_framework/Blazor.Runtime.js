@@ -867,7 +867,8 @@ window['jsobject.js'] = (function () {
         var preloadAssemblies = [entryPoint].concat(referenceAssemblies).map(function (assemblyName) {
             return { assemblyName: assemblyName, url: '/_bin/' + assemblyName };
         });
-        preloadAssemblies.push({ assemblyName: 'Blazor.Runtime.dll', url: '/_framework/Blazor.Runtime.dll' });
+        preloadAssemblies.push({ assemblyName: 'Blazor.Runtime.dll', url: '/_bin/Blazor.Runtime.dll' });
+        preloadAssemblies.push({ assemblyName: 'Blazor.Runtime.wdb', url: '/_bin/Blazor.Runtime.wdb' });
 
         // Also infer the name of the views assembly from the entrypoint. We have to pass a special querystring
         // value with this so that the dev-time host app knows to compile the Razor files dynamically. In a production
@@ -879,13 +880,13 @@ window['jsobject.js'] = (function () {
             url: '/_bin/' + viewsAssemblyFilename + '?type=razorviews&' + referencesQueryStringSegments
         });
 
-        var wpdbFileName = entryPoint.replace(/\.dll$/, '.wdb');
-        preloadAssemblies.push({ assemblyName: wpdbFileName, url: '/_bin/' + wpdbFileName });
+        // var wpdbFileName = entryPoint.replace(/\.dll$/, '.wdb');
+        // preloadAssemblies.push({ assemblyName: wpdbFileName, url: '/_bin/' + wpdbFileName });
 
         window.Module = {
             wasmBinaryFile: '/_framework/wasm/dna.wasm',
             asmjsCodeFile: '/_framework/asmjs/dna.asm.js',
-            arguments: [entryPoint],
+            arguments: ["-vv", entryPoint],
             preRun: function () {
                 // Preload corlib.dll and other assemblies
                 Module.readAsync = FetchArrayBuffer;
@@ -895,6 +896,8 @@ window['jsobject.js'] = (function () {
                 });
             },
             postRun: function () {
+                Module.ccall('Debugger_SetBreakPoint', 'number', ['string', 'number'], ['Blazor.Runtime.dllBlazor.ComponentsComponentMountAsPage', 0]);
+
                 InvokeStatic('Blazor.Runtime', 'Blazor.Runtime.Interop', 'Startup', 'EnsureAssembliesLoaded', JSON.stringify(
                     preloadAssemblies.map(function (assemblyInfo) {
                         var name = assemblyInfo.assemblyName;

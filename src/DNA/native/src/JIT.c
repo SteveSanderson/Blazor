@@ -260,8 +260,8 @@ static U32* JITit(tMD_MethodDef *pMethodDef, U8 *pCIL, U32 codeSize, tParameter 
 	PTR pMem;
 	tMetaData *pMetaData;
     tDebugMetaData* pDebugMetadata;
-    tDebugMetaDataEntry* pDebugMetadataEntry;
-    U32 sequencePointIndex;
+    tDebugMetaDataEntry* pDebugMetadataEntry = NULL;
+    int sequencePointIndex;
 
 	pMetaData = pMethodDef->pMetaData;
     pDebugMetadata = pMetaData->debugMetadata;
@@ -332,7 +332,6 @@ static U32* JITit(tMD_MethodDef *pMethodDef, U8 *pCIL, U32 codeSize, tParameter 
 
 		op = pCIL[cilOfs++];
 		//printf("Opcode: 0x%02x\n", op);
-
         if (pDebugMetadataEntry != NULL && sequencePointIndex < pDebugMetadataEntry->sequencePointsCount) {
             U32 spOffset = pDebugMetadataEntry->sequencePoints[sequencePointIndex];
             if (spOffset == pcilOfs) {
@@ -356,7 +355,7 @@ static U32* JITit(tMD_MethodDef *pMethodDef, U8 *pCIL, U32 codeSize, tParameter 
                 PushOp(JIT_LOAD_I32);
                 PushI32((int)pDebugMetadataEntry);
                 PushOp(JIT_LOAD_I32);
-                PushI32(pcilOfs);
+                PushI32((int)sequencePointIndex);
                 PushOp(JIT_CALL_O);
                 PushPTR(pDebuggerBreakPointMethod);
 
@@ -612,27 +611,6 @@ cilLdInd:
 			case CIL_CALL:
 			case CIL_CALLVIRT:
 				{
-                    //tMD_MethodDef *pDebuggerBreakPointMethod;
-                    //tMetaData *pCorelibMetadata;
-                    //tMD_TypeDef *pDebuggerTypeDef;
-
-                    //pCorelibMetadata = CLIFile_GetMetaDataForAssembly("corlib");
-                    //pDebuggerTypeDef = MetaData_GetTypeDefFromName(pCorelibMetadata, "System.Diagnostics", "Debugger", NULL, /* assertExists */ 1);
-                    //MetaData_Fill_TypeDef(pDebuggerTypeDef, NULL, NULL);
-                    //for (int i = 0; i < pDebuggerTypeDef->numMethods; i++) {
-                    //    if (strcmp(pDebuggerTypeDef->ppMethods[i]->name, "Internal_BreakPoint") == 0) {
-                    //        pDebuggerBreakPointMethod = pDebuggerTypeDef->ppMethods[i];
-                    //        break;
-                    //    }
-                    //}
-
-                    //PushOp(JIT_LOAD_I32);
-                    //PushI32((int)pMethodDef);
-                    //PushOp(JIT_LOAD_I32);
-                    //PushI32(cilOfs);
-                    //PushOp(JIT_CALL_O);
-                    //PushPTR(pDebuggerBreakPointMethod);
-
 					tMD_MethodDef *pCallMethod;
 					tMD_TypeDef *pBoxCallType;
 					U32 derefRefType;

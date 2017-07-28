@@ -103,7 +103,7 @@ namespace VSCodeDebug
 
         private void OnMessage(byte[] all)
         {
-            Console.WriteLine("Received Message from Debugee: " + Encoding.GetString(all));
+            Log("Received Message from Debugee: " + Encoding.GetString(all));
         }
 
         public override void Continue(Response response, dynamic arguments)

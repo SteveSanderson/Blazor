@@ -115,15 +115,17 @@ tAsyncCall* System_Diagnostics_Debugger_Internal_Break_Point(PTR pThis_, PTR pPa
     tBreakPoint* pHead;
     int doBreakpoint;
 
-    U32 arg0 = INTERNALCALL_PARAM(0, U32);
-    U32 offset = INTERNALCALL_PARAM(4, U32);
+    tDebugMetaDataEntry* pDebugEntry = INTERNALCALL_PARAM(0, tDebugMetaDataEntry*);
+    I32 spOffset = INTERNALCALL_PARAM(4, I32);
 
-    tDebugMetaDataEntry* pDebugEntry = (tDebugMetaDataEntry*)arg0;
+    log_f(1, "System_Diagnostics_Debugger_Internal_Break_Point(%d, %d) \n", pDebugEntry, spOffset);
+
+    int offset = pDebugEntry->sequencePoints[spOffset];
 
     doBreakpoint = 0;
     pHead = pBreakpoints;
 
-    log_f(1, "Scanning break point matching (%s, %d) \n", pDebugEntry->pID, offset);
+    log_f(1, "Scanning break point matching (%s, %d, %04X) \n", pDebugEntry->pID, offset, offset);
 
     while (pHead != NULL) {
         log_f(1, "Found entry for (%s) \n", pHead->pID);
@@ -136,7 +138,9 @@ tAsyncCall* System_Diagnostics_Debugger_Internal_Break_Point(PTR pThis_, PTR pPa
                 }
             }
 
-            log_f(1, "No break point set at %s \n", pHead->pID);
+            if (!doBreakpoint) {
+                log_f(1, "No break point set at (%s, %d) \n", pHead->pID, offset);
+            }
         }
         pHead = pHead->next;
     }

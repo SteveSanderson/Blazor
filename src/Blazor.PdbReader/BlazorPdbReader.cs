@@ -17,48 +17,52 @@ namespace Blazor.PdbReader
         /// </summary>
         public static void WriteSequencePointsToFile(string modulePath, string outputPath)
         {
-            var peStream = File.OpenRead(modulePath);
-            var pdbStream = File.OpenRead(Path.ChangeExtension(modulePath, "pdb"));
-            var peReader = new PEReader(peStream);
-            var pdbProvider = MetadataReaderProvider.FromPortablePdbStream(pdbStream);
-            var peMetadataReader = peReader.GetMetadataReader();
-            var pdbMetadataReader = pdbProvider.GetMetadataReader();
-
-            using (var outputFile = File.OpenWrite(outputPath))
+            using (var peStream = File.OpenRead(modulePath))
+            using (var pdbStream = File.OpenRead(Path.ChangeExtension(modulePath, "pdb")))
             {
-                var moduleNameBytes = Encoding.UTF8.GetBytes(peMetadataReader.GetString(peMetadataReader.GetModuleDefinition().Name));
+                var peReader = new PEReader(peStream);
+                var pdbProvider = MetadataReaderProvider.FromPortablePdbStream(pdbStream);
+                var peMetadataReader = peReader.GetMetadataReader();
+                var pdbMetadataReader = pdbProvider.GetMetadataReader();
 
-                foreach (var methodDebugInfoHandle in pdbMetadataReader.MethodDebugInformation)
+                using (var outputFile = File.OpenWrite(outputPath))
                 {
-                    var methodDebugInfo = pdbMetadataReader.GetMethodDebugInformation(methodDebugInfoHandle);
-                    var methodDefHandle = methodDebugInfoHandle.ToDefinitionHandle();
-                    var methodDef = peMetadataReader.GetMethodDefinition(methodDefHandle);
-                    var document = pdbMetadataReader.GetDocument(methodDebugInfo.Document);
-                    var methodDefToken = MetadataTokens.GetToken(methodDefHandle);
-                    var methodDebugInfoToken = MetadataTokens.GetToken(methodDefHandle);
-                    var declaringType = peMetadataReader.GetTypeDefinition(methodDef.GetDeclaringType());
+                    var moduleNameBytes = Encoding.UTF8.GetBytes(peMetadataReader.GetString(peMetadataReader.GetModuleDefinition().Name));
 
-                    var namespaceNameBytes = Encoding.UTF8.GetBytes(peMetadataReader.GetString(declaringType.Namespace));
-                    var classNameBytes = Encoding.UTF8.GetBytes(peMetadataReader.GetString(declaringType.Name));
-                    var methodNameBytes = Encoding.UTF8.GetBytes(peMetadataReader.GetString(methodDef.Name));
-
-                    var sequencePoints = methodDebugInfo.GetSequencePoints().ToArray();
-
-                    outputFile.Write(moduleNameBytes, 0, moduleNameBytes.Length);
-                    outputFile.WriteByte(0);
-                    outputFile.Write(namespaceNameBytes, 0, namespaceNameBytes.Length);
-                    outputFile.WriteByte(0);
-                    outputFile.Write(classNameBytes, 0, classNameBytes.Length);
-                    outputFile.WriteByte(0);
-                    outputFile.Write(methodNameBytes, 0, methodNameBytes.Length);
-                    outputFile.WriteByte(0);
-                    WriteInt32(outputFile, sequencePoints.Length);
-
-                    foreach (var sequencePoint in sequencePoints)
+                    foreach (var methodDebugInfoHandle in pdbMetadataReader.MethodDebugInformation)
                     {
-                        WriteInt32(outputFile, sequencePoint.Offset);
-                        //Console.WriteLine($"document name: {pdbMetadataReader.GetString(document.Name)} namespace: {peMetadataReader.GetString(declaringType.Namespace)} class name: {peMetadataReader.GetString(declaringType.Name)} method name: {peMetadataReader.GetString(methodDef.Name)} method def token: {methodDefToken} method debug info token: {methodDebugInfoToken} start line: {sequencePoint.StartLine} offset: {sequencePoint.Offset}");
+                        var methodDebugInfo = pdbMetadataReader.GetMethodDebugInformation(methodDebugInfoHandle);
+                        var methodDefHandle = methodDebugInfoHandle.ToDefinitionHandle();
+                        var methodDef = peMetadataReader.GetMethodDefinition(methodDefHandle);
+                        var document = pdbMetadataReader.GetDocument(methodDebugInfo.Document);
+                        var methodDefToken = MetadataTokens.GetToken(methodDefHandle);
+                        var methodDebugInfoToken = MetadataTokens.GetToken(methodDefHandle);
+                        var declaringType = peMetadataReader.GetTypeDefinition(methodDef.GetDeclaringType());
+
+                        var namespaceNameBytes = Encoding.UTF8.GetBytes(peMetadataReader.GetString(declaringType.Namespace));
+                        var classNameBytes = Encoding.UTF8.GetBytes(peMetadataReader.GetString(declaringType.Name));
+                        var methodNameBytes = Encoding.UTF8.GetBytes(peMetadataReader.GetString(methodDef.Name));
+
+                        var sequencePoints = methodDebugInfo.GetSequencePoints().ToArray();
+
+                        outputFile.Write(moduleNameBytes, 0, moduleNameBytes.Length);
+                        outputFile.WriteByte(0);
+                        outputFile.Write(namespaceNameBytes, 0, namespaceNameBytes.Length);
+                        outputFile.WriteByte(0);
+                        outputFile.Write(classNameBytes, 0, classNameBytes.Length);
+                        outputFile.WriteByte(0);
+                        outputFile.Write(methodNameBytes, 0, methodNameBytes.Length);
+                        outputFile.WriteByte(0);
+                        WriteInt32(outputFile, sequencePoints.Length);
+
+                        foreach (var sequencePoint in sequencePoints)
+                        {
+                            WriteInt32(outputFile, sequencePoint.Offset);
+                            //Console.WriteLine($"document name: {pdbMetadataReader.GetString(document.Name)} namespace: {peMetadataReader.GetString(declaringType.Namespace)} class name: {peMetadataReader.GetString(declaringType.Name)} method name: {peMetadataReader.GetString(methodDef.Name)} method def token: {methodDefToken} method debug info token: {methodDebugInfoToken} start line: {sequencePoint.StartLine} offset: {sequencePoint.Offset}");
+                        }
                     }
+
+                    outputFile.WriteByte(0);
                 }
             }
         }

@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Net.WebSockets;
 using System.Reflection;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Blazor.PdbReader;
@@ -16,6 +17,7 @@ using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 
 namespace Blazor.Host
 {
@@ -31,11 +33,8 @@ namespace Blazor.Host
         private readonly static Assembly _hostAssembly = typeof(BlazorApplicationBuilderExtensions).GetTypeInfo().Assembly;
         private readonly static string _embeddedResourceProjectName = "Blazor.Host"; // Note: Not the same as _hostAssembly.Name
 
-        public static IApplicationBuilder UseBlazorDebugger(this IApplicationBuilder app, string clientBinDir, string clientAssemblyName)
+        public static IApplicationBuilder UseBlazorDebugger(this IApplicationBuilder app, List<string> paths)
         {
-            var clientAssemblyPath = Path.Combine(clientBinDir, clientAssemblyName);
-            BlazorPdbReader.WriteSequencePointsToFile(clientAssemblyPath, Path.ChangeExtension(clientAssemblyPath, "wdb"));
-
             var logger = app.ApplicationServices.GetRequiredService<ILoggerFactory>().CreateLogger("BlazorDebugger");
 
             app.UseWebSockets();
@@ -122,6 +121,9 @@ namespace Blazor.Host
                                 Debug.Assert(isDebugger, "Debugger should be the one attaching");
                                 var debugger = ws;
 
+                                // Send the paths to the debugger
+                                await SendJsonAsync(debugger, new { command = "configuration", paths = paths });
+
                                 // We have a session, so connect!
                                 if (!session.WaitForDebugger.TrySetResult(debugger))
                                 {
@@ -158,6 +160,12 @@ namespace Blazor.Host
                     }
                 });
             });
+        }
+
+        private static Task SendJsonAsync(WebSocket socket, object value)
+        {
+            var json = JsonConvert.SerializeObject(value);
+            return socket.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(json)), WebSocketMessageType.Text, endOfMessage: true, cancellationToken: CancellationToken.None);
         }
 
         private static async Task<WebSocket> DoProxy(
@@ -299,6 +307,22 @@ namespace Blazor.Host
                 clientBinDir = Directory.GetCurrentDirectory();
             }
 
+            var paths = new List<string>();
+            // TODO: Do this on the fly without writing to disk
+            foreach (var dllPath in Directory.GetFiles(clientBinDir, "*.dll"))
+            {
+                try
+                {
+                    BlazorPdbReader.WriteSequencePointsToFile(dllPath, Path.ChangeExtension(dllPath, "wdb"));
+                    paths.Add(dllPath);
+                }
+                catch (Exception)
+                {
+                    Console.WriteLine($"Failed to generate PDB for {dllPath}");
+                }
+            }
+            
+
             app.UseStaticFiles(new StaticFileOptions
             {
                 FileProvider = new PhysicalFileProvider(clientBinDir),
@@ -313,7 +337,7 @@ namespace Blazor.Host
                     throw new ArgumentException($"If {nameof(options.EnableDeubugging)} is true, then you must specify a value for {nameof(options.ClientAssemblyName)}.");
                 }
 
-                app.UseBlazorDebugger(clientBinDir, options.ClientAssemblyName);
+                app.UseBlazorDebugger(paths);
             }
 
             app.UseLiveReloading();
