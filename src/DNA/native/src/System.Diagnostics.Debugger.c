@@ -58,6 +58,7 @@ int Debugger_SetBreakPoint(char* pID, int ILOffset)
 {
     log_f(1, "Debugger_SetBreakPoint(%s, %d) called\n", pID, ILOffset);
     tBreakPoint* pNode = pBreakpoints;
+    tBreakPoint* pTail = NULL;
 
     // Search for method node
     while (pNode != NULL) {
@@ -65,22 +66,38 @@ int Debugger_SetBreakPoint(char* pID, int ILOffset)
             break;
         }
         pNode = pNode->next;
+        pTail = pNode;
     }
 
     // Didn't find the node
     if (pNode == NULL) {
         pNode = TMALLOC(tBreakPoint);
-        pNode->pID = pID;
+        pNode->pID = mallocForever((U32)strlen(pID) + 1);
+        strcpy(pNode->pID, pID);
         pNode->offset = 0;
+        pNode->next = NULL;
     }
 
     if (pBreakpoints == NULL) {
         pBreakpoints = pNode;
     }
+    else {
+        // Append
+        pTail->next = pNode;
+    }
     
     if (pNode->offset < 100) {
         log_f(1, "Breakpoint successfully set\n", pID, ILOffset);
         pNode->ILOffsets[pNode->offset++] = ILOffset;
+    }
+
+    // Dump break points
+    tBreakPoint* pScan = pBreakpoints;
+    while (pScan != NULL) {
+        for (int i = 0; i < pScan->offset; i++) {
+            log_f(1, "Break point at (%s, %d) \n", pScan->pID, pScan->ILOffsets[i]);
+        }
+        pScan = pScan->next;
     }
 
     return 0;
@@ -106,7 +123,11 @@ tAsyncCall* System_Diagnostics_Debugger_Internal_Break_Point(PTR pThis_, PTR pPa
     doBreakpoint = 0;
     pHead = pBreakpoints;
 
+    log_f(1, "Scanning break point matching (%s, %d) \n", pDebugEntry->pID, offset);
+
     while (pHead != NULL) {
+        log_f(1, "Found entry for (%s) \n", pHead->pID);
+
         if (strcmp(pHead->pID, pDebugEntry->pID) == 0) {
             for (int i = 0; i < pHead->offset; i++) {
                 if (pHead->ILOffsets[i] == offset) {
@@ -114,17 +135,17 @@ tAsyncCall* System_Diagnostics_Debugger_Internal_Break_Point(PTR pThis_, PTR pPa
                     break;
                 }
             }
+
+            log_f(1, "No break point set at %s \n", pHead->pID);
         }
         pHead = pHead->next;
     }
 
-
-    // Only break on methods that start with _
     if (doBreakpoint == 0) {
         return NULL;
     }
 
-    printf("BREAK_POINT hit (%s, %d) \n", pDebugEntry->pMethodName, offset);
+    log_f(1, "BREAK_POINT hit (%s, %d) \n", pDebugEntry->pMethodName, offset);
 
     waitingOnBreakPoint = 1;
 
