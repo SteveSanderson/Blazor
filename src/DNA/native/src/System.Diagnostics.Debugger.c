@@ -42,10 +42,15 @@ struct tBreakPoint_ {
 
 static tBreakPoint* pBreakpoints;
 
-int Debugger_Clear_BreakPoints() {
-    log_f(1, "Debugger_Clear_BreakPoints called\n");
+int Debugger_Reset() {
+    log_f(1, "Debugger_Reset called\n");
     // Clear all break points
     pBreakpoints = NULL;
+
+    // Reset all debugger state and continue
+    waitingOnBreakPoint = 0;
+    releaseBreakPoint = 0;
+    alwaysBreak = 0;
 }
 
 int Debugger_Continue() {

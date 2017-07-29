@@ -9,7 +9,7 @@ set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Oz")
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s NO_EXIT_RUNTIME=1")
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s RESERVED_FUNCTION_POINTERS=20")
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s ASSERTIONS=1")
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s EXPORTED_FUNCTIONS=\"['_main', '_JSInterop_CallDotNet', '_Debugger_Continue', '_Debugger_SetBreakPoint', '_Debugger_Step']\"")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s EXPORTED_FUNCTIONS=\"['_main', '_JSInterop_CallDotNet', '_Debugger_Continue', '_Debugger_SetBreakPoint', '_Debugger_Step', '_Debugger_Reset']\"")
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s WASM=1")
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --js-library js-interop.js")
 

@@ -138,6 +138,9 @@ namespace Blazor.Host
                                 {
                                     logger.LogInformation("Debugger detached for {sessionId}.", sessionId);
 
+                                    // Tell the debuggee that the server detached
+                                    await SendJsonAsync(session.Debuggee, new { command = "detached" });
+
                                     // Reset the tcs
                                     session.WaitForDebugger = new TaskCompletionSource<WebSocket>();
 

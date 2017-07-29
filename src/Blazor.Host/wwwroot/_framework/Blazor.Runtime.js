@@ -847,7 +847,9 @@ window['jsobject.js'] = (function () {
                         var item = data.value[i];
                         Module.ccall('Debugger_SetBreakPoint', 'number', ['string', 'number'], [item.id, item.offset]);
                     }
-                    
+                }
+                else if (data.command == 'detached') {
+                    Module.ccall('Debugger_Reset', 'number', [], []);
                 }
                 
             };
