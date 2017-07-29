@@ -210,6 +210,9 @@ namespace VSCodeDebug
                                     {
                                         b.Id = id;
                                         b.SequencePointOffset = offset;
+                                        // Verify the break point
+                                        b.Breakpoint = new Breakpoint(verified: true, line: b.Breakpoint.line);
+                                        SendEvent(new BreakpointEvent("update", b.Breakpoint));
                                         break;
                                     }
                                 }

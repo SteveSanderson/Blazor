@@ -822,6 +822,8 @@ window['jsobject.js'] = (function () {
             var sessionId = guid();
             var url = 'ws://' + document.location.host + '/__debugger?id=' + sessionId + '&d=1';
 
+            window.debuggerSessionId = sessionId;
+
             // No websockets, no debugging, sorry...
             var ws = new WebSocket(url);
             ws.onopen = function () {
@@ -833,7 +835,8 @@ window['jsobject.js'] = (function () {
                 var data = JSON.parse(event.data);
 
                 if (data.command == 'continue') {
-                    Module.ccall('Debugger_Continue', 'number', [], []);
+                    // Do nothing since the only thing pausing the browser is the browser debugger
+                    // Module.ccall('Debugger_Continue', 'number', [], []);
                 }
                 else if (data.command == 'step') {
                     Module.ccall('Debugger_Step', 'number', [], []);
@@ -921,7 +924,6 @@ window['jsobject.js'] = (function () {
                 });
             },
             postRun: function () {
-                Module.ccall('Debugger_SetBreakPoint', 'number', ['string', 'number'], ['Blazor.Runtime.dllBlazor.ComponentsComponentMountAsPage', 0]);
                 InvokeStatic('Blazor.Runtime', 'Blazor.Runtime.Interop', 'Startup', 'EnsureAssembliesLoaded', JSON.stringify(
                     preloadAssemblies.map(function (assemblyInfo) {
                         var name = assemblyInfo.assemblyName;

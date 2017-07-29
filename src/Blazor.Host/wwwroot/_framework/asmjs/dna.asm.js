@@ -19628,16 +19628,14 @@ function _CheckIfSequencePointIsBreakpoint(i5, i6) {
    i3 = i1;
    i1 = i4 + 408 | 0;
   }
-  if (!i3) i1 = 0; else {
-   HEAP32[8759] = 0;
-   i10 = 10;
-  }
- } else i10 = 10;
- if ((i10 | 0) == 10) {
+  if (!i3) i1 = 0; else i10 = 9;
+ } else i10 = 9;
+ if ((i10 | 0) == 9) {
   HEAP32[i8 >> 2] = HEAP32[i5 + 12 >> 2];
   HEAP32[i8 + 4 >> 2] = i6;
   _log_f(1, 18553, i8);
   HEAP32[8758] = 1;
+  HEAP32[8759] = 0;
   i1 = HEAP32[i7 >> 2] | 0;
   HEAP32[i9 >> 2] = HEAP32[i5 + 24 + (i6 << 2) >> 2];
   HEAP32[i9 + 4 >> 2] = i6;

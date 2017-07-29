@@ -11,7 +11,7 @@
             "name": "Attach to Blazor Program",
             "type": "blazor",
             "request": "attach",
-            "address": "ws://localhost:5000/__debugger?id=6b4d417d-9146-8ed6-160c-d391274cc70e",
+            "address": "ws://localhost:5000/__debugger?id=fcb3b6fa-c4d0-76b3-d22c-4fc2e44b06a7",
             "program": "${workspaceRoot}/Program.cs"
         }
     ]

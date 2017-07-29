@@ -42,6 +42,12 @@ struct tBreakPoint_ {
 
 static tBreakPoint* pBreakpoints;
 
+int Debugger_Clear_BreakPoints() {
+    log_f(1, "Debugger_Clear_BreakPoints called\n");
+    // Clear all break points
+    pBreakpoints = NULL;
+}
+
 int Debugger_Continue() {
     log_f(1, "Debugger_Continue called\n");
     if (waitingOnBreakPoint) {
@@ -139,13 +145,12 @@ int CheckIfSequencePointIsBreakpoint(tDebugMetaDataEntry* pDebugEntry, I32 seque
         if (doBreakpoint == 0) {
             return 0;
         }
-
-        alwaysBreak = 0;
     }
 
     log_f(1, "BREAK_POINT hit (%s, %d) \n", pDebugEntry->pMethodName, sequencePoint);
 
     waitingOnBreakPoint = 1;
+    alwaysBreak = 0;
 
     // TODO: Handle overflow
     unsigned char payload[1024];
