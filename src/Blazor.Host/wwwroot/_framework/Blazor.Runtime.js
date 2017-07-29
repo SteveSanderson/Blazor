@@ -12,6 +12,11 @@
         },
 
         SendDebuggerMessage: function (message) {
+            if (window.debuggerSocket) {
+                console.log('Sending debugger message: ' + message);
+                window.debuggerSocket.send(message);
+            }
+
             if (JSON.parse(message).command === 'breakpoint') {
                 // Use the browser's native debugger to halt both the JS and .NET sides of execution
                 // For this to be useful, we'll need to implement some tooling that connects to the
@@ -19,10 +24,7 @@
                 // a UI for stepping/resuming (i.e., instructing the browser to resume)
                 debugger;
             }
-            if (window.debuggerSocket) {
-                console.log('Sending debugger message: ' + message);
-                window.debuggerSocket.send(message);
-            }
+
             // Module.ccall('Debugger_Continue', 'number', [], []);
         },
         ResolveRelativeUrl: function (url) {
@@ -828,7 +830,23 @@ window['jsobject.js'] = (function () {
             };
             ws.onmessage = function (event) {
                 console.log('Received message from debugger: ' + event.data);
-                // Module.ccall('Debugger_Continue', 'number', [], []);
+                var data = JSON.parse(event.data);
+
+                if (data.command == 'continue') {
+                    Module.ccall('Debugger_Continue', 'number', [], []);
+                }
+                else if (data.command == 'step') {
+                    Module.ccall('Debugger_Step', 'number', [], []);
+                }
+                else if (data.command == 'breakpoints') {
+                    // { id: '', offset: 0 }
+                    for (var i = 0; i < data.value.length; ++i) {
+                        var item = data.value[i];
+                        Module.ccall('Debugger_SetBreakPoint', 'number', ['string', 'number'], [item.id, item.offset]);
+                    }
+                    
+                }
+                
             };
             ws.onclose = function (event) {
                 console.log('Debugger connection closed!');
@@ -887,8 +905,8 @@ window['jsobject.js'] = (function () {
             url: '/_bin/' + viewsAssemblyFilename + '?type=razorviews&' + referencesQueryStringSegments
         });
 
-        // var wpdbFileName = entryPoint.replace(/\.dll$/, '.wdb');
-        // preloadAssemblies.push({ assemblyName: wpdbFileName, url: '/_bin/' + wpdbFileName });
+        var wpdbFileName = entryPoint.replace(/\.dll$/, '.wdb');
+        preloadAssemblies.push({ assemblyName: wpdbFileName, url: '/_bin/' + wpdbFileName });
 
         window.Module = {
             wasmBinaryFile: '/_framework/wasm/dna.wasm',
@@ -904,7 +922,6 @@ window['jsobject.js'] = (function () {
             },
             postRun: function () {
                 Module.ccall('Debugger_SetBreakPoint', 'number', ['string', 'number'], ['Blazor.Runtime.dllBlazor.ComponentsComponentMountAsPage', 0]);
-
                 InvokeStatic('Blazor.Runtime', 'Blazor.Runtime.Interop', 'Startup', 'EnsureAssembliesLoaded', JSON.stringify(
                     preloadAssemblies.map(function (assemblyInfo) {
                         var name = assemblyInfo.assemblyName;

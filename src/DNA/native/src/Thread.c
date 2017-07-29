@@ -29,6 +29,7 @@
 
 int releaseBreakPoint = 0;
 int waitingOnBreakPoint = 0;
+int alwaysBreak = 0;
 
 static tThread *pAllThreads = NULL;
 static tThread *pCurrentThread;

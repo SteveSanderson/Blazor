@@ -4,11 +4,16 @@
  *--------------------------------------------------------------------------------------------*/
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.WebSockets;
+using System.Reflection.Metadata;
+using System.Reflection.Metadata.Ecma335;
+using System.Reflection.PortableExecutable;
 using System.Threading;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace VSCodeDebug
@@ -19,11 +24,13 @@ namespace VSCodeDebug
         private static int _threadId = 1;
 
         private string _sourceFile;
-        private string[] _sourceLines;
+        private string _method;
         private int _currentLine;
 
-        // maps from sourceFile to array of Breakpoints
-        private Dictionary<string, Breakpoint[]> _breakpoints = new Dictionary<string, Breakpoint[]>();
+        private Dictionary<string, DebugFileInfo[]> _debugInfo = new Dictionary<string, DebugFileInfo[]>();
+        private Dictionary<string, BreakPointInfo[]> _breakPoints = new Dictionary<string, BreakPointInfo[]>(StringComparer.OrdinalIgnoreCase);
+        private TaskCompletionSource<object> _configurationComplete = new TaskCompletionSource<object>();
+
         private ClientWebSocket _clientWebSocket = new ClientWebSocket();
         bool _webSocketConnected;
 
@@ -31,7 +38,7 @@ namespace VSCodeDebug
         {
         }
 
-        public override void Attach(Response response, dynamic arguments)
+        public override async void Attach(Response response, dynamic arguments)
         {
             Log("Attach");
 
@@ -42,7 +49,11 @@ namespace VSCodeDebug
 
             _ = HandleMessages();
 
-            Launch(response, arguments);
+            SendResponse(response);
+
+            await _configurationComplete.Task;
+
+            // Launch(response, arguments);
         }
 
         private async Task HandleMessages()
@@ -60,7 +71,7 @@ namespace VSCodeDebug
                 catch (WebSocketException)
                 {
                     _webSocketConnected = false;
-                    
+
                     // This is supposed to be the exited event but it doesn't seem to do anything
                     // SendEvent(new ExitedEvent(1));
                     SendEvent(new TerminatedEvent());
@@ -94,33 +105,141 @@ namespace VSCodeDebug
                         offset += chunk.Count;
                     }
 
-                    OnMessage(all);
+                    await OnMessage(all);
 
                     cumulative.Clear();
                 }
             }
         }
 
-        private void OnMessage(byte[] all)
+        private async Task OnMessage(byte[] all)
         {
-            Log("Received Message from Debugee: " + Encoding.GetString(all));
+            var obj = JObject.Parse(Encoding.GetString(all));
+            Log("Received Message from Debugee: " + obj);
+
+            switch (obj.Value<string>("command"))
+            {
+                case "configuration":
+                    foreach (var pathVal in obj.Value<JArray>("paths"))
+                    {
+                        string path = pathVal.Value<string>();
+
+                        InitializeDebugInformation(path);
+                    }
+
+                    await SendJson(new
+                    {
+                        command = "breakpoints",
+                        value = _breakPoints.SelectMany(b => b.Value.Select(bb => new { id = bb.Id, offset = bb.SequencePointOffset }))
+                    });
+
+                    _configurationComplete.TrySetResult(null);
+                    break;
+                case "breakpoint":
+                    var id = obj.Value<string>("ID");
+                    var offset = obj.Value<int>("sequencePoint");
+
+                    var info = _debugInfo[id];
+                    if (offset < info.Length)
+                    {
+                        _sourceFile = info[offset].SourceFile;
+                        _currentLine = info[offset].Line;
+                        _method = info[offset].Method;
+
+                        SendEvent(new StoppedEvent(_threadId, "breakpoint"));
+                    }
+                    else
+                    {
+                        // Not a thing
+                    }
+
+                    break;
+                default:
+                    break;
+            }
         }
 
-        public override void Continue(Response response, dynamic arguments)
+        private void InitializeDebugInformation(string path)
+        {
+            var pdbPath = Path.ChangeExtension(path, "pdb");
+
+            if (!File.Exists(pdbPath))
+            {
+                return;
+            }
+
+            using (var peStream = File.OpenRead(path))
+            using (var pdbStream = File.OpenRead(pdbPath))
+            {
+                var peReader = new PEReader(peStream);
+                var pdbProvider = MetadataReaderProvider.FromPortablePdbStream(pdbStream);
+                var peMetadataReader = peReader.GetMetadataReader();
+                var pdbMetadataReader = pdbProvider.GetMetadataReader();
+                var moduleName = peMetadataReader.GetString(peMetadataReader.GetModuleDefinition().Name);
+
+                foreach (var methodDebugInfoHandle in pdbMetadataReader.MethodDebugInformation)
+                {
+                    try
+                    {
+                        var methodDebugInfo = pdbMetadataReader.GetMethodDebugInformation(methodDebugInfoHandle);
+                        var methodDefHandle = methodDebugInfoHandle.ToDefinitionHandle();
+                        var methodDef = peMetadataReader.GetMethodDefinition(methodDefHandle);
+                        var document = pdbMetadataReader.GetDocument(methodDebugInfo.Document);
+                        var methodDefToken = MetadataTokens.GetToken(methodDefHandle);
+                        var methodDebugInfoToken = MetadataTokens.GetToken(methodDefHandle);
+                        var declaringType = peMetadataReader.GetTypeDefinition(methodDef.GetDeclaringType());
+
+                        var namespaceName = peMetadataReader.GetString(declaringType.Namespace);
+                        var className = peMetadataReader.GetString(declaringType.Name);
+                        var methodName = peMetadataReader.GetString(methodDef.Name);
+
+                        var sequencePoints = methodDebugInfo.GetSequencePoints().ToArray();
+                        var id = moduleName + namespaceName + className + methodName;
+
+                        var debugInfos = new List<DebugFileInfo>();
+                        int offset = 0;
+                        foreach (var sequencePoint in sequencePoints)
+                        {
+                            var sourceFile = pdbMetadataReader.GetString(document.Name);
+
+                            if (_breakPoints.TryGetValue(sourceFile, out var breakpoints))
+                            {
+                                foreach (var b in breakpoints)
+                                {
+                                    if (b.Breakpoint.line == sequencePoint.StartLine)
+                                    {
+                                        b.Id = id;
+                                        b.SequencePointOffset = offset;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            debugInfos.Add(new DebugFileInfo
+                            {
+                                Method = methodName,
+                                SequncePointOffset = offset++,
+                                ILOffset = sequencePoint.Offset,
+                                SourceFile = sourceFile,
+                                Line = sequencePoint.StartLine
+                            });
+                        }
+
+                        _debugInfo[id] = debugInfos.ToArray();
+                    }
+                    catch (Exception ex)
+                    {
+                        Log(ex.ToString());
+                    }
+                }
+            }
+        }
+
+        public override async void Continue(Response response, dynamic arguments)
         {
             Log("Continue");
 
-            for (int i = _currentLine + 1; i < _sourceLines.Length; i++)
-            {
-                if (FireEventsForLine(response, i))
-                {
-                    return;
-                }
-            }
-
-            SendResponse(response);
-            // no more lines: run to end
-            SendEvent(new TerminatedEvent());
+            await SendJson(new { command = "continue" });
         }
 
         public override void Disconnect(Response response, dynamic arguments)
@@ -162,39 +281,41 @@ namespace VSCodeDebug
         {
             Log("Launch");
 
-            _sourceFile = arguments.program;
-            _sourceFile = _sourceFile.Replace('\\', '/');
-            _sourceLines = File.ReadLines(_sourceFile).ToArray();
+            //_sourceFile = arguments.program;
+            //_sourceFile = _sourceFile.Replace('\\', '/');
+            //_sourceLines = File.ReadLines(_sourceFile).ToArray();
 
-            Log($"_sourceFile: {_sourceFile}");
+            //Log($"_sourceFile: {_sourceFile}");
 
-            if (arguments.stopOnEntry ?? false)
-            {
-                _currentLine = 1;
-                SendEvent(new StoppedEvent(_threadId, "entry"));
-            }
-            else
-            {
-                Continue(response, new { threadId = _threadId });
-            }
+            //if (arguments.stopOnEntry ?? false)
+            //{
+            //    _currentLine = 1;
+            //    SendEvent(new StoppedEvent(_threadId, "entry"));
+            //}
+            //else
+            //{
+            //    Continue(response, new { threadId = _threadId });
+            //}
         }
 
-        public override void Next(Response response, dynamic arguments)
+        public override async void Next(Response response, dynamic arguments)
         {
             Log("Next");
 
-            for (int i = _currentLine + 1; i < _sourceLines.Length; i++)
-            {
-                if (FireStepEvent(response, i))
-                {
-                    return;
-                }
-            }
+            await SendJson(new { command = "step" });
 
-            SendResponse(response);
+            //for (int i = _currentLine + 1; i < _sourceLines.Length; i++)
+            //{
+            //    if (FireStepEvent(response, i))
+            //    {
+            //        return;
+            //    }
+            //}
 
-            // no more lines: run to end
-            SendEvent(new TerminatedEvent());
+            //SendResponse(response);
+
+            //// no more lines: run to end
+            //SendEvent(new TerminatedEvent());
         }
 
         public override void Pause(Response response, dynamic arguments)
@@ -211,8 +332,8 @@ namespace VSCodeDebug
         {
             Log("SetBreakpoints");
 
-            string path = arguments.source.path;
-            path = path.Replace('\\', '/');
+            string path = (string)arguments.source.path;
+            // path = path.Replace('\\', '/');
 
             Log($"Breakpoint file path: {path}");
 
@@ -225,11 +346,11 @@ namespace VSCodeDebug
             foreach (var clientLineNumber in clientLineNumbers)
             {
                 var debuggerLineNumber = ConvertClientLineToDebugger(clientLineNumber);
-                breakpoints.Add(new Breakpoint(debuggerLineNumber - 1 < lines.Length, clientLineNumber));
+                breakpoints.Add(new Breakpoint(verified: false, line: clientLineNumber));
                 Log($"Added breakpoint to line #{clientLineNumber} containing {lines[debuggerLineNumber - 1]}");
             }
 
-            _breakpoints[path] = breakpoints.ToArray();
+            _breakPoints[path] = breakpoints.Select(s => new BreakPointInfo { Breakpoint = s }).ToArray();
 
             // In theory, the breakpoint positions could have changed, but we don't do this yet at least.
             response.body = new SetBreakpointsResponseBody(breakpoints);
@@ -248,11 +369,7 @@ namespace VSCodeDebug
 
             response.body = new StackTraceResponseBody(new List<StackFrame>
             {
-                new StackFrame(_threadId, "Look", VSCodeDebug.Source.Create(fileName, clientPath), clientLine, 0),
-                new StackFrame(_threadId, "at", VSCodeDebug.Source.Create(fileName, clientPath), clientLine, 0),
-                new StackFrame(_threadId, "my", VSCodeDebug.Source.Create(fileName, clientPath), clientLine, 0),
-                new StackFrame(_threadId, "stack", VSCodeDebug.Source.Create(fileName, clientPath), clientLine, 0),
-                new StackFrame(_threadId, "frames!", VSCodeDebug.Source.Create(fileName, clientPath), clientLine, 0),
+                new StackFrame(_threadId, _method, VSCodeDebug.Source.Create(fileName, clientPath), clientLine, 0)
             });
 
             SendResponse(response);
@@ -274,7 +391,7 @@ namespace VSCodeDebug
 
             response.body = new ThreadsResponseBody(new List<Thread>
             {
-                new Thread(_threadId, "thread 1")
+                new Thread(_threadId, "Main Thread")
             });
 
             SendResponse(response);
@@ -282,10 +399,10 @@ namespace VSCodeDebug
 
         public override void Variables(Response response, dynamic arguments)
         {
-            response.body = new VariablesResponseBody(new List<Variable>
-            {
-                new Variable("foo", "bar", "TotallyARealType"),
-            });
+            //response.body = new VariablesResponseBody(new List<Variable>
+            //{
+            //    new Variable("foo", "bar", "TotallyARealType"),
+            //});
 
             SendResponse(response);
         }
@@ -296,79 +413,100 @@ namespace VSCodeDebug
         }
 
         // Fire StoppedEvent if line is not empty.
-        private bool FireStepEvent(Response response, int lineNumber)
-        {
-            if (!string.IsNullOrWhiteSpace(_sourceLines[lineNumber - 1]))
-            {
-                _currentLine = lineNumber;
-                SendResponse(response);
-                SendEvent(new StoppedEvent(_threadId, "step"));
-                return true;
-            }
+        //private bool FireStepEvent(Response response, int lineNumber)
+        //{
+        //    if (!string.IsNullOrWhiteSpace(_sourceLines[lineNumber - 1]))
+        //    {
+        //        _currentLine = lineNumber;
+        //        SendResponse(response);
+        //        SendEvent(new StoppedEvent(_threadId, "step"));
+        //        return true;
+        //    }
 
-            return false;
-        }
+        //    return false;
+        //}
 
-        // Fire StoppedEvent if line has a breakpoint or the word 'exception' is found.
-        private bool FireEventsForLine(Response response, int lineNumber)
-        {
-            // find the breakpoints for the current source file
-            var breakpoints = _breakpoints.GetValueOrDefault(_sourceFile);
+        //// Fire StoppedEvent if line has a breakpoint or the word 'exception' is found.
+        //private bool FireEventsForLine(Response response, int lineNumber)
+        //{
+        //    // find the breakpoints for the current source file
+        //    var breakpoints = _breakpoints.GetValueOrDefault(_sourceFile);
 
-            Log($"FireEventsForLine for line {lineNumber} sees breakpoints on lines {string.Join(", ", breakpoints.Select(bp => bp.line))}");
+        //    // Log($"FireEventsForLine for line {lineNumber} sees breakpoints on lines {string.Join(", ", breakpoints.Select(bp => bp.line))}");
 
-            if (breakpoints != null)
-            {
-                var filteredBps = breakpoints.Where(bp => bp.line == ConvertDebuggerLineToClient(lineNumber)).ToArray();
+        //    if (breakpoints != null)
+        //    {
+        //        var filteredBps = breakpoints.Where(bp => bp.line == ConvertDebuggerLineToClient(lineNumber)).ToArray();
 
-                if (filteredBps.Length > 0)
-                {
-                    Log($"Breakpoint at line #{lineNumber}");
+        //        if (filteredBps.Length > 0)
+        //        {
+        //            Log($"Breakpoint at line #{lineNumber}");
 
-                    _currentLine = lineNumber;
+        //            _currentLine = lineNumber;
 
-                    // 'continue' request finished
-                    SendResponse(response);
+        //            // 'continue' request finished
+        //            SendResponse(response);
 
-                    // send 'stopped' event
-                    SendEvent(new StoppedEvent(_threadId, "breakpoint"));
+        //            // send 'stopped' event
+        //            SendEvent(new StoppedEvent(_threadId, "breakpoint"));
 
-                    // the following shows the use of 'breakpoint' events to update properties of a breakpoint in the UI
-                    // if breakpoint is not yet verified, verify it now and send a 'breakpoint' update event
-                    if (!filteredBps[0].verified)
-                    {
-                        filteredBps[0] = new Breakpoint(true, filteredBps[0].line);
-                        SendEvent(new BreakpointEvent("update", filteredBps[0]));
-                    }
-                    return true;
-                }
-                else
-                {
-                    Log($"No breakpoint at line #{lineNumber}");
-                }
-            }
+        //            // the following shows the use of 'breakpoint' events to update properties of a breakpoint in the UI
+        //            // if breakpoint is not yet verified, verify it now and send a 'breakpoint' update event
+        //            if (!filteredBps[0].verified)
+        //            {
+        //                filteredBps[0] = new Breakpoint(true, filteredBps[0].line);
+        //                SendEvent(new BreakpointEvent("update", filteredBps[0]));
+        //            }
+        //            return true;
+        //        }
+        //        else
+        //        {
+        //            Log($"No breakpoint at line #{lineNumber}");
+        //        }
+        //    }
 
-            // if word 'throw' found in source -> throw exception
-            if (_sourceLines[lineNumber - 1].Contains("throw"))
-            {
-                _currentLine = ConvertDebuggerLineToClient(lineNumber);
-                SendResponse(response);
-                SendEvent(new StoppedEvent(_threadId, "exception"));
-                Log($"exception in line {lineNumber}");
-                return true;
-            }
+        //    // if word 'throw' found in source -> throw exception
+        //    if (_sourceLines[lineNumber - 1].Contains("throw"))
+        //    {
+        //        _currentLine = ConvertDebuggerLineToClient(lineNumber);
+        //        SendResponse(response);
+        //        SendEvent(new StoppedEvent(_threadId, "exception"));
+        //        Log($"exception in line {lineNumber}");
+        //        return true;
+        //    }
 
-            return false;
-        }
+        //    return false;
+        //}
 
         protected override void Log(string message)
         {
             base.Log(message);
+        }
 
+        private Task SendJson(object value)
+        {
             if (_webSocketConnected)
             {
-                _clientWebSocket.SendAsync(new ArraySegment<byte>(Encoding.GetBytes(message)), WebSocketMessageType.Text, true, CancellationToken.None).Wait();
+                var json = JsonConvert.SerializeObject(value);
+                return _clientWebSocket.SendAsync(new ArraySegment<byte>(Encoding.GetBytes(json)), WebSocketMessageType.Text, true, CancellationToken.None);
             }
+            return Task.CompletedTask;
+        }
+
+        private class DebugFileInfo
+        {
+            public string Method { get; set; }
+            public int ILOffset { get; set; }
+            public int SequncePointOffset { get; set; }
+            public string SourceFile { get; set; }
+            public int Line { get; set; }
+        }
+
+        private class BreakPointInfo
+        {
+            public Breakpoint Breakpoint { get; set; }
+            public string Id { get; set; }
+            public int SequencePointOffset { get; set; }
         }
     }
 }

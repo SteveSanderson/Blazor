@@ -100,6 +100,7 @@ struct tThread_ {
 
 extern int releaseBreakPoint;
 extern int waitingOnBreakPoint;
+extern int alwaysBreak;
 
 U32 Internal_Debugger_Resume_Check(PTR pThis_, PTR pParams, PTR pReturnValue, tAsyncCall *pAsync);
 tThread* Thread();

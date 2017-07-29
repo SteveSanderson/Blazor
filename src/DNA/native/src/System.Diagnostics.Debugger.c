@@ -54,6 +54,12 @@ int Debugger_Continue() {
     return 1;
 }
 
+int Debugger_Step() {
+    log_f(1, "Debugger_Step called\n");
+    alwaysBreak = 1;
+    return 0;
+}
+
 int Debugger_SetBreakPoint(char* pID, int sequencePoint)
 {
     log_f(1, "Debugger_SetBreakPoint(%s, %d) called\n", pID, sequencePoint);
@@ -114,23 +120,27 @@ int CheckIfSequencePointIsBreakpoint(tDebugMetaDataEntry* pDebugEntry, I32 seque
 	tBreakPoint* pHead;
 	int doBreakpoint;
 
-    doBreakpoint = 0;
-    pHead = pBreakpoints;
+    if (!alwaysBreak) {
+        doBreakpoint = 0;
+        pHead = pBreakpoints;
 
-    while (pHead != NULL) {
-        if (strcmp(pHead->pID, pDebugEntry->pID) == 0) {
-            for (int i = 0; i < pHead->offset; i++) {
-                if (pHead->breakOnSequencePoints[i] == sequencePoint) {
-                    doBreakpoint = 1;
-                    break;
+        while (pHead != NULL) {
+            if (strcmp(pHead->pID, pDebugEntry->pID) == 0) {
+                for (int i = 0; i < pHead->offset; i++) {
+                    if (pHead->breakOnSequencePoints[i] == sequencePoint) {
+                        doBreakpoint = 1;
+                        break;
+                    }
                 }
             }
+            pHead = pHead->next;
         }
-        pHead = pHead->next;
-    }
 
-    if (doBreakpoint == 0) {
-        return 0;
+        if (doBreakpoint == 0) {
+            return 0;
+        }
+
+        alwaysBreak = 0;
     }
 
     log_f(1, "BREAK_POINT hit (%s, %d) \n", pDebugEntry->pMethodName, sequencePoint);
