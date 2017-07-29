@@ -24,8 +24,6 @@
                 // a UI for stepping/resuming (i.e., instructing the browser to resume)
                 debugger;
             }
-
-            // Module.ccall('Debugger_Continue', 'number', [], []);
         },
         ResolveRelativeUrl: function (url) {
             var a = document.createElement('a');
@@ -842,6 +840,8 @@ window['jsobject.js'] = (function () {
                     Module.ccall('Debugger_Step', 'number', [], []);
                 }
                 else if (data.command == 'breakpoints') {
+                    Module.ccall('Debugger_Clear_BreakPoints', 'number', [], []);
+
                     // { id: '', offset: 0 }
                     for (var i = 0; i < data.value.length; ++i) {
                         var item = data.value[i];

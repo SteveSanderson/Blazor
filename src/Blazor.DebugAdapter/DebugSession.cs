@@ -138,10 +138,17 @@ namespace VSCodeDebug
 
             return new Source(name, path, sourceReference);
         }
+
+        internal static Source Create(string path)
+        {
+            return Create(Path.GetFileName(path), path);
+        }
     }
 
     public class Breakpoint
     {
+        public string id => source?.path.Replace(Path.DirectorySeparatorChar, '_').Replace(Path.AltDirectorySeparatorChar, '_') + line;
+        public Source source { get; set; }
         public bool verified { get; }
         public int line { get; }
 

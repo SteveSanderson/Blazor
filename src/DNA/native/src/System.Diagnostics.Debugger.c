@@ -55,6 +55,13 @@ int Debugger_Reset() {
     return 0;
 }
 
+int Debugger_Clear_BreakPoints() {
+    log_f(1, "Debugger_Clear_BreakPoints called\n");
+
+    // Clear all break points
+    pBreakpoints = NULL;
+}
+
 int Debugger_Continue() {
     log_f(1, "Debugger_Continue called\n");
     if (waitingOnBreakPoint) {
