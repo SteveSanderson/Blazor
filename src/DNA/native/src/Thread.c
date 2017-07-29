@@ -73,7 +73,7 @@ tThread* Thread() {
 
     pThread = pAllThreads;
 
-    log_f(1, "Creating thread %d\n.", (int)pThis->threadID);
+    log_f(1, "Creating thread %d.\n", (int)pThis->threadID);
 
     // FIFO
     /*if (pThread == NULL) {
@@ -195,7 +195,7 @@ I32 Thread_Execute() {
 					pThread = pThread->pNextThread;
 				}
 				if (canExit) {
-                    log_f(1, "No more threads to run. Quitting\n.");
+                    log_f(1, "No more threads to run. Quitting.\n");
 					return threadExitValue;
 				}
 			}

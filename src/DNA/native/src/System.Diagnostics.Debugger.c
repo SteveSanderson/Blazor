@@ -60,6 +60,7 @@ int Debugger_Clear_BreakPoints() {
 
     // Clear all break points
     pBreakpoints = NULL;
+    return 0;
 }
 
 int Debugger_Continue() {
