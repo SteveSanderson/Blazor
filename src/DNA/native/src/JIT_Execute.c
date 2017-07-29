@@ -128,12 +128,12 @@ tJITCodeInfo jitCodeGoNext;
 
 #define THROW(exType) heapPtr = Heap_AllocType(exType); goto throwHeapPtr
 
-static void CheckIfCurrentInstructionHasBreakpoint(tMD_MethodDef *pMethodDef, U32 opOffset, I32* pOpSequencePoints)
+static void CheckIfCurrentInstructionHasBreakpoint(tMethodState* pMethodState, U32 opOffset, I32* pOpSequencePoints)
 {
 	if (pOpSequencePoints != NULL) {
 		I32 currentOpSequencePoint = pOpSequencePoints[opOffset];
 		if (currentOpSequencePoint >= 0) {
-			CheckIfSequencePointIsBreakpoint(pMethodDef->pJITted->pDebugMetadataEntry, currentOpSequencePoint);
+			CheckIfSequencePointIsBreakpoint(pMethodState, currentOpSequencePoint);
 		}
 	}
 }
@@ -195,7 +195,7 @@ U32 opcodeNumUses[JIT_OPCODE_MAXNUM];
 #endif
 
 #define CHECK_FOR_BREAKPOINT() \
-	CheckIfCurrentInstructionHasBreakpoint(pCurrentMethodState->pMethod, pCurOp - pOps, pOpSequencePoints);
+	CheckIfCurrentInstructionHasBreakpoint(pCurrentMethodState, pCurOp - pOps, pOpSequencePoints);
 
 #ifdef __GNUC__
 

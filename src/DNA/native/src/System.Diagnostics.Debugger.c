@@ -51,6 +51,8 @@ int Debugger_Reset() {
     waitingOnBreakPoint = 0;
     releaseBreakPoint = 0;
     alwaysBreak = 0;
+
+    return 0;
 }
 
 int Debugger_Continue() {
@@ -127,9 +129,15 @@ tAsyncCall* System_Diagnostics_Debugger_Break(PTR pThis_, PTR pParams, PTR pRetu
     return NULL;
 }
 
-int CheckIfSequencePointIsBreakpoint(tDebugMetaDataEntry* pDebugEntry, I32 sequencePoint) {
+int CheckIfSequencePointIsBreakpoint(tMethodState* pMethodState, I32 sequencePoint) {
 	tBreakPoint* pHead;
 	int doBreakpoint;
+    tDebugMetaDataEntry* pDebugEntry;
+
+    pDebugEntry = pMethodState->pMethod->pJITted->pDebugMetadataEntry;
+    U32 ilOffset = pDebugEntry->sequencePoints[sequencePoint];
+
+    // log_f(1, "(%s, %d, %04X) \n", pDebugEntry->pMethodName, sequencePoint, ilOffset);
 
     if (!alwaysBreak) {
         doBreakpoint = 0;
@@ -152,14 +160,13 @@ int CheckIfSequencePointIsBreakpoint(tDebugMetaDataEntry* pDebugEntry, I32 seque
         }
     }
 
-    log_f(1, "BREAK_POINT hit (%s, %d) \n", pDebugEntry->pMethodName, sequencePoint);
+    log_f(1, "BREAK_POINT hit (%s, %d, %04X) \n", pDebugEntry->pMethodName, sequencePoint, ilOffset);
 
     waitingOnBreakPoint = 1;
     alwaysBreak = 0;
 
     // TODO: Handle overflow
     unsigned char payload[1024];
-	U32 ilOffset = pDebugEntry->sequencePoints[sequencePoint];
     sprintf(payload, "{\"command\":\"breakpoint\", \"ilOffset\":%d, \"sequencePoint\":%d,\"ID\":\"%s\"}", ilOffset, sequencePoint, pDebugEntry->pID);
 #ifndef _WIN32
     invokeJsFunc("browser.js", "SendDebuggerMessage", payload);
