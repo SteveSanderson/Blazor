@@ -26,6 +26,7 @@ namespace Blazor.DebugAdapter.ChromeProtocolConnection
         private TaskCompletionSource<string> _connectionTcs = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
         private int _applicationPort;
         private string _debuggerHost;
+        private CallFrame _currentFrame;
 
         public ChromeProtocolConnection(int applicationPort, string debuggerHost, Action<string> log, Action<string> onBreakpointHit)
         {
@@ -181,6 +182,7 @@ namespace Blazor.DebugAdapter.ChromeProtocolConnection
                         await OnReceivedDebuggerPausedMessage(JsonConvert.DeserializeObject<DebuggerPausedMessage>(str));
                         break;
                     case "Debugger.resumed":
+                        _currentFrame = null;
                         await SendRequestAndAwaitResponseAsync<object>(new ChromeRequest("Overlay.setPausedInDebuggerMessage"));
                         break;
                     default:
@@ -198,6 +200,8 @@ namespace Blazor.DebugAdapter.ChromeProtocolConnection
                 _log("Paused, but received no call frames. Ignoring.");
                 return;
             }
+
+            _currentFrame = topCallFrame;
 
             // Initial pause
             if (!_connectionTcs.Task.IsCompleted)
@@ -237,6 +241,21 @@ namespace Blazor.DebugAdapter.ChromeProtocolConnection
                 var pages = JsonConvert.DeserializeObject<DebuggablePageInfo[]>(json);
                 return pages.FirstOrDefault(page => new Uri(page.Url).Port == applicationPort)?.WebSocketDebuggerUrl;
             }
+        }
+
+        public async Task StepAsync()
+        {
+            // Not broken
+            if (_currentFrame == null)
+            {
+                return;
+            }
+
+            // Tell the browser to execute the step command then resume execution
+            await SendRequestAndAwaitResponseAsync<EvaluateOnCallFrameResponse>(
+                new EvaluateOnCallFrameRequest(_currentFrame, "Module.ccall('Debugger_Step', 'number', [], []);"));
+
+            await ResumeAsync();
         }
     }
 }

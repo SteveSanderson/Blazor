@@ -329,7 +329,7 @@ namespace VSCodeDebug
         {
             Log("Next");
 
-            await SendJson(new { command = "step" });
+            await _chromeProtoConnection.StepAsync();
         }
 
         public override void Pause(Response response, dynamic arguments)
