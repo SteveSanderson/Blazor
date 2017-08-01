@@ -38,6 +38,13 @@
       "type": "coreclr",
       "request": "attach",
       "processId": "${command:pickProcess}"
+    },
+    {
+      "name": "Attach to Blazor Program",
+      "type": "blazor",
+      "request": "attach",
+      "address": "ws://localhost:56860/__debugger?id=1fcd6f30-6993-b60d-7689-8ce1946f69eb",
+      "program": "${workspaceRoot}/Program.cs"
     }
   ]
 }

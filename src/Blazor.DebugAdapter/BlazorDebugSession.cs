@@ -15,6 +15,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Blazor.DebugAdapter.ChromeProtocolConnection;
 
 namespace VSCodeDebug
 {
@@ -33,6 +34,8 @@ namespace VSCodeDebug
         bool _webSocketConnected;
         private Task _sendQueue = Task.CompletedTask;
 
+        private ChromeProtocolConnection _chromeProtoConnection;
+
         public BlazorDebugSession() : base(debuggerLinesStartAt1: true)
         {
 
@@ -45,6 +48,11 @@ namespace VSCodeDebug
             string address = arguments.address;
 
             _clientWebSocket.ConnectAsync(new Uri(address), CancellationToken.None).Wait();
+            _chromeProtoConnection = new ChromeProtocolConnection(
+                new Uri(address).Port,
+                "localhost:9222",
+                Log,
+                OnMessage);
             _webSocketConnected = true;
 
             _ = HandleMessages();
@@ -119,8 +127,22 @@ namespace VSCodeDebug
 
         private void OnMessage(byte[] all)
         {
-            var obj = JObject.Parse(Encoding.GetString(all));
-            Log("Received Message from Debugee: " + obj);
+            OnMessage(Encoding.GetString(all));
+        }
+
+        private void OnMessage(string messageJson)
+        {
+            Log("Received Message from Debugee: " + messageJson);
+            JObject obj = null;
+
+            try
+            {
+                obj = JObject.Parse(messageJson);
+            }
+            catch (Exception ex)
+            {
+                Log("Unable to parse message from debugee: " + ex.ToString());
+            }
 
             switch (obj.Value<string>("command"))
             {
@@ -236,7 +258,7 @@ namespace VSCodeDebug
         {
             Log("Continue");
 
-            await SendJson(new { command = "continue" });
+            await _chromeProtoConnection.ResumeAsync();
         }
 
         public override void Disconnect(Response response, dynamic arguments)
@@ -249,6 +271,7 @@ namespace VSCodeDebug
 
                 // TODO: Don't block
                 _clientWebSocket.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None).Wait();
+                _chromeProtoConnection.Dispose();
             }
         }
 

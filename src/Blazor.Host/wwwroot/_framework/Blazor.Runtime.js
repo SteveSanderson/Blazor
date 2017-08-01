@@ -12,11 +12,6 @@
         },
 
         SendDebuggerMessage: function (message) {
-            if (window.debuggerSocket) {
-                console.log('Sending debugger message: ' + message);
-                window.debuggerSocket.send(message);
-            }
-
             if (JSON.parse(message).command === 'breakpoint') {
                 // Use the browser's native debugger to halt both the JS and .NET sides of execution
                 // For this to be useful, we'll need to implement some tooling that connects to the
