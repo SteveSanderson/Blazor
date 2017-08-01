@@ -23,6 +23,9 @@ namespace Blazor.DebugAdapter.ChromeProtocolConnection
         readonly JsonSerializerSettings _jsonSettings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
         readonly Dictionary<int, TaskCompletionSource<string>> _pendingResponseAwaiters = new Dictionary<int, TaskCompletionSource<string>>();
         readonly object _pendingResponseAwaitersLock = new object();
+        private TaskCompletionSource<string> _connectionTcs = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
+        private int _applicationPort;
+        private string _debuggerHost;
 
         public ChromeProtocolConnection(int applicationPort, string debuggerHost, Action<string> log, Action<string> onBreakpointHit)
         {
@@ -30,7 +33,13 @@ namespace Blazor.DebugAdapter.ChromeProtocolConnection
             _onBreakpointHit = onBreakpointHit;
             _browserConnection = new ClientWebSocket();
             _disposalCancellationTokenSource = new CancellationTokenSource();
-            ConnectAsync(applicationPort, debuggerHost).Wait();
+            _applicationPort = applicationPort;
+            _debuggerHost = debuggerHost;
+        }
+
+        public Task<string> ConnectAsync()
+        {
+            return ConnectAsync(_applicationPort, _debuggerHost);
         }
 
         public void Dispose()
@@ -48,7 +57,7 @@ namespace Blazor.DebugAdapter.ChromeProtocolConnection
             await SendRequestAsync(new ChromeRequest("Debugger.resume"));
         }
 
-        private async Task ConnectAsync(int applicationPort, string debuggerHost)
+        private async Task<string> ConnectAsync(int applicationPort, string debuggerHost)
         {
             // First get the list of debuggable endpoints (tabs)
             _log($"Finding debugger endpoint for app running on port {applicationPort}...");
@@ -56,7 +65,7 @@ namespace Blazor.DebugAdapter.ChromeProtocolConnection
             if (debuggerWebsocketUrl == null)
             {
                 _log($"Could not find any debuggable page for app running on port {applicationPort}. Make sure it is running in a tab in Chrome, and that you do *NOT* have the browser's DevTools opened in that tab.");
-                return;
+                return null;
             }
             _log($"Found endpoint at {debuggerWebsocketUrl}");
 
@@ -65,11 +74,17 @@ namespace Blazor.DebugAdapter.ChromeProtocolConnection
                 new Uri(debuggerWebsocketUrl),
                 CancellationToken.None);
             _log($"Connected to {debuggerWebsocketUrl}");
-            ReceiveLoop();
 
             // Enable the protocol features we want
             await SendRequestAsync(new ChromeRequest("Debugger.enable"));
             await SendRequestAsync(new ChromeRequest("Overlay.enable"));
+
+            // Pause so that we can retrieve the session id from the browser
+            await SendRequestAsync(new ChromeRequest("Debugger.pause"));
+
+            ReceiveLoop();
+
+            return await _connectionTcs.Task;
         }
 
         private async Task SendRequestAsync(ChromeRequestBase request)
@@ -85,7 +100,7 @@ namespace Blazor.DebugAdapter.ChromeProtocolConnection
 
         private async Task<T> SendRequestAndAwaitResponseAsync<T>(ChromeRequestBase request)
         {
-            var tcs = new TaskCompletionSource<string>();
+            var tcs = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
             lock (_pendingResponseAwaitersLock)
             {
                 _pendingResponseAwaiters.Add(request.Id, tcs);
@@ -181,6 +196,18 @@ namespace Blazor.DebugAdapter.ChromeProtocolConnection
             if (topCallFrame == null)
             {
                 _log("Paused, but received no call frames. Ignoring.");
+                return;
+            }
+
+            // Initial pause
+            if (!_connectionTcs.Task.IsCompleted)
+            {
+                var sessionIdValue = await SendRequestAndAwaitResponseAsync<EvaluateOnCallFrameResponse>(
+                    new EvaluateOnCallFrameRequest(topCallFrame, "window.debuggerSessionId"));
+
+                _connectionTcs.TrySetResult(sessionIdValue.Result.Result.Value.ToString());
+                // Resume the debugger
+                await ResumeAsync();
                 return;
             }
 

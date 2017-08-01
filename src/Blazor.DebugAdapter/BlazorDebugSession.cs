@@ -47,12 +47,19 @@ namespace VSCodeDebug
 
             string address = arguments.address;
 
-            _clientWebSocket.ConnectAsync(new Uri(address), CancellationToken.None).Wait();
             _chromeProtoConnection = new ChromeProtocolConnection(
                 new Uri(address).Port,
                 "localhost:9222",
                 Log,
                 OnMessage);
+
+            var sessionId = _chromeProtoConnection.ConnectAsync().Result;
+
+            var builder = new UriBuilder(address);
+            builder.Query = "?id=" + sessionId;
+
+            _clientWebSocket.ConnectAsync(builder.Uri, CancellationToken.None).Wait();
+
             _webSocketConnected = true;
 
             _ = HandleMessages();
