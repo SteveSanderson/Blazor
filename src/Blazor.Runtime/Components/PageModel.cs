@@ -7,7 +7,7 @@ namespace Blazor.Runtime.Components
 {
     public abstract class PageModel : IModel
     {
-        private BlazorContext Context { get; set; }
+        public BlazorContext Context { get; set; }
 
         public virtual Task InitAsync()
         {

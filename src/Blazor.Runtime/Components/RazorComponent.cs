@@ -628,13 +628,13 @@ namespace Blazor.Components
         #endregion
     }
 
-    public abstract class RazorComponent<TModel> : RazorComponent 
+    public abstract class RazorComponent<TModel> : RazorComponent
     {
         // This is not really used, but simply has to exist so that the Razor tooling is willing to regard
         // Blazor.Components.RazorComponent as a valid base class. This would probably go away if updating
         // to work using newer Razor tooling.
 
-        public static TModel Model { get;  set; } // TODO this really should be a private set.
+        public static TModel Model { get; set; } // TODO this really should be a private set.
 
         public bool IsPage { get; set; }
 
@@ -650,12 +650,14 @@ namespace Blazor.Components
             Console.WriteLine($"CALLED RazorComponent.InitAsync(), IsPage={IsPage}, Model={((Model as IModel) == null ? "null" : "IModel")}");
             if (IsPage)
             {
-                return (Model as IModel).InitAsync();
+                var model = Model as IModel;
+                if (model != null)
+                {
+                    model.Context = Context;
+                    return model.InitAsync();
+                }
             }
-            else
-            {
-                return null;
-            }
+            return null;
         }
 
         public override Task InitAsync(int id)
