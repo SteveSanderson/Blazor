@@ -1,6 +1,6 @@
 ﻿(function () {
     var nextElemId = 0;
-    var debuggerSocket;
+    window._dnaRuntimeHasStarted = false;
 
     window['browser.js'] = {
         JSEval: function (code) {
@@ -20,6 +20,7 @@
                 debugger;
             }
         },
+
         ResolveRelativeUrl: function (url) {
             var a = document.createElement('a');
             a.href = url;
@@ -495,6 +496,10 @@
     };
 })();
 
+function setBreakpointInDna(dnaMethodId, ilOffset) {
+    Module.ccall('Debugger_SetBreakPoint', 'number', ['string', 'number'], [dnaMethodId, ilOffset]);
+}
+
 var dotNetStringDecoder;
 function readDotNetString(ptrString) {
     dotNetStringDecoder = dotNetStringDecoder || new TextDecoder("utf-16le"); // Lazy-initialised because we have to wait for loading the polyfill on some browsers
@@ -809,56 +814,8 @@ window['jsobject.js'] = (function () {
         return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
             s4() + '-' + s4() + s4() + s4();
     }
-
-    function ListenForDebugger() {
-        if (window.WebSocket) {
-            var sessionId = guid();
-            var url = 'ws://' + document.location.host + '/__debugger?id=' + sessionId + '&d=1';
-
-            window.debuggerSessionId = sessionId;
-
-            // No websockets, no debugging, sorry...
-            var ws = new WebSocket(url);
-            ws.onopen = function () {
-                console.log('Opened debugger connection: Use ' + sessionId + ' to attach to this session');
-                debuggerSocket = ws;
-            };
-            ws.onmessage = function (event) {
-                console.log('Received message from debugger: ' + event.data);
-                var data = JSON.parse(event.data);
-
-                if (data.command == 'continue') {
-                    // Do nothing since the only thing pausing the browser is the browser debugger
-                    // Module.ccall('Debugger_Continue', 'number', [], []);
-                }
-                else if (data.command == 'step') {
-                    Module.ccall('Debugger_Step', 'number', [], []);
-                }
-                else if (data.command == 'breakpoints') {
-                    Module.ccall('Debugger_Clear_BreakPoints', 'number', [], []);
-
-                    // { id: '', offset: 0 }
-                    for (var i = 0; i < data.value.length; ++i) {
-                        var item = data.value[i];
-                        Module.ccall('Debugger_SetBreakPoint', 'number', ['string', 'number'], [item.id, item.offset]);
-                    }
-                }
-                else if (data.command == 'detached') {
-                    Module.ccall('Debugger_Reset', 'number', [], []);
-                }
-                
-            };
-            ws.onclose = function (event) {
-                console.log('Debugger connection closed!');
-            };
-        }
-    }
-
+    
     ListenForReload();
-
-    if (window.location.toString().includes("localhost")) {
-        ListenForDebugger();
-    }
 
     function DisplayErrorPage(html) {
         var frame = document.createElement('iframe');
@@ -886,6 +843,15 @@ window['jsobject.js'] = (function () {
         };
         xhr.onerror = onerror;
         xhr.send(null);
+    }
+
+    function setAnyPendingBreakpoints() {
+        if (window._pendingBreakpoints) {
+            window._pendingBreakpoints.forEach(function (breakpointInfo) {
+                setBreakpointInDna(breakpointInfo.dnaMethodId, breakpointInfo.ilOffset);
+            });
+            window._pendingBreakpoints.length = 0;
+        }
     }
 
     function StartApplication(entryPoint, referenceAssemblies) {
@@ -921,6 +887,8 @@ window['jsobject.js'] = (function () {
                 });
             },
             postRun: function () {
+                window._dnaRuntimeHasStarted = true;
+                setAnyPendingBreakpoints();
                 InvokeStatic('Blazor.Runtime', 'Blazor.Runtime.Interop', 'Startup', 'EnsureAssembliesLoaded', JSON.stringify(
                     preloadAssemblies.map(function (assemblyInfo) {
                         var name = assemblyInfo.assemblyName;
