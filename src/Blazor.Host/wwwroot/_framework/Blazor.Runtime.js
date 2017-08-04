@@ -689,6 +689,16 @@ window.addEventListener('popstate', function (evt) {
     OnLocationChanged(window.location.pathname);
 });
 
+// If the user presses Ctrl+Shift+D, launch the debugger in a new tab
+document.addEventListener("keydown", function (evt) {
+    if (evt.ctrlKey && evt.shiftKey && evt.code === 'KeyD') {
+        // TODO: Figure out why directly using window.open or <a target=_blank> doesn't work
+        console.log('Opening debugger...');
+        var url = 'http://localhost:9222/devtools/inspector.html?ws=' + location.host + '/__v8debugger';
+        prompt('Open the following URL in a new tab', url);
+    }
+});
+
 window['jsobject.js'] = (function () {
     var _nextObjectId = 0;
     var _trackedObjects = {};
