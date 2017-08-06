@@ -19,6 +19,7 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Blazor.Host.Debugging;
+using Blazor.Host.Debugging.Discovery;
 
 namespace Blazor.Host
 {
@@ -123,7 +124,8 @@ namespace Blazor.Host
                 }
 
                 app.UseWebSockets();
-                app.UseBlazorDebugServer(clientBinDir, "localhost:9222");
+                app.UseBlazorDebugServer(clientBinDir);
+                app.UseV8DebugTargetsEndpoint();
             }
 
             app.UseLiveReloading();

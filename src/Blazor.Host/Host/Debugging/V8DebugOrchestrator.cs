@@ -23,7 +23,7 @@ namespace Blazor.Host.Debugging
         private Dictionary<string, PossibleBreakpointLocation> _currentBreakpointsById = new Dictionary<string, PossibleBreakpointLocation>();
         private PossibleBreakpointLocation _currentlyPausedInDotNetBreakpoint;
 
-        public async Task ConnectAsync(WebSocket ideSocket, string browserDebugEndpointHost, int targetPagePort, string clientBinDir)
+        public async Task ConnectAsync(WebSocket ideSocket, string browserDebugSocketUrl, string clientBinDir)
         {
             _clientBinDir = clientBinDir;
             _ideConnection = new V8DebugServer(ideSocket);
@@ -31,7 +31,7 @@ namespace Blazor.Host.Debugging
 
             _browserConnection = new V8DebugClient();
             _browserConnection.OnNotificationReceived += HandleMessageFromBrowser;
-            await _browserConnection.ConnectAsync(browserDebugEndpointHost, targetPagePort);
+            await _browserConnection.ConnectAsync(browserDebugSocketUrl);
         }
 
         public void Dispose()
