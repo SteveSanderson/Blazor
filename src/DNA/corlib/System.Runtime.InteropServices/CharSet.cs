@@ -21,6 +21,7 @@
 #if !LOCALTEST
 
 namespace System.Runtime.InteropServices {
+	[Serializable]
 	public enum CharSet {
 		None = 1,
 		Ansi = 2,

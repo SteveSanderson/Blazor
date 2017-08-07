@@ -20,18 +20,19 @@
 
 #if !LOCALTEST
 
-using System;
-using System.Collections.Generic;
-using System.Text;
-
 namespace System.Reflection {
-	public abstract class MemberInfo {
+	public abstract class MemberInfo : ICustomAttributeProvider {
 
 		protected MemberInfo() {
 		}
 
-		public abstract string Name { get;}
+		public abstract string Name { get; }
 
+		public abstract bool IsDefined(Type attributeType, bool inherit);
+
+		public abstract Object[] GetCustomAttributes(bool inherit);
+
+		public abstract Object[] GetCustomAttributes(Type attributeType, bool inherit);
 	}
 }
 

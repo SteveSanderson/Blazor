@@ -90,8 +90,19 @@ struct tMetaData_ {
 #define FIELDATTRIBUTES_LITERAL 0x40 // compile-time constant
 #define FIELDATTRIBUTES_HASFIELDRVA 0x100
 
-#define SIG_METHODDEF_GENERIC 0x10
-#define SIG_METHODDEF_HASTHIS 0x20
+#define SIG_CALLCONV_DEFAULT 0x0
+#define SIG_CALLCONV_VARARG 0x5
+#define SIG_CALLCONV_FIELD 0x6
+#define SIG_CALLCONV_LOCAL_SIG 0x7
+#define SIG_CALLCONV_PROPERTY 0x8
+#define SIG_CALLCONV_UNMGD 0x9
+#define SIG_CALLCONV_GENERICINST 0xa
+#define SIG_CALLCONV_NATIVEVARARG 0xb
+#define SIG_CALLCONV_MAX 0xc
+#define SIG_CALLCONV_MASK 0x0f
+#define SIG_CALLCONV_GENERIC 0x10
+#define SIG_CALLCONV_HASTHIS 0x20
+#define SIG_CALLCONV_EXPLICITTHIS 0x40
 
 #define IMPLMAP_FLAGS_CHARSETMASK 0x0006
 #define IMPLMAP_FLAGS_CHARSETNOTSPEC 0x0000
@@ -157,6 +168,9 @@ void MetaData_GetHeapRoots(tHeapRoots *pHeapRoots, tMetaData *pMetaData);
 void MetaData_Fill_TypeDef_(tMD_TypeDef *pTypeDef, tMD_TypeDef **ppClassTypeArgs, tMD_TypeDef **ppMethodTypeArgs);
 void MetaData_Fill_FieldDef(tMD_TypeDef *pParentType, tMD_FieldDef *pFieldDef, U32 memOffset, tMD_TypeDef **ppClassTypeArgs);
 void MetaData_Fill_MethodDef(tMD_TypeDef *pParentType, tMD_MethodDef *pMethodDef, tMD_TypeDef **ppClassTypeArgs, tMD_TypeDef **ppMethodTypeArgs);
+
+tMD_MethodDef* FindVirtualOverriddenMethod(tMD_TypeDef *pTypeDef, tMD_MethodDef *pMethodDef);
+tMD_MethodDef* FindMethodInType(tMD_TypeDef *pTypeDef, STRING name, tMetaData *pSigMetaData, BLOB_ sigBlob, tMD_TypeDef **ppClassTypeArgs, tMD_TypeDef **ppMethodTypeArgs);
 
 // Meta-data searching
 

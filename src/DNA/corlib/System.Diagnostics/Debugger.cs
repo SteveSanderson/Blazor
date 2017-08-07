@@ -27,6 +27,7 @@ namespace System.Diagnostics {
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		extern public static void Break();
 
+		public static bool Launch() { Break(); return false; }
 	}
 }
 

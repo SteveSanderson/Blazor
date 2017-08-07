@@ -22,6 +22,7 @@
 
 namespace System {
 
+	[Flags, Serializable]
 	public enum AttributeTargets {
 		Assembly = 0x00000001,
 		Module = 0x00000002,

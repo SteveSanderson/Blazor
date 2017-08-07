@@ -10,5 +10,9 @@ namespace System.Reflection
         {
             return type.GetProperties();
         }
+        public static IEnumerable<MethodInfo> GetRuntimeMethods(this Type type)
+        {
+            return type.GetMethods();
+        }
     }
 }

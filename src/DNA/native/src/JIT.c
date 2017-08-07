@@ -92,7 +92,7 @@ static U32 Translate(U32 op, U32 getDynamic) {
 #define PushFloat(v) convFloat.f=(float)(v); PushU32_(&ops, convFloat.u32)
 #define PushDouble(v) convDouble.d=(double)(v); PushU32_(&ops, convDouble.u32.a); PushU32_(&ops, convDouble.u32.b)
 #define PushPTR(ptr) PushU32_(&ops, (U32)(ptr))
-#define PushOp(op) PushU32_(&ops, Translate((U32)(op), 0))
+#define PushOp(op) PushU32_(&ops, Translate((U32)(op), 0)); //dprintfn("PushOp: 0x%03x (%s)", op, Sys_JIT_OpCodeName(op));
 #define PushOpParam(op, param) PushOp(op); PushU32_(&ops, (U32)(param))
 #endif
 
@@ -119,16 +119,23 @@ static void PushStackType_(tTypeStack *pTypeStack, tMD_TypeDef *pType) {
 	if (size > pTypeStack->maxBytes) {
 		pTypeStack->maxBytes = size;
 	}
-	//printf("Stack ofs = %d; Max stack size: %d (0x%x)\n", pTypeStack->ofs, size, size);
+	//dprintfn("Stack ofs = %d; Max stack size: %d (0x%x)", pTypeStack->ofs, size, size);
 }
 
 static void PushU32_(tOps *pOps, U32 v) {
 	if (pOps->ofs >= pOps->capacity) {
 		pOps->capacity <<= 1;
-//		printf("a.pOps->p = 0x%08x size=%d\n", pOps->p, pOps->capacity * sizeof(U32));
+		//dprintfn("a.pOps->p = 0x%08x size=%d", pOps->p, pOps->capacity * sizeof(U32));
 		pOps->p = realloc(pOps->p, pOps->capacity * sizeof(U32));
 	}
 	pOps->p[pOps->ofs++] = v;
+}
+
+static U32 GetUnalignedU16(U8 *pCIL, U32 *pCILOfs) {
+	U32 a, b;
+	a = pCIL[(*pCILOfs)++];
+	b = pCIL[(*pCILOfs)++];
+	return a | (b << 8);
 }
 
 static U32 GetUnalignedU32(U8 *pCIL, U32 *pCILOfs) {
@@ -295,11 +302,16 @@ static U32* JITit(tMD_MethodDef *pMethodDef, U8 *pCIL, U32 codeSize, tParameter 
 		pJITOffsets[cilOfs] = ops.ofs;
 
 		op = pCIL[cilOfs++];
-		//printf("Opcode: 0x%02x\n", op);
+
+		//U32 op2 = (op == CIL_EXTENDED) ? 0x100 + pCIL[cilOfs] : op;
+		//dprintfn("CIL op: 0x%03x (%s)", op2, Sys_CIL_OpCodeName(op2));
 
 		switch (op) {
 			case CIL_NOP:
 				PushOp(JIT_NOP);
+				break;
+			case CIL_BREAK:
+				Crash("Break-point requested.");
 				break;
 
 			case CIL_LDNULL:
@@ -531,6 +543,9 @@ cilLdInd:
 			case CIL_STIND_I1:
 			case CIL_STIND_I2:
 			case CIL_STIND_I4:
+			case CIL_STIND_I8:
+			case CIL_STIND_R4:
+			case CIL_STIND_R8:
 				PopStackTypeMulti(2); // Don't care what they are
 				PushOp(JIT_STOREINDIRECT_REF + (op - CIL_STIND_REF));
 				break;
@@ -545,7 +560,7 @@ cilLdInd:
 				{
 					tMD_MethodDef *pCallMethod;
 					tMD_TypeDef *pBoxCallType;
-					U32 derefRefType;
+					U32 derefRefType = 0;
 					U8 dynamicallyBoxReturnValue = 0;
 
 					u32Value2 = 0;
@@ -553,6 +568,7 @@ cilLdInd:
 cilCallVirtConstrained:
 					pBoxCallType = NULL;
 					derefRefType = 0;
+					dynamicallyBoxReturnValue = 0;
 
 					u32Value = GetUnalignedU32(pCIL, &cilOfs);
 					pCallMethod = MetaData_GetMethodDefFromDefRefOrSpec(pMetaData, u32Value, pMethodDef->pParentType->ppClassTypeArgs, pMethodDef->ppMethodTypeArgs);
@@ -604,7 +620,7 @@ cilCallVirtConstrained:
 
 					// Pop stack type for each argument. Don't actually care what these are,
 					// except the last one which will be the 'this' object type of a non-static method
-					//printf("Call %s() - popping %d stack args\n", pCallMethod->name, pCallMethod->numberOfParameters);
+					//dprintfn("Call %s() - popping %d stack args", pCallMethod->name, pCallMethod->numberOfParameters);
 					for (i=0; i<pCallMethod->numberOfParameters; i++) {
 						pStackType = PopStackType();
 					}
@@ -702,17 +718,21 @@ cilBr:
 			case CIL_BRFALSE_S:
 			case CIL_BRTRUE_S:
 				u32Value = (I8)pCIL[cilOfs++];
-				u32Value2 = JIT_BRANCH_FALSE + (op - CIL_BRFALSE_S);
+				u32Value2 = (op - CIL_BRFALSE_S);
 				goto cilBrFalseTrue;
 
 			case CIL_BRFALSE:
 			case CIL_BRTRUE:
 				u32Value = GetUnalignedU32(pCIL, &cilOfs);
-				u32Value2 = JIT_BRANCH_FALSE + (op - CIL_BRFALSE);
+				u32Value2 = (op - CIL_BRFALSE);
 cilBrFalseTrue:
-				PopStackTypeDontCare(); // Don't care what it is
+				pStackType = PopStackType();
+				if (pStackType->stackSize > 8) {
+					Crash("JITit(): Cannot perform branch operation on type: %s", pStackType->name);
+				}
 				// Put a temporary CIL offset value into the JITted code. This will be updated later
 				u32Value = cilOfs + (I32)u32Value;
+				u32Value2 = (pStackType->stackSize == 4 ? JIT_BRANCH_FALSE : JIT_BRANCH64_FALSE) + u32Value2;
 				MayCopyTypeStack();
 				PushOp(u32Value2);
 				PushBranch();
@@ -750,8 +770,7 @@ cilBrCond:
 				pTypeA = PopStackType();
 				u32Value = cilOfs + (I32)u32Value;
 				MayCopyTypeStack();
-				if ((pTypeA->stackType == EVALSTACK_INT32 && pTypeB->stackType == EVALSTACK_INT32) ||
-					(pTypeA->stackType == EVALSTACK_O && pTypeB->stackType == EVALSTACK_O)) {
+				if (pTypeA->stackType == EVALSTACK_INT32 && pTypeB->stackType == EVALSTACK_INT32) {
 					PushOp(JIT_BEQ_I32I32 + (op - u32Value2));
 				} else if (pTypeA->stackType == EVALSTACK_INT64 && pTypeB->stackType == EVALSTACK_INT64) {
 					PushOp(JIT_BEQ_I64I64 + (op - u32Value2));
@@ -759,6 +778,10 @@ cilBrCond:
 					PushOp(JIT_BEQ_F32F32 + (op - u32Value2));
 				} else if (pTypeA->stackType == EVALSTACK_F64 && pTypeB->stackType == EVALSTACK_F64) {
 					PushOp(JIT_BEQ_F64F64 + (op - u32Value2));
+				} else if (pTypeA->stackType == EVALSTACK_O && pTypeB->stackType == EVALSTACK_O) {
+					//pTypeA->stackType == EVALSTACK_O && pTypeB->stackType == EVALSTACK_INT32 ||
+					//pTypeA->stackType == EVALSTACK_INT32 && pTypeB->stackType == EVALSTACK_O) {
+					PushOp(JIT_BEQ_I32I32 + (op - u32Value2));
 				} else {
 					Crash("JITit(): Cannot perform conditional branch on stack types: %d and %d", pTypeA->stackType, pTypeB->stackType);
 				}
@@ -788,21 +811,24 @@ cilBrCond:
 cilBinaryArithOp:
 				pTypeB = PopStackType();
 				pTypeA = PopStackType();
-				if (pTypeA->stackType == EVALSTACK_INT32 && pTypeB->stackType == EVALSTACK_INT32) {
+				if ((pTypeA->stackType == EVALSTACK_INT32 && pTypeB->stackType == EVALSTACK_INT32)) {
 					PushOp(JIT_ADD_I32I32 + (op - CIL_ADD) - u32Value);
-					PushStackType(types[TYPE_SYSTEM_INT32]);
 				} else if (pTypeA->stackType == EVALSTACK_INT64 && pTypeB->stackType == EVALSTACK_INT64) {
 					PushOp(JIT_ADD_I64I64 + (op - CIL_ADD) - u32Value);
-					PushStackType(types[TYPE_SYSTEM_INT64]);
 				} else if (pTypeA->stackType == EVALSTACK_F32 && pTypeB->stackType == EVALSTACK_F32) {
 					PushOp(JIT_ADD_F32F32 + (op - CIL_ADD) - u32Value);
-					PushStackType(pTypeA);
 				} else if (pTypeA->stackType == EVALSTACK_F64 && pTypeB->stackType == EVALSTACK_F64) {
 					PushOp(JIT_ADD_F64F64 + (op - CIL_ADD) - u32Value);
-					PushStackType(pTypeA);
+				} else if (pTypeA->stackType == EVALSTACK_O && pTypeB->stackType == EVALSTACK_O) {
+					//pTypeA->stackType == EVALSTACK_O && pTypeB->stackType == EVALSTACK_INT32 ||
+					//pTypeA->stackType == EVALSTACK_INT32 && pTypeB->stackType == EVALSTACK_O) {
+					PushOp(JIT_ADD_I32I32 + (op - CIL_ADD) - u32Value);
+				} else if (pTypeA->stackType == EVALSTACK_PTR && pTypeB->stackType == EVALSTACK_INT32 && (op == CIL_ADD || op == CIL_SUB)) {
+					PushOp((sizeof(void*) == 4 ? JIT_ADD_I32I32 : JIT_ADD_I64I64) + (op - CIL_ADD));
 				} else {
 					Crash("JITit(): Cannot perform binary numeric operand on stack types: %d and %d", pTypeA->stackType, pTypeB->stackType);
 				}
+				PushStackType(pTypeA);
 				break;
 
 			case CIL_NEG:
@@ -814,6 +840,12 @@ cilBinaryArithOp:
 				} else if (pTypeA->stackType == EVALSTACK_INT64) {
 					PushOp(JIT_NEG_I64 + (op - CIL_NEG));
 					PushStackType(types[TYPE_SYSTEM_INT64]);
+				} else if (pTypeA->stackType == EVALSTACK_F32) {
+					PushOp(JIT_NEG_F32);
+					PushStackType(types[TYPE_SYSTEM_SINGLE]);
+				} else if (pTypeA->stackType == EVALSTACK_F64) {
+					PushOp(JIT_NEG_F64);
+					PushStackType(types[TYPE_SYSTEM_DOUBLE]);
 				} else {
 					Crash("JITit(): Cannot perform unary operand on stack types: %d", pTypeA->stackType);
 				}
@@ -1419,7 +1451,8 @@ cilLeave:
 					break;
 
 				case CILX_LOADFUNCTION:
-					{
+				case CILX_LOADVIRTFN:
+				{
 						tMD_MethodDef *pFuncMethodDef;
 
 						u32Value = GetUnalignedU32(pCIL, &cilOfs);
@@ -1437,10 +1470,7 @@ cilLeave:
 				case CILX_CLT_UN:
 					pTypeB = PopStackType();
 					pTypeA = PopStackType();
-					if ((pTypeA->stackType == EVALSTACK_INT32 && pTypeB->stackType == EVALSTACK_INT32) ||
-						(pTypeA->stackType == EVALSTACK_O && pTypeB->stackType == EVALSTACK_O) ||
-						// Next line: only on 32-bit
-						(pTypeA->stackType == EVALSTACK_PTR && pTypeB->stackType == EVALSTACK_PTR)) {
+					if (pTypeA->stackType == EVALSTACK_INT32 && pTypeB->stackType == EVALSTACK_INT32) {
 						PushOp(JIT_CEQ_I32I32 + (op - CILX_CEQ));
 					} else if (pTypeA->stackType == EVALSTACK_INT64 && pTypeB->stackType == EVALSTACK_INT64) {
 						PushOp(JIT_CEQ_I64I64 + (op - CILX_CEQ));
@@ -1448,12 +1478,24 @@ cilLeave:
 						PushOp(JIT_CEQ_F32F32 + (op - CILX_CEQ));
 					} else if (pTypeA->stackType == EVALSTACK_F64 && pTypeB->stackType == EVALSTACK_F64) {
 						PushOp(JIT_CEQ_F64F64 + (op - CILX_CEQ));
+					} else if (pTypeA->stackType == EVALSTACK_O && pTypeB->stackType == EVALSTACK_O) {
+						PushOp(JIT_CEQ_I32I32 + (op - CILX_CEQ));
+					} else if (pTypeA->stackType == EVALSTACK_PTR && pTypeB->stackType == EVALSTACK_PTR) {
+						PushOp((sizeof(void*) == 4 ? JIT_CEQ_I32I32 : JIT_CEQ_I64I64) + (op - CILX_CEQ));
 					} else {
 						Crash("JITit(): Cannot perform comparison operand on stack types: %s and %s", pTypeA->name, pTypeB->name);
 					}
 					PushStackType(types[TYPE_SYSTEM_INT32]);
 					break;
-					
+
+				case CILX_LDLOC:
+					u32Value = GetUnalignedU16(pCIL, &cilOfs);
+					goto cilLdLoc;
+
+				case CILX_STLOC:
+					u32Value = GetUnalignedU16(pCIL, &cilOfs);
+					goto cilStLoc;
+
 				case CILX_RETHROW:
 					PushOp(JIT_RETHROW);
 					break;
@@ -1465,6 +1507,10 @@ cilLeave:
 
 				case CILX_READONLY:
 					// Do nothing
+					break;
+
+				case CILX_TAIL:
+					// Do nothing. TODO: implement
 					break;
 
 				default:

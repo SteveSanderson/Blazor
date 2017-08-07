@@ -18,15 +18,17 @@ mergeInto(LibraryManager.library, {
   	funcName = Pointer_stringify(funcName);
   	arg0 = Pointer_stringify(arg0);
 
-    if (!(libName in window)) {
+    var globalRef = ENVIRONMENT_IS_NODE ? global : window;
+
+    if (!(libName in globalRef)) {
         throw new Error('No such library \'' + libName + '\'');
     }
 
-    if (!(funcName in window[libName])) {
+    if (!(funcName in globalRef[libName])) {
         throw new Error('No such function \'' + funcName + '\' on library \'' + libName + '\'');
     }
 
-    var result = window[libName][funcName](arg0);
+    var result = globalRef[libName][funcName](arg0);
     if (result !== null && result !== undefined) {
       var resultString = result.toString();
       var resultPtr = allocate(intArrayFromString(resultString), 'i8', ALLOC_NORMAL);

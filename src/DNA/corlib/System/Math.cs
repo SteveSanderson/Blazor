@@ -219,5 +219,14 @@ namespace System {
 
 		[MethodImplAttribute(MethodImplOptions.InternalCall)]
 		public extern static double Sqrt(double x);
+
+		[MethodImplAttribute(MethodImplOptions.InternalCall)]
+		public static extern double Ceiling(double a);
+
+		[MethodImplAttribute(MethodImplOptions.InternalCall)]
+		public static extern double Floor(double d);
+
+		[MethodImplAttribute(MethodImplOptions.InternalCall)]
+		public static extern double Round(double d);
 	}
 }

@@ -34,6 +34,14 @@ void* mallocTrace(int s, char *pFile, int line);
 #define Assert(cond)
 #endif
 
+#ifdef DEBUG_PRINT
+#define dprintf(format, ...) printf(format, __VA_ARGS__)
+#define dprintfn(format, ...) printf(format "\n", __VA_ARGS__)
+#else
+#define dprintf(format, ...) 0
+#define dprintfn(format, ...) 0
+#endif
+
 #define FAKE_RETURN exit(101)
 
 #define INTERNALCALL_PARAM(ofs, type) *(type*)(pParams + ofs)
@@ -54,5 +62,10 @@ U64 msTime();
 U64 microTime();
 #endif
 void SleepMS(U32 ms);
+
+#ifdef DEBUG_PRINT
+char* Sys_CIL_OpCodeName(U32 op);
+char* Sys_JIT_OpCodeName(U32 op);
+#endif
 
 #endif

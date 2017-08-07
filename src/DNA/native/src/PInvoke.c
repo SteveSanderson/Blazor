@@ -18,7 +18,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#if WIN32
+#else
 #include <dlfcn.h>
+#endif
 
 #include "Compat.h"
 #include "Sys.h"
@@ -93,28 +96,23 @@ static tLoadedLib* GetLib(STRING name) {
 extern char* invokeJsFunc(STRING libName, STRING funcName, STRING arg0);
 
 fnPInvoke PInvoke_GetFunction(tMetaData *pMetaData, tMD_ImplMap *pImplMap) {
-	tLoadedLib *pLib;
-	STRING libName;
-	void *pProc;
-
-	libName = MetaData_GetModuleRefName(pMetaData, pImplMap->importScope);
-
+	STRING libName = MetaData_GetModuleRefName(pMetaData, pImplMap->importScope);
+#if JS_INTEROP
 	return (fnPInvoke)invokeJsFunc;
-
-	/*
-	pLib = GetLib(libName);
+#else
+	tLoadedLib *pLib = GetLib(libName);
 	if (pLib == NULL) {
 		// Library not found, so we can't find the function
 		return NULL;
 	}
 
 #if WIN32
-	pProc = GetProcAddress(pLib->pLib, pImplMap->importName);
+	void *pProc = GetProcAddress(pLib->pLib, pImplMap->importName);
 #else
-	pProc = dlsym(pLib->pLib, pImplMap->importName);
+	void *pProc = dlsym(pLib->pLib, pImplMap->importName);
 #endif
 	return pProc;
-	*/
+#endif
 }
 
 static void* ConvertStringToANSI(HEAP_PTR pHeapEntry) {
@@ -180,9 +178,9 @@ U32 PInvoke_Call(tJITCallPInvoke *pCall, PTR pParams, PTR pReturnValue, tThread 
 	U32 _tempMemOfs = 0;
 	U32 i;
 	U32 funcParams = DEFAULT;
-	U64 u64Ret;
-	float fRet;
-	double dRet;
+	U64 u64Ret = 0;
+	float fRet = 0;
+	double dRet = 0;
 
 	// [Steve edit] Before we issue the call into JS code, we need to set the calling .NET thread's state
 	// to 'suspended' so that, if the JS code makes other calls into .NET, the DNA runtime doesn't try to
@@ -204,8 +202,8 @@ U32 PInvoke_Call(tJITCallPInvoke *pCall, PTR pParams, PTR pReturnValue, tThread 
 	// Prepend the 'libName' and 'funcName' strings to the set of arguments
 	// NOTE: These aren't currently used in js-interop.js, but they would be if I found a way
 	// to pass an arbitrary set of args without declaring the C func type in advance
-	_args[0] = MetaData_GetModuleRefName(pCall->pMethod->pMetaData, pCall->pImplMap->importScope);
-	_args[1] = pCall->pMethod->name;
+	_args[0] = (U32)MetaData_GetModuleRefName(pCall->pMethod->pMetaData, pCall->pImplMap->importScope);
+	_args[1] = (U32)pCall->pMethod->name;
 	_argOfs += 2;
 	SET_ARG_TYPE(0, DEFAULT);
 	SET_ARG_TYPE(1, DEFAULT);
@@ -262,7 +260,7 @@ U32 PInvoke_Call(tJITCallPInvoke *pCall, PTR pParams, PTR pReturnValue, tThread 
 	if (funcParams != 255) {
 		Crash("PInvoke_Call() currently only supports calls of type 255; you tried to make a call of type %i.\n", funcParams);
 	}
-	int intRet = pFn(_args[0], _args[1], _args[2]);
+	int intRet = pFn((STRING)_args[0], (STRING)_args[1], (STRING)_args[2]);
 	u64Ret = (U64)intRet;
 
 	/*
