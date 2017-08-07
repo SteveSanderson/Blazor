@@ -1,0 +1,205 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{888AAA01-F58E-4E41-8BBB-78294D9DABF7}</ProjectGuid>
+    <RootNamespace>dna</RootNamespace>
+    <Keyword>Win32Proj</Keyword>
+    <WindowsTargetPlatformVersion>10.0.15063.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>15.0.26430.15</_ProjectFileVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>$(ProjectDir)$(Configuration)\</OutDir>
+    <IntDir>$(Configuration)\</IntDir>
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(ProjectDir)$(Configuration)\</OutDir>
+    <IntDir>$(Configuration)\</IntDir>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;DEBUG_PRINT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>true</MinimalRebuild>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <PrecompiledHeader />
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention />
+      <TargetMachine>MachineX86</TargetMachine>
+      <Profile>true</Profile>
+    </Link>
+    <PostBuildEvent>
+      <Command>xcopy "$(TargetDir)$(TargetFileName)" "$(SolutionDir)Builds\$(Configuration)\" /Y</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <Optimization>Full</Optimization>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <OmitFramePointers>true</OmitFramePointers>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <PrecompiledHeader />
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <CompileAs>CompileAsC</CompileAs>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention />
+      <TargetMachine>MachineX86</TargetMachine>
+      <Profile>true</Profile>
+    </Link>
+    <PostBuildEvent>
+      <Command>xcopy "$(TargetDir)$(TargetFileName)" "$(SolutionDir)Builds\$(Configuration)\" /Y</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="CLIFile.c" />
+    <ClCompile Include="Delegate.c" />
+    <ClCompile Include="dna.c" />
+    <ClCompile Include="Finalizer.c" />
+    <ClCompile Include="Generics.c" />
+    <ClCompile Include="Heap.c" />
+    <ClCompile Include="InternalCall.c" />
+    <ClCompile Include="JIT.c" />
+    <ClCompile Include="JIT_Execute.c" />
+    <ClCompile Include="JSInterop.c" />
+    <ClCompile Include="MetaData.c" />
+    <ClCompile Include="MetaData_Fill.c" />
+    <ClCompile Include="MetaData_Search.c" />
+    <ClCompile Include="MethodState.c" />
+    <ClCompile Include="PInvoke.c" />
+    <ClCompile Include="RVA.c" />
+    <ClCompile Include="Sys.c" />
+    <ClCompile Include="System.Array.c" />
+    <ClCompile Include="System.Char.c" />
+    <ClCompile Include="System.Console.c" />
+    <ClCompile Include="System.DateTime.c" />
+    <ClCompile Include="System.Diagnostics.Debugger.c" />
+    <ClCompile Include="System.Enum.c" />
+    <ClCompile Include="System.Environment.c" />
+    <ClCompile Include="System.GC.c" />
+    <ClCompile Include="System.IO.FileInternal.c" />
+    <ClCompile Include="System.Math.c" />
+    <ClCompile Include="System.Net.Dns.c" />
+    <ClCompile Include="System.Net.Sockets.Socket.c" />
+    <ClCompile Include="System.Object.c" />
+    <ClCompile Include="System.Runtime.CompilerServices.RuntimeHelpers.c" />
+    <ClCompile Include="System.RuntimeType.c" />
+    <ClCompile Include="System.String.c" />
+    <ClCompile Include="System.Threading.Interlocked.c" />
+    <ClCompile Include="System.Threading.Monitor.c" />
+    <ClCompile Include="System.Threading.Thread.c" />
+    <ClCompile Include="System.Type.c" />
+    <ClCompile Include="System.ValueType.c" />
+    <ClCompile Include="System.WeakReference.c" />
+    <ClCompile Include="Thread.c" />
+    <ClCompile Include="Type.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="CIL_OpCodes.h" />
+    <ClInclude Include="CLIFile.h" />
+    <ClInclude Include="Compat.h" />
+    <ClInclude Include="Config.h" />
+    <ClInclude Include="Delegate.h" />
+    <ClInclude Include="EvalStack.h" />
+    <ClInclude Include="Finalizer.h" />
+    <ClInclude Include="Generics.h" />
+    <ClInclude Include="Heap.h" />
+    <ClInclude Include="InternalCall.h" />
+    <ClInclude Include="JIT.h" />
+    <ClInclude Include="JIT_OpCodes.h" />
+    <ClInclude Include="JSInterop.h" />
+    <ClInclude Include="MetaData.h" />
+    <ClInclude Include="MetaDataTables.h" />
+    <ClInclude Include="MethodState.h" />
+    <ClInclude Include="PInvoke.h" />
+    <ClInclude Include="PInvoke_CaseCode.h" />
+    <ClInclude Include="PInvoke_TypeDef.h" />
+    <ClInclude Include="RVA.h" />
+    <ClInclude Include="Sys.h" />
+    <ClInclude Include="System.Array.h" />
+    <ClInclude Include="System.Char.CaseConversion.h" />
+    <ClInclude Include="System.Char.h" />
+    <ClInclude Include="System.Char.UC_IndexRuns.h" />
+    <ClInclude Include="System.Console.h" />
+    <ClInclude Include="System.DateTime.h" />
+    <ClInclude Include="System.Diagnostics.Debugger.h" />
+    <ClInclude Include="System.Enum.h" />
+    <ClInclude Include="System.Environment.h" />
+    <ClInclude Include="System.GC.h" />
+    <ClInclude Include="System.IO.FileInternal.h" />
+    <ClInclude Include="System.Math.h" />
+    <ClInclude Include="System.Net.Dns.h" />
+    <ClInclude Include="System.Net.Sockets.Socket.h" />
+    <ClInclude Include="System.Object.h" />
+    <ClInclude Include="System.Reflection.MethodBase.h" />
+    <ClInclude Include="System.Reflection.MethodInfo.h" />
+    <ClInclude Include="System.Reflection.PropertyInfo.h" />
+    <ClInclude Include="System.Runtime.CompilerServices.RuntimeHelpers.h" />
+    <ClInclude Include="System.RuntimeType.h" />
+    <ClInclude Include="System.String.h" />
+    <ClInclude Include="System.Threading.Interlocked.h" />
+    <ClInclude Include="System.Threading.Monitor.h" />
+    <ClInclude Include="System.Threading.Thread.h" />
+    <ClInclude Include="System.Type.h" />
+    <ClInclude Include="System.ValueType.h" />
+    <ClInclude Include="System.WeakReference.h" />
+    <ClInclude Include="Thread.h" />
+    <ClInclude Include="Type.h" />
+    <ClInclude Include="Types.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

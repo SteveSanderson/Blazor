@@ -319,11 +319,15 @@ tMD_TypeDef* Type_GetTypeFromSig(tMetaData *pMetaData, SIG *pSig, tMD_TypeDef **
 
 		case ELEMENT_TYPE_MVAR:
 			entry = MetaData_DecodeSigEntry(pSig); // This is the argument number
-			if (ppMethodTypeArgs == NULL) {
-				// Can't do anything sensible, as we don't have any type args
-				return NULL;
-			} else {
+			if (ppMethodTypeArgs != NULL) {
 				return ppMethodTypeArgs[entry];
+			} else {
+				if (ppClassTypeArgs != NULL) {
+					return ppClassTypeArgs[entry];
+				} else {
+					// Can't do anything sensible, as we don't have any type args
+					return NULL;
+				}
 			}
 
 		default:
@@ -456,7 +460,7 @@ U32 Type_IsMethod(tMD_MethodDef *pMethod, STRING name, tMD_TypeDef *pReturnType,
 
 	sig = MetaData_GetBlob(pMethod->signature, &sigLen);
 	i = MetaData_DecodeSigEntry(&sig); // Don't care about this
-	if (i & SIG_METHODDEF_GENERIC) {
+	if (i & SIG_CALLCONV_GENERIC) {
 		MetaData_DecodeSigEntry(&sig);
 	}
 	numSigParams = MetaData_DecodeSigEntry(&sig);

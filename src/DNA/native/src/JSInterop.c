@@ -23,7 +23,7 @@ int JSInterop_CallDotNet(char* assemblyName, char* namespace, char* className, c
 	// inherited methods if needed), is complex and not required at the moment.
 	tMD_TypeDef *pTypeDef = MetaData_GetTypeDefFromName(pAssemblyMetadata, namespace, className, NULL, /* assertExists */ 1);
 	MetaData_Fill_TypeDef(pTypeDef, NULL, NULL);
-	for (int i=0; i<pTypeDef->numMethods; i++) {
+	for (U32 i=0; i<pTypeDef->numMethods; i++) {
 		if (strcmp(pTypeDef->ppMethods[i]->name, methodName) == 0) {
 			tMD_MethodDef *pMethodDef = pTypeDef->ppMethods[i];
 			
@@ -42,7 +42,7 @@ int JSInterop_CallDotNet(char* assemblyName, char* namespace, char* className, c
 
 tAsyncCall* Framework_JSInterop_ToHeapRef(PTR pThis_, PTR pParams, PTR pReturnValue) {
 	HEAP_PTR obj = ((HEAP_PTR*)pParams)[0];
-	*(U32*)pReturnValue = obj;
+	*(U32*)pReturnValue = *(U32*)obj;
 	return NULL;
 }
 

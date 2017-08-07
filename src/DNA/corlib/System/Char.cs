@@ -38,11 +38,11 @@ namespace System {
 			(char) 0x2006, (char) 0x2007, (char) 0x2008, (char) 0x2009,
 			(char) 0x200A, (char) 0x200B, (char) 0x3000, (char) 0xFEFF };
 
-#pragma warning disable 0649
-        internal char m_value;
-#pragma warning restore 0649
+#pragma warning disable 0169, 0649
+		internal char m_value;
+#pragma warning restore 0169, 0649
 
-        public override string ToString() {
+		public override string ToString() {
 			return new string(m_value, 1);
 		}
 

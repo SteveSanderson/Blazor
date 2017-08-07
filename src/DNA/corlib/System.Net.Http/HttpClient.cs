@@ -1,4 +1,4 @@
-﻿using Blazor.System.Runtime.InteropServices.Json;
+﻿using MiniJSON;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Threading;

@@ -326,15 +326,86 @@ namespace System {
 			}
 
 			return output;
-		} 
+		}
 
-        public static T[] Empty<T>()
-        {
-            return (T[])CreateInstance(typeof(T), 0);
-        }
+		public static void Sort<T>(T[] array) where T: IComparable, IComparable<T> {
+			Sort(array, 0, array.Length);
+		}
 
-        [MethodImpl(MethodImplOptions.InternalCall)]
-        extern public static Array CreateInstance(Type elementType, int length);
+		public static void Sort<T>(T[] array, int index, int count) where T: IComparable, IComparable<T> {
+			void swap(T[] a, int i, int j) { T t = a[i]; a[i] = a[j]; a[j] = t; }
+			int gap = count;
+			bool swapped;
+			do {
+				swapped = false;
+				gap = gap * 4 / 5; // 80% gap reduction
+				gap = gap < 1 ? 1 : (gap == 9 || gap == 10) ? 11 : gap;
+				for (int i = index; i < count - gap; ++i) {
+					if (array[i].CompareTo(array[i + gap]) > 0) {
+						swapped = true;
+						swap(array, i, i + gap);
+					}
+				}
+			} while (gap > 1 || swapped);
+		}
+
+		public static void Sort<T>(T[] array, Comparison<T> comparison) {
+			Sort(array, 0, array.Length, comparison);
+		}
+
+		public static void Sort<T>(T[] array, IComparer<T> comparer) {
+			Sort(array, 0, array.Length, comparer ?? Comparer<T>.Default);
+		}
+
+		public static void Sort<T>(T[] array, int index, int count, Comparison<T> comparison) {
+			Sort(array, index, count, Comparer<T>.Create(comparison));
+		}
+
+		public static void Sort<T>(T[] array, int index, int count, IComparer<T> comparer) {
+			void swap(T[] a, int i, int j) { T t = a[i]; a[i] = a[j]; a[j] = t; }
+			int gap = count;
+			bool swapped;
+			do {
+				swapped = false;
+				gap = gap * 4 / 5; // 80% gap reduction
+				gap = gap < 1 ? 1 : (gap == 9 || gap == 10) ? 11 : gap;
+				for (int i = index; i < count - gap; ++i) {
+					if (comparer.Compare(array[i], array[i + gap]) > 0) {
+						swapped = true;
+						swap(array, i, i + gap);
+					}
+				}
+			} while (gap > 1 || swapped);
+		}
+
+		public static void Sort<TKey, TValue>(TKey[] keys, TValue[] items, IComparer<TKey> comparer) {
+			Sort(keys, items, 0, keys.Length, comparer ?? Comparer<TKey>.Default);
+		}
+
+		public static void Sort<TKey, TValue>(TKey[] keys, TValue[] items, int index, int count, IComparer<TKey> comparer) {
+			void swap<V>(V[] a, int i, int j) { V t = a[i]; a[i] = a[j]; a[j] = t; }
+			int gap = count;
+			bool swapped;
+			do {
+				swapped = false;
+				gap = gap * 4 / 5; // 80% gap reduction
+				gap = gap < 1 ? 1 : (gap == 9 || gap == 10) ? 11 : gap;
+				for (int i = index; i < count - gap; ++i) {
+					if (comparer.Compare(keys[i], keys[i + gap]) > 0) {
+						swapped = true;
+						swap(keys, i, i + gap);
+						swap(items, i, i + gap);
+					}
+				}
+			} while (gap > 1 || swapped);
+		}
+
+		public static T[] Empty<T>() {
+			return (T[])CreateInstance(typeof(T), 0);
+		}
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		extern public static Array CreateInstance(Type elementType, int length);
 
 		#region Interface Members
 

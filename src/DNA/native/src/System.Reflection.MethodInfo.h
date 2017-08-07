@@ -8,4 +8,6 @@ struct tMethodInfo_ {
     tMethodBase methodBase;
 };
 
+tAsyncCall* System_Reflection_MethodInfo_MakeGenericMethod(PTR pThis_, PTR pParams, PTR pReturnValue);
+
 #endif

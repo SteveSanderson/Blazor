@@ -328,7 +328,7 @@ U32 SystemArray_GetNumBytes(HEAP_PTR pThis_, tMD_TypeDef *pElementType) {
 }
 
 tAsyncCall* System_Array_CreateInstance(PTR pThis_, PTR pParams, PTR pReturnValue) {
-	tMD_TypeDef *pElementType = RuntimeType_DeRef(INTERNALCALL_PARAM(0, tRuntimeType*));
+	tMD_TypeDef *pElementType = RuntimeType_DeRef((PTR)INTERNALCALL_PARAM(0, tRuntimeType*));
 	tMD_TypeDef *pArrayType = Type_GetArrayTypeDef(pElementType, NULL, NULL);
 	U32 length = INTERNALCALL_PARAM(4, U32);
 	*(HEAP_PTR*)pReturnValue = SystemArray_NewVector(pArrayType, length);

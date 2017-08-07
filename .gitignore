@@ -1,5 +1,8 @@
 bin
 obj
+Debug
+Release
+*.vcxproj.filters
 *.suo
 *.user
 *.nupkg
