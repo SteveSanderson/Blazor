@@ -139,7 +139,7 @@ namespace Blazor.Host.Debugging.Discovery
                         $"</ol>" +
                         $"For example, run:" +
                         $"</p>" +
-                        $"<p><tt style='border: 1px solid #ccc; background-color: #eee; padding: 3px 6px; margin: 20px;'>\"C:\\Program Files(x86)\\Google\\Chrome\\Application\\chrome.exe\" --remote-debugging-port=9222</tt></p>" +
+                        $"<p><tt style='border: 1px solid #ccc; background-color: #eee; padding: 3px 6px; margin: 20px;'>\"C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe\" --remote-debugging-port=9222</tt></p>" +
                         $"<div style='color: gray; font-size: 0.7em; margin-top: 40px;'>" +
                         $"<h3>Underlying exception</h3>" +
                         $"<pre>{ex}</pre>" +
