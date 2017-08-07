@@ -139,13 +139,13 @@ namespace Blazor.Host.Debugging
                     FunctionName = breakpoint.MethodName,
                     FunctionLocation = new {
                         ScriptId = sourceFile.Id,
-                        LineNumber = lineNumber, // TODO: Get actual line/col where the function starts, not the breakpoint hit
-                        ColumnNumber = colNumber
+                        LineNumber = lineNumber - 1, // TODO: Get actual line/col where the function starts, not the breakpoint hit
+                        ColumnNumber = colNumber - 1
                     },
                     Location = new {
                         ScriptId = sourceFile.Id,
-                        LineNumber = lineNumber,
-                        ColumnNumber = colNumber
+                        LineNumber = lineNumber - 1,
+                        ColumnNumber = colNumber - 1
                     },
                     ScopeChain = EmptyJObject, // TODO: Populate, so it can show locals
                     This = EmptyJObject
@@ -182,8 +182,8 @@ namespace Blazor.Host.Debugging
                         var scriptId = start.GetValue("scriptId").Value<string>();
                         if (_debugInfoStore.ContainsScript(scriptId))
                         {
-                            var lineNumber = start.GetValue("lineNumber").Value<int>();
-                            var columnNumber = start.GetValue("columnNumber").Value<int>();
+                            var lineNumber = start.GetValue("lineNumber").Value<int>() + 1;
+                            var columnNumber = start.GetValue("columnNumber").Value<int>() + 1;
                             return GetPossibleBreakpoints(scriptId, lineNumber, columnNumber);
                         }
                         break;
@@ -197,8 +197,8 @@ namespace Blazor.Host.Debugging
                         var script = _debugInfoStore.GetSourceFileByUrl(url);
                         if (script != null)
                         {
-                            var lineNumber = parameters.GetValue("lineNumber").Value<int>();
-                            var columnNumber = parameters.GetValue("columnNumber").Value<int>();
+                            var lineNumber = parameters.GetValue("lineNumber").Value<int>() + 1;
+                            var columnNumber = parameters.GetValue("columnNumber").Value<int>() + 1;
                             return await SetBreakpoint(script, lineNumber, columnNumber);
                         }
                         break;
@@ -272,8 +272,8 @@ namespace Blazor.Host.Debugging
                     {
                         new {
                             scriptId = closestLocation.SourceFile.Id,
-                            lineNumber = closestLocation.SequencePointInfo.StartLine,
-                            columnNumber = closestLocation.SequencePointInfo.StartColumn
+                            lineNumber = closestLocation.SequencePointInfo.StartLine - 1,
+                            columnNumber = closestLocation.SequencePointInfo.StartColumn - 1
                         }
                     }
                 });
@@ -308,8 +308,8 @@ namespace Blazor.Host.Debugging
                 locations = closestLocations.Select(location => new
                 {
                     ScriptId = scriptId,
-                    LineNumber = location.SequencePointInfo.StartLine,
-                    ColumnNumber = location.SequencePointInfo.StartColumn
+                    LineNumber = location.SequencePointInfo.StartLine - 1,
+                    ColumnNumber = location.SequencePointInfo.StartColumn - 1
                 })
             });
         }
