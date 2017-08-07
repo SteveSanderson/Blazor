@@ -43,7 +43,7 @@ namespace Blazor.PdbReader
                         var classNameBytes = Encoding.UTF8.GetBytes(peMetadataReader.GetString(declaringType.Name));
                         var methodNameBytes = Encoding.UTF8.GetBytes(peMetadataReader.GetString(methodDef.Name));
 
-                        var sequencePoints = methodDebugInfo.GetSequencePoints().ToArray();
+                        var sequencePoints = methodDebugInfo.GetSequencePoints().Where(sp => !sp.IsHidden).ToArray();
 
                         outputFile.Write(moduleNameBytes, 0, moduleNameBytes.Length);
                         outputFile.WriteByte(0);

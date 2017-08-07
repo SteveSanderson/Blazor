@@ -103,7 +103,7 @@ namespace Blazor.Host.Debugging.Models
 
                     // Add PossibleBreakpointLocation objects to the sourcefile
                     int sequencePointIndex = 0;
-                    foreach (var sequencePoint in methodDebugInfo.GetSequencePoints())
+                    foreach (var sequencePoint in methodDebugInfo.GetSequencePoints().Where(sp => !sp.IsHidden))
                     {
                         var possibleBreakpointLocations = sourceFile.PossibleBreakpointLocationsByLine;
                         var lineNumber = sequencePoint.StartLine;
