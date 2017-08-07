@@ -1,23 +1,11 @@
 ﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Net.WebSockets;
 using System.Reflection;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using Blazor.PdbReader;
 using Blazor.Sdk.Host;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.StaticFiles;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using Blazor.Host.Debugging;
 using Blazor.Host.Debugging.Discovery;
 
@@ -50,7 +38,6 @@ namespace Blazor.Host
             contentTypeProvider.Mappings.Add(".dll", "application/octet-stream");
             contentTypeProvider.Mappings.Add(".exe", "application/octet-stream");
             contentTypeProvider.Mappings.Add(".wasm", "application/octet-stream");
-            contentTypeProvider.Mappings[".wdb"] = "application/octet-stream";
 
             app.UseStaticFiles(new StaticFileOptions
             {
@@ -88,27 +75,6 @@ namespace Blazor.Host
             // For requests under /_bin, serve assemblies from the client app's bin dir
             var clientBinDir = Path.GetFullPath(Path.Combine(rootPath, "bin", "Debug", "netcoreapp1.0"));
 
-            if (!Directory.Exists(clientBinDir))
-            {
-                clientBinDir = Directory.GetCurrentDirectory();
-            }
-
-            var paths = new List<string>();
-            // TODO: Do this on the fly without writing to disk
-            foreach (var dllPath in Directory.GetFiles(clientBinDir, "*.dll"))
-            {
-                try
-                {
-                    BlazorPdbReader.WriteSequencePointsToFile(dllPath, Path.ChangeExtension(dllPath, "wdb"));
-                    paths.Add(dllPath);
-                }
-                catch (Exception)
-                {
-                    Console.WriteLine($"Failed to generate PDB for {dllPath}");
-                }
-            }
-            
-
             app.UseStaticFiles(new StaticFileOptions
             {
                 FileProvider = new PhysicalFileProvider(clientBinDir),
@@ -124,8 +90,9 @@ namespace Blazor.Host
                 }
 
                 app.UseWebSockets();
-                app.UseBlazorDebugServer(clientBinDir);
+                app.UseBlazorDebugServer(clientBinDir, Path.ChangeExtension(options.ClientAssemblyName, "Views.dll"));
                 app.UseV8DebugTargetsEndpoint();
+                app.UseWdbServer(rootPath, clientBinDir);
             }
 
             app.UseLiveReloading();

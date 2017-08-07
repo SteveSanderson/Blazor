@@ -24,15 +24,30 @@ namespace Blazor.Sdk.Host
             builder.Use(async (context, next) =>
             {
                 var req = context.Request;
-                if (req.Path.StartsWithSegments(binDir) && req.Query["type"] == "razorviews")
+                if (req.Path.StartsWithSegments(binDir)
+                    && req.Query["type"] == "razorviews"
+                    && req.Path.Value.EndsWith(".dll"))
                 {
-                    await ServeCompiledAssembly(context, rootDir);
+                    var compiledAssembly = GetCompiledViewsAssembly(rootDir, context.Request);
+                    context.Response.ContentType = "application/octet-steam";
+                    await context.Response.Body.WriteAsync(compiledAssembly.Item1, 0, compiledAssembly.Item1.Length);
                 }
                 else
                 {
                     await next();
                 }
             });
+        }
+
+        public static (byte[], byte[]) GetCachedCompiledAssembly(string assemblyName)
+        {
+            lock(cachedCompilationResultsLock)
+            {
+                var cacheKey = assemblyName;
+                return cachedCompilationResults.TryGetValue(cacheKey, out var result)
+                    ? result
+                    : (null, null);
+            }
         }
 
         private static void BeginFileSystemWatcher(string rootDir)
@@ -66,17 +81,13 @@ namespace Blazor.Sdk.Host
             }
         }
 
-        private static async Task ServeCompiledAssembly(HttpContext context, string rootDir)
+        internal static (byte[], byte[]) GetCompiledViewsAssembly(string rootDir, HttpRequest forRequest)
         {
             // Determine the desired views assembly name based on the URL
-            var requestPath = context.Request.Path.Value;
-            var assemblyFilename = requestPath.Substring(requestPath.LastIndexOf('/') + 1);
-            var references = context.Request.Query["reference"];
-
-            // Serve the assembly
-            context.Response.ContentType = "application/octet-steam";
-            var compiledAssembly = GetCompiledViewsAssembly(rootDir, assemblyFilename, references);
-            await context.Response.Body.WriteAsync(compiledAssembly.Item1, 0, compiledAssembly.Item1.Length);
+            var requestPath = forRequest.Path.Value;
+            var assemblyFilename = Path.ChangeExtension(requestPath.Substring(requestPath.LastIndexOf('/') + 1), "dll");
+            var references = forRequest.Query["reference"];
+            return GetCompiledViewsAssembly(rootDir, assemblyFilename, references);
         }
 
         internal static (byte[], byte[]) GetCompiledViewsAssembly(string rootDir, string assemblyFilename, IEnumerable<string> references)

@@ -1,5 +1,6 @@
 ﻿using Blazor.Host.Debugging.Models;
 using Blazor.Host.Debugging.Protocol;
+using Blazor.Sdk.Host;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
@@ -19,13 +20,15 @@ namespace Blazor.Host.Debugging
         private V8DebugServer _ideConnection;
         private V8DebugClient _browserConnection;
         private string _clientBinDir;
+        private string _clientViewsAssemblyName;
         private DebugInfoStore _debugInfoStore = new DebugInfoStore();
         private Dictionary<string, PossibleBreakpointLocation> _currentBreakpointsById = new Dictionary<string, PossibleBreakpointLocation>();
         private PossibleBreakpointLocation _currentlyPausedInDotNetBreakpoint;
 
-        public async Task ConnectAsync(WebSocket ideSocket, string browserDebugSocketUrl, string clientBinDir)
+        public async Task ConnectAsync(WebSocket ideSocket, string browserDebugSocketUrl, string clientBinDir, string clientViewsAssemblyName)
         {
             _clientBinDir = clientBinDir;
+            _clientViewsAssemblyName = clientViewsAssemblyName;
             _ideConnection = new V8DebugServer(ideSocket);
             _ideConnection.HandleInvocation += HandleCallFromIde;
 
@@ -327,7 +330,24 @@ namespace Blazor.Host.Debugging
 
         private async Task NotifyIdeAboutDotNetSources(int executionContextId, JObject auxData)
         {
+            // Add all the .pdb files from the client bin dir
+            // TODO: Don't do it based on files on disk. Instead, somehow know what assemblies
+            // have been referenced in client-side code, and use that as the list.
             _debugInfoStore.AddPdbFiles(_clientBinDir);
+
+            // Also add .pdb files corresponding to the compiled Razor views
+            // It's a bit lame to rely on the compiled assembly already being cached like this,
+            // but we don't have all the info needed to compile it freshly here (e.g., list of
+            // assembly references).
+            var compiledViewsAssemblyData = RazorCompilation.GetCachedCompiledAssembly(_clientViewsAssemblyName);
+            if (compiledViewsAssemblyData.Item1 != null)
+            {
+                using (var peStream = new MemoryStream(compiledViewsAssemblyData.Item1))
+                using (var pdbStream = new MemoryStream(compiledViewsAssemblyData.Item2))
+                {
+                    _debugInfoStore.AddPdb(peStream, pdbStream);
+                }
+            }
 
             foreach (var sourceFile in _debugInfoStore.SourceFiles)
             {

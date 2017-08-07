@@ -874,7 +874,6 @@ window['jsobject.js'] = (function () {
             return { assemblyName: assemblyName, url: '/_bin/' + assemblyName };
         });
         preloadAssemblies.push({ assemblyName: 'Blazor.Runtime.dll', url: '/_bin/Blazor.Runtime.dll' });
-        preloadAssemblies.push({ assemblyName: 'Blazor.Runtime.wdb', url: '/_bin/Blazor.Runtime.wdb' });
 
         // Also infer the name of the views assembly from the entrypoint. We have to pass a special querystring
         // value with this so that the dev-time host app knows to compile the Razor files dynamically. In a production
@@ -886,9 +885,6 @@ window['jsobject.js'] = (function () {
             url: '/_bin/' + viewsAssemblyFilename + '?type=razorviews&' + referencesQueryStringSegments
         });
 
-        var wpdbFileName = entryPoint.replace(/\.dll$/, '.wdb');
-        preloadAssemblies.push({ assemblyName: wpdbFileName, url: '/_bin/' + wpdbFileName });
-
         window.Module = {
             wasmBinaryFile: '/_framework/wasm/dna.wasm',
             asmjsCodeFile: '/_framework/asmjs/dna.asm.js',
@@ -899,6 +895,11 @@ window['jsobject.js'] = (function () {
                 Module.FS_createPreloadedFile('/', 'corlib.dll', '/_framework/corlib.dll', true, false);
                 preloadAssemblies.forEach(function (assemblyInfo) {
                     Module.FS_createPreloadedFile('/', assemblyInfo.assemblyName, assemblyInfo.url, true, false);
+
+                    // Also preload .wdb files for each .dll
+                    // TODO: Stop having .wdb files altogether. The DNA runtime should be able to debug in terms of
+                    // IL offsets only, and hence doesn't need to know about sequence points.
+                    Module.FS_createPreloadedFile('/', assemblyInfo.assemblyName.replace(/\.dll\b/, '.wdb'), assemblyInfo.url.replace(/\.dll\b/, '.wdb'), true, false);
                 });
             },
             postRun: function () {

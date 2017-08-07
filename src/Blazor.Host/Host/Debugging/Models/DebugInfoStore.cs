@@ -36,19 +36,25 @@ namespace Blazor.Host.Debugging.Models
                 var assemblyFilename = Path.ChangeExtension(pdbFileName, "dll");
                 if (File.Exists(assemblyFilename))
                 {
-
                     using (var peStream = File.OpenRead(assemblyFilename))
-                    using (var peReader = new PEReader(peStream))
                     using (var pdbStream = File.OpenRead(pdbFileName))
-                    using (var pdbProvider = MetadataReaderProvider.FromPortablePdbStream(pdbStream))
                     {
-                        var peMetadataReader = peReader.GetMetadataReader();
-                        var pdbMetadataReader = pdbProvider.GetMetadataReader();
-                        var moduleName = peMetadataReader.GetString(peMetadataReader.GetModuleDefinition().Name);
-
-                        AddPdb(moduleName, peMetadataReader, pdbMetadataReader);
+                        AddPdb(peStream, pdbStream);
                     }
                 }
+            }
+        }
+
+        public void AddPdb(Stream peStream, Stream pdbStream)
+        {
+            using (var peReader = new PEReader(peStream))
+            using (var pdbProvider = MetadataReaderProvider.FromPortablePdbStream(pdbStream))
+            {
+                var peMetadataReader = peReader.GetMetadataReader();
+                var pdbMetadataReader = pdbProvider.GetMetadataReader();
+                var moduleName = peMetadataReader.GetString(peMetadataReader.GetModuleDefinition().Name);
+
+                AddPdb(moduleName, peMetadataReader, pdbMetadataReader);
             }
         }
 
