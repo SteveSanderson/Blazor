@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Security.Claims;
 using System.Security.Principal;
+using Blazor.Interop;
 
 namespace Blazor.Runtime.Components
 {
@@ -10,10 +11,27 @@ namespace Blazor.Runtime.Components
     {
         public BlazorContext(string absoluteUrl)
         {
-            AbsoluteUrl = absoluteUrl;
+            Url = absoluteUrl;
         }
 
-        public string AbsoluteUrl { get; set; }
+        public string Url { get; set; }
+
+        public string AbsoluteUrl(string relativeUrl)
+        {
+            if (Env.IsServer)
+            {
+                return ServerAbsoluteUrl(relativeUrl);
+            }
+            else
+            {
+                return Browser.ResolveRelativeUrl(relativeUrl);
+            }
+        }
+
+        private string ServerAbsoluteUrl(string relativeUrl)
+        {
+            return new Uri(new Uri(Url), relativeUrl).ToString();
+        }
 
         public IDictionary<string, object> Items { get; } = new ItemDictionary();
 

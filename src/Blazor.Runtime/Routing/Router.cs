@@ -31,7 +31,7 @@ namespace Blazor.Routing
             }
             else
             {
-                _context.AbsoluteUrl = absoluteUrl;
+                _context.Url = absoluteUrl;
             }
             return MountPageFromUrl(url, _context);
         }

@@ -29,6 +29,7 @@
 
 int releaseBreakPoint = 0;
 int waitingOnBreakPoint = 0;
+int alwaysBreak = 0;
 
 static tThread *pAllThreads = NULL;
 static tThread *pCurrentThread;
@@ -72,7 +73,7 @@ tThread* Thread() {
 
     pThread = pAllThreads;
 
-    log_f(1, "Creating thread %d\n.", (int)pThis->threadID);
+    log_f(1, "Creating thread %d.\n", (int)pThis->threadID);
 
     // FIFO
     /*if (pThread == NULL) {
@@ -155,18 +156,7 @@ I32 Thread_Execute() {
 		U32 minSleepTime = 0xffffffff;
 		I32 threadExitValue;
 
-        //if (waitingOnBreakPoint && pThread->pAsync == NULL)
-        //{
-        //    // We're waiting on a break point, we're ok running methods that have an async, but everything else
-        //    // should be paused (don't JIT Execute the current thread)
-        //    status = THREAD_STATUS_ASYNC;
-        //    pThread->pAsync = TMALLOC(tAsyncCall);
-        //    pThread->pAsync->checkFn = Internal_Debugger_Resume_Check;
-        //}
-        //else {
-        //    
-        //}
-        log_f(1, "Executing thread %d\n.", (int)pThread->threadID);
+        log_f(1, "Executing thread %d.\n", (int)pThread->threadID);
         status = JIT_Execute(pThread, 100);
 
 		switch (status) {
@@ -205,7 +195,7 @@ I32 Thread_Execute() {
 					pThread = pThread->pNextThread;
 				}
 				if (canExit) {
-                    log_f(1, "No more threads to run. Quitting\n.");
+                    log_f(1, "No more threads to run. Quitting.\n");
 					return threadExitValue;
 				}
 			}

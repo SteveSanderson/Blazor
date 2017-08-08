@@ -86,7 +86,7 @@ namespace Blazor.Components
                 // InitAsync's task completes (where applicable)
                 Init();
 
-                var url = Context.AbsoluteUrl;
+                var url = Context.Url;
                 if (url[url.Length - 1] == '/')
                 {
                     url = url.Substring(0, url.Length - 1);
@@ -237,23 +237,6 @@ namespace Blazor.Components
             // Always re-render after an event handler completes synchronously. Could make this controlled by
             // a flag on the EventInfo so you could do @onclick(..., AutoRender: false).
             Render();
-        }
-
-        public string AbsoluteUrl(string relativeUrl)
-        {
-            if (Env.IsServer)
-            {
-                return ServerAbsoluteUrl(relativeUrl);
-            }
-            else
-            {
-                return Browser.ResolveRelativeUrl(relativeUrl);
-            }
-        }
-
-        private string ServerAbsoluteUrl(string relativeUrl)
-        {
-            return new Uri(new Uri(Context.AbsoluteUrl), relativeUrl).ToString();
         }
     }
 }

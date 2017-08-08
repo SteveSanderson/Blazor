@@ -49,6 +49,8 @@ struct tCombinedOpcodesMem_ {
 struct tJITted_ {
 	// The JITted opcodes
 	U32 *pOps;
+	// The corresponding sequence points in the original CIL
+	U32 *pOpSequencePoints;
 	// The maximum size of the evaluation stack
 	U32 maxStack;
 	// The required size of the locals stack
@@ -57,6 +59,8 @@ struct tJITted_ {
 	U32 numExceptionHandlers;
 	// Pointer to the exception handler headers (NULL if none)
 	tExceptionHeader *pExceptionHeaders;
+	// If we have debug metadata for this method, points to it
+	tDebugMetaDataEntry *pDebugMetadataEntry;
 #ifdef GEN_COMBINED_OPCODES
 	// The number of bytes used by this JITted method - to include ALL bytes:
 	// The size of the opcodes, plus the size of the combined opcodes.

@@ -33,6 +33,5 @@
     <ProjectReference Include="../Blazor.Compiler/Blazor.Compiler.csproj" />
     <ProjectReference Include="../Blazor.Runtime/Blazor.Runtime.csproj" />
     <ProjectReference Include="../Blazor.TypeScriptProxy/Blazor.TypeScriptProxy.csproj" />
-    <ProjectReference Include="../Blazor.PdbReader/Blazor.PdbReader.csproj" />
   </ItemGroup>
 </Project>

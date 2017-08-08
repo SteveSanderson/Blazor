@@ -1,6 +1,6 @@
 ﻿(function () {
     var nextElemId = 0;
-    var debuggerSocket;
+    window._dnaRuntimeHasStarted = false;
 
     window['browser.js'] = {
         JSEval: function (code) {
@@ -12,12 +12,15 @@
         },
 
         SendDebuggerMessage: function (message) {
-            if (window.debuggerSocket) {
-                console.log('Sending debugger message: ' + message);
-                window.debuggerSocket.send(message);
+            if (JSON.parse(message).command === 'breakpoint') {
+                // Use the browser's native debugger to halt both the JS and .NET sides of execution
+                // For this to be useful, we'll need to implement some tooling that connects to the
+                // browser's debugging API, observes native breakpoints hitting like this, and presents
+                // a UI for stepping/resuming (i.e., instructing the browser to resume)
+                debugger;
             }
-            // Module.ccall('Debugger_Continue', 'number', [], []);
         },
+
         ResolveRelativeUrl: function (url) {
             var a = document.createElement('a');
             a.href = url;
@@ -493,6 +496,10 @@
     };
 })();
 
+function setBreakpointInDna(dnaMethodId, ilOffset) {
+    Module.ccall('Debugger_SetBreakPoint', 'number', ['string', 'number'], [dnaMethodId, ilOffset]);
+}
+
 var dotNetStringDecoder;
 function readDotNetString(ptrString) {
     dotNetStringDecoder = dotNetStringDecoder || new TextDecoder("utf-16le"); // Lazy-initialised because we have to wait for loading the polyfill on some browsers
@@ -682,6 +689,21 @@ window.addEventListener('popstate', function (evt) {
     OnLocationChanged(window.location.pathname);
 });
 
+// If the user presses Ctrl+Shift+D, launch the debugger in a new tab
+document.addEventListener('keydown', function (evt) {
+    if (evt.ctrlKey && evt.shiftKey && evt.code === 'KeyD') {
+        // I haven't yet found a viable way to open the debugger window programmatically. If it's
+        // opened using window.open or target=_blank, then Chrome tracks the association with the
+        // parent tab, and then when the parent tab pauses in the debugger, the child tab does so
+        // too (even if it's since navigated to a different page). This means that the debugger
+        // itself freezes, and not just the page being debugged.
+        // One possible solution, albeit elaborate, would be to have the link click send a message
+        // back to the Host .NET code, which could then use some external native-code browser
+        // automation to open the new tab.
+        prompt('Open the following URL in a new tab to start the debugger:', 'http://localhost:9223/');
+    }
+});
+
 window['jsobject.js'] = (function () {
     var _nextObjectId = 0;
     var _trackedObjects = {};
@@ -807,33 +829,8 @@ window['jsobject.js'] = (function () {
         return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
             s4() + '-' + s4() + s4() + s4();
     }
-
-    function ListenForDebugger() {
-        if (window.WebSocket) {
-            var sessionId = guid();
-            var url = 'ws://' + document.location.host + '/__debugger?id=' + sessionId + '&d=1';
-
-            // No websockets, no debugging, sorry...
-            var ws = new WebSocket(url);
-            ws.onopen = function () {
-                console.log('Opened debugger connection: Use ' + sessionId + ' to attach to this session');
-                debuggerSocket = ws;
-            };
-            ws.onmessage = function (event) {
-                console.log('Received message from debugger: ' + event.data);
-                // Module.ccall('Debugger_Continue', 'number', [], []);
-            };
-            ws.onclose = function (event) {
-                console.log('Debugger connection closed!');
-            };
-        }
-    }
-
+    
     ListenForReload();
-
-    if (window.location.toString().includes("localhost")) {
-        ListenForDebugger();
-    }
 
     function DisplayErrorPage(html) {
         var frame = document.createElement('iframe');
@@ -863,11 +860,20 @@ window['jsobject.js'] = (function () {
         xhr.send(null);
     }
 
+    function setAnyPendingBreakpoints() {
+        if (window._pendingBreakpoints) {
+            window._pendingBreakpoints.forEach(function (breakpointInfo) {
+                setBreakpointInDna(breakpointInfo.dnaMethodId, breakpointInfo.ilOffset);
+            });
+            window._pendingBreakpoints.length = 0;
+        }
+    }
+
     function StartApplication(entryPoint, referenceAssemblies) {
         var preloadAssemblies = [entryPoint].concat(referenceAssemblies).map(function (assemblyName) {
             return { assemblyName: assemblyName, url: '/_bin/' + assemblyName };
         });
-        preloadAssemblies.push({ assemblyName: 'Blazor.Runtime.dll', url: '/_framework/Blazor.Runtime.dll' });
+        preloadAssemblies.push({ assemblyName: 'Blazor.Runtime.dll', url: '/_bin/Blazor.Runtime.dll' });
 
         // Also infer the name of the views assembly from the entrypoint. We have to pass a special querystring
         // value with this so that the dev-time host app knows to compile the Razor files dynamically. In a production
@@ -879,22 +885,26 @@ window['jsobject.js'] = (function () {
             url: '/_bin/' + viewsAssemblyFilename + '?type=razorviews&' + referencesQueryStringSegments
         });
 
-        var wpdbFileName = entryPoint.replace(/\.dll$/, '.wdb');
-        preloadAssemblies.push({ assemblyName: wpdbFileName, url: '/_bin/' + wpdbFileName });
-
         window.Module = {
             wasmBinaryFile: '/_framework/wasm/dna.wasm',
             asmjsCodeFile: '/_framework/asmjs/dna.asm.js',
-            arguments: [entryPoint],
+            arguments: ["-vv", entryPoint],
             preRun: function () {
                 // Preload corlib.dll and other assemblies
                 Module.readAsync = FetchArrayBuffer;
                 Module.FS_createPreloadedFile('/', 'corlib.dll', '/_framework/corlib.dll', true, false);
                 preloadAssemblies.forEach(function (assemblyInfo) {
                     Module.FS_createPreloadedFile('/', assemblyInfo.assemblyName, assemblyInfo.url, true, false);
+
+                    // Also preload .wdb files for each .dll
+                    // TODO: Stop having .wdb files altogether. The DNA runtime should be able to debug in terms of
+                    // IL offsets only, and hence doesn't need to know about sequence points.
+                    Module.FS_createPreloadedFile('/', assemblyInfo.assemblyName.replace(/\.dll\b/, '.wdb'), assemblyInfo.url.replace(/\.dll\b/, '.wdb'), true, false);
                 });
             },
             postRun: function () {
+                window._dnaRuntimeHasStarted = true;
+                setAnyPendingBreakpoints();
                 InvokeStatic('Blazor.Runtime', 'Blazor.Runtime.Interop', 'Startup', 'EnsureAssembliesLoaded', JSON.stringify(
                     preloadAssemblies.map(function (assemblyInfo) {
                         var name = assemblyInfo.assemblyName;
