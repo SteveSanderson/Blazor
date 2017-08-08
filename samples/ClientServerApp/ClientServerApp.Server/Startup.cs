@@ -74,7 +74,7 @@ namespace ClientServerApp.Server
             app.UseBlazorUI(clientDirectory, opts =>
             {
                 opts.EnableServerSidePrerendering = true;
-                opts.EnableDeubugging = true;
+                opts.EnableDebugging = true;
                 opts.ClientAssemblyName = "ClientServerApp.Client.dll";
             });
         }

@@ -457,7 +457,8 @@ using System.ComponentModel.DataAnnotations; " + generatedCode;
             }
 
             // Success
-            compilation.Emit(outputStream, pdbStream);
+            var emitOptions = new EmitOptions().WithDebugInformationFormat(DebugInformationFormat.PortablePdb);
+            compilation.Emit(outputStream, pdbStream, options: emitOptions);
         }
     }
 }
