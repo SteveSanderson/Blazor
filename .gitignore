@@ -1,5 +1,7 @@
 bin
 obj
+Debug
+Release
 *.suo
 *.user
 *.nupkg

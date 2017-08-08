@@ -27,11 +27,11 @@ namespace System {
 		public const long MaxValue = 0x7fffffffffffffff;
 		public const long MinValue = unchecked((long)0x8000000000000000);
 
-#pragma warning disable 0649
-        private long m_value;
-#pragma warning restore 0649
+#pragma warning disable 0169, 0649
+		private long m_value;
+#pragma warning restore 0169, 0649
 
-        public override bool Equals(object o) {
+		public override bool Equals(object o) {
 			return (o is long) && ((long)o).m_value == this.m_value;
 		}
 

@@ -85,14 +85,31 @@ namespace System {
 
 		#region Misc Methods
 
-		public static string Join(string separator, string[] value) {
-			return Join(separator, value, 0, value.Length);
+		public char[] ToCharArray () {
+			char[] tmp = new char [length];
+			for (int i = 0; i < tmp.Length; i++) {
+				tmp[i] = this[i];
+			}
+			return tmp;
 		}
 
-		public static string Join(string separator, string[] value, int startIndex, int count) {
+		public static string Join<T>(string separator, T[] values) {
+			return Join(separator, values, 0, values.Length);
+		}
+
+		public static string Join<T>(string separator, T[] values, int startIndex, int count) {
 			StringBuilder sb = new StringBuilder();
 			for (int i = startIndex; i < count; i++) {
-				sb.Append(value[i]);
+				sb.Append(values[i]);
+				sb.Append(separator);
+			}
+			return sb.ToString(0, sb.Length - separator.Length);
+		}
+
+		public static string Join<T>(string separator, IEnumerable<T> values) {
+			StringBuilder sb = new StringBuilder();
+			foreach(var v in values) {
+				sb.Append(v);
 				sb.Append(separator);
 			}
 			return sb.ToString(0, sb.Length - separator.Length);
@@ -604,6 +621,13 @@ namespace System {
 		IEnumerator<char> IEnumerable<char>.GetEnumerator() {
 			return new CharEnumerator(this);
 		}
+
+		#endregion
+
+		#region IEquatable<string> Members
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		extern public double ToDouble();
 
 		#endregion
 	}

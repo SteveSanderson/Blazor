@@ -30,16 +30,10 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using System.Reflection;
+using System.Text;
 
-// This is currently duplicated in both the corlib code (because it can't directly address
-// anything in Blazor.Runtime), and in Blazor.Runtime (because it can only see corlib APIs
-// that are also part of netstandard). Consider restructuring these assemblies and their
-// references to one another.
-
-namespace Blazor.System.Runtime.InteropServices.Json
-{
+namespace MiniJSON {
     // Example usage:
     //
     //  using UnityEngine;
@@ -102,6 +96,12 @@ namespace Blazor.System.Runtime.InteropServices.Json
                 return Char.IsWhiteSpace(c) || WORD_BREAK.IndexOf(c) != -1;
             }
 
+            const string HEX_DIGIT = "0123456789ABCDEFabcdef";
+
+            public static bool IsHexDigit(char c) {
+                return HEX_DIGIT.IndexOf(c) != -1;
+            }
+
             enum TOKEN {
                 NONE,
                 CURLY_OPEN,
@@ -149,7 +149,7 @@ namespace Blazor.System.Runtime.InteropServices.Json
                         continue;
                     case TOKEN.CURLY_CLOSE:
                         return table;
-                    default:
+                    case TOKEN.STRING:
                         // name
                         string name = ParseString();
                         if (name == null) {
@@ -164,8 +164,14 @@ namespace Blazor.System.Runtime.InteropServices.Json
                         json.Read();
 
                         // value
-                        table[name] = ParseValue();
+                        TOKEN valueToken = NextToken;
+                        object value = ParseByToken(valueToken);
+                        if(value==null && valueToken!=TOKEN.NULL)
+                            return null;
+                        table[name] = value;
                         break;
+                    default:
+                        return null;
                     }
                 }
             }
@@ -191,7 +197,8 @@ namespace Blazor.System.Runtime.InteropServices.Json
                         break;
                     default:
                         object value = ParseByToken(nextToken);
-
+                        if(value==null && nextToken!=TOKEN.NULL)
+                            return null;
                         array.Add(value);
                         break;
                     }
@@ -279,10 +286,12 @@ namespace Blazor.System.Runtime.InteropServices.Json
 
                             for (int i=0; i< 4; i++) {
                                 hex[i] = NextChar;
+                                if (!IsHexDigit(hex[i]))
+                                    return null;
                             }
-                            throw new NotImplementedException("Parsing incoming \\u values");
-                            //s.Append((char) Convert.ToInt32(new string(hex), 16));
-                            //break;
+
+                            s.Append((char) Convert.ToInt32(new string(hex), 16));
+                            break;
                         }
                         break;
                     default:
@@ -297,19 +306,15 @@ namespace Blazor.System.Runtime.InteropServices.Json
             object ParseNumber() {
                 string number = NextWord;
 
-                if (number.IndexOf('.') == -1) {
+                if (number.IndexOf('.') == -1 && number.IndexOf('E') == -1 && number.IndexOf('e') == -1) {
                     int parsedInt;
                     Int32.TryParse(number, out parsedInt);
-                    return parsedInt;
+                    return (double)parsedInt;
                 }
 
-                // TODO: Actually parse doubles
-                return 0;
-                /*
-                float parsedDouble;
-                Single.TryParse(number, out parsedDouble);
+                double parsedDouble;
+                Double.TryParse(number, out parsedDouble);
                 return parsedDouble;
-                */
             }
 
             void EatWhitespace() {

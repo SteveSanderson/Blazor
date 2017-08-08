@@ -72,7 +72,8 @@ static tInternalCall internalCalls[] = {
 	{NULL,      NULL,    "GetHashCode", System_Object_GetHashCode, TYPE_SYSTEM_INT32, 0},
 	{NULL,      NULL,    "GetType", System_Object_GetType, TYPE_SYSTEM_TYPE, 0},
 
-	{NULL, "String", ".ctor", System_String_ctor_CharInt32, TYPE_SYSTEM_VOID, 2, {TYPE_SYSTEM_CHAR, TYPE_SYSTEM_INT32}},
+	{NULL, "String", ".ctor", System_String_ctor_CharInt32, TYPE_SYSTEM_VOID, 2, { TYPE_SYSTEM_CHAR, TYPE_SYSTEM_INT32 } },
+	{NULL, NULL,	 ".ctor", System_String_ctor_CharA, TYPE_SYSTEM_VOID, 1, { TYPE_SYSTEM_ARRAY_CHAR } },
 	{NULL, NULL,     ".ctor", System_String_ctor_CharAIntInt, TYPE_SYSTEM_VOID, 3, {TYPE_SYSTEM_ARRAY_CHAR, TYPE_SYSTEM_INT32, TYPE_SYSTEM_INT32}},
 	{NULL, NULL,     ".ctor", System_String_ctor_StringIntInt, TYPE_SYSTEM_VOID, 3, {TYPE_SYSTEM_STRING, TYPE_SYSTEM_INT32, TYPE_SYSTEM_INT32}},
 	{NULL, NULL,     "get_Chars", System_String_get_Chars, TYPE_SYSTEM_CHAR, 1, {TYPE_SYSTEM_INT32}},
@@ -83,6 +84,7 @@ static tInternalCall internalCalls[] = {
 	{NULL, NULL,     "InternalReplace", System_String_InternalReplace, TYPE_SYSTEM_STRING, 2, {TYPE_SYSTEM_STRING, TYPE_SYSTEM_STRING}},
 	{NULL, NULL,     "InternalIndexOf", System_String_InternalIndexOf, TYPE_SYSTEM_INT32, 4, {TYPE_SYSTEM_CHAR, TYPE_SYSTEM_INT32, TYPE_SYSTEM_INT32, TYPE_SYSTEM_BOOLEAN}},
 	{NULL, NULL,     "InternalIndexOfAny", System_String_InternalIndexOfAny, TYPE_SYSTEM_INT32, 4, {TYPE_SYSTEM_ARRAY_CHAR, TYPE_SYSTEM_INT32, TYPE_SYSTEM_INT32, TYPE_SYSTEM_BOOLEAN}},
+	{NULL, NULL,     "ToDouble", System_String_ToDouble, TYPE_SYSTEM_DOUBLE, 0},
 
 	{NULL, "Activator", "CreateInstance", Framework_JSInterop_Activator_CreateInstance, TYPE_SYSTEM_OBJECT, 1, {TYPE_SYSTEM_TYPE}},
 
@@ -106,6 +108,7 @@ static tInternalCall internalCalls[] = {
 	{NULL, NULL,   "EnsureAssemblyLoaded", System_Type_EnsureAssemblyLoaded, TYPE_SYSTEM_VOID, 1, {TYPE_SYSTEM_STRING}},
 	{NULL, NULL,   "GetMethodInternal", System_Type_GetMethod, TYPE_SYSTEM_OBJECT, 1, {TYPE_SYSTEM_STRING}},
 	{NULL, NULL,   "GetProperties", System_Type_GetProperties, TYPE_SYSTEM_ARRAY_NO_TYPE, 0},
+	{NULL, NULL,   "GetMethods", System_Type_GetMethods, TYPE_SYSTEM_ARRAY_NO_TYPE, 0},
 	{NULL, NULL,   "GetType", System_Type_GetTypeFromName, TYPE_SYSTEM_TYPE, 3, {TYPE_SYSTEM_STRING, TYPE_SYSTEM_STRING, TYPE_SYSTEM_STRING}},
 	{NULL, NULL,   "get_IsValueType", System_Type_get_IsValueType, TYPE_SYSTEM_BOOLEAN, 0},
 
@@ -117,6 +120,8 @@ static tInternalCall internalCalls[] = {
 	{NULL, NULL,          "get_IsGenericType", System_RuntimeType_get_IsGenericType, TYPE_SYSTEM_BOOLEAN, 0},
 	{NULL, NULL,          "Internal_GetGenericTypeDefinition", System_RuntimeType_Internal_GetGenericTypeDefinition, TYPE_SYSTEM_RUNTIMETYPE, 0},
 	{NULL, NULL,          "GetGenericArguments", System_RuntimeType_GetGenericArguments, TYPE_SYSTEM_ARRAY_TYPE, 0},
+	{NULL, NULL,          "IsDefined", System_RuntimeType_IsDefined, TYPE_SYSTEM_BOOLEAN, 2, {TYPE_SYSTEM_TYPE, TYPE_SYSTEM_BOOLEAN}},
+	{NULL, NULL,          "Internal_GetCustomAttributes", System_RuntimeType_GetCustomAttributes, TYPE_SYSTEM_ARRAY_OBJECT, 2, {TYPE_SYSTEM_TYPE, TYPE_SYSTEM_BOOLEAN}},
 	{NULL, NULL,          "GetElementType", System_RuntimeType_GetElementType, TYPE_SYSTEM_TYPE, 0},
 
 	{NULL, "Char", "GetUnicodeCategory", System_Char_GetUnicodeCategory, TYPE_SYSTEM_GLOBALIZATION_UNICODECATEGORY, 1, {TYPE_SYSTEM_CHAR}},
@@ -142,7 +147,10 @@ static tInternalCall internalCalls[] = {
 	{NULL, NULL,   "Cos", System_Math_Cos, TYPE_SYSTEM_DOUBLE, 1, {TYPE_SYSTEM_DOUBLE}},
 	{NULL, NULL,   "Tan", System_Math_Tan, TYPE_SYSTEM_DOUBLE, 1, {TYPE_SYSTEM_DOUBLE}},
 	{NULL, NULL,   "Pow", System_Math_Pow, TYPE_SYSTEM_DOUBLE, 2, {TYPE_SYSTEM_DOUBLE, TYPE_SYSTEM_DOUBLE}},
-	{NULL, NULL,   "Sqrt", System_Math_Sqrt, TYPE_SYSTEM_DOUBLE, 1, {TYPE_SYSTEM_DOUBLE}},
+	{NULL, NULL, "Sqrt", System_Math_Sqrt, TYPE_SYSTEM_DOUBLE, 1, { TYPE_SYSTEM_DOUBLE}},
+	{NULL, NULL, "Ceiling", System_Math_Ceiling, TYPE_SYSTEM_DOUBLE, 1, {TYPE_SYSTEM_DOUBLE}},
+	{NULL, NULL, "Floor", System_Math_Floor, TYPE_SYSTEM_DOUBLE, 1, {TYPE_SYSTEM_DOUBLE}},
+	{NULL, NULL, "Round", System_Math_Round, TYPE_SYSTEM_DOUBLE, 1, {TYPE_SYSTEM_DOUBLE}},
 
 	{"System.Reflection", "MemberInfo", "GetCustomAttributes", Reflection_MemberInfo_GetCustomAttributes, TYPE_SYSTEM_ARRAY_NO_TYPE, 0},
 
@@ -167,6 +175,8 @@ static tInternalCall internalCalls[] = {
 	{NULL,        NULL,           "GetCurrentDirectory", System_IO_FileInternal_GetCurrentDirectory, TYPE_SYSTEM_STRING, 1, {TYPE_SYSTEM_INTPTR}},
 	{NULL,        NULL,           "GetFileAttributes", System_IO_FileInternal_GetFileAttributes, TYPE_SYSTEM_IO_FILESYSTEMATTRIBUTES, 2, {TYPE_SYSTEM_STRING, TYPE_SYSTEM_INTPTR}},
 	{NULL,        NULL,           "GetFileSystemEntries", System_IO_FileInternal_GetFileSystemEntries, TYPE_SYSTEM_ARRAY_STRING, 5, {TYPE_SYSTEM_STRING, TYPE_SYSTEM_STRING, TYPE_SYSTEM_IO_FILESYSTEMATTRIBUTES, TYPE_SYSTEM_IO_FILESYSTEMATTRIBUTES, TYPE_SYSTEM_INTPTR}},
+
+	{"System.Reflection", "MethodInfo", "MakeGenericMethod", System_Reflection_MethodInfo_MakeGenericMethod, TYPE_SYSTEM_REFLECTION_METHODINFO, 1, {TYPE_SYSTEM_ARRAY_TYPE}},
 
 	{"System.Runtime.CompilerServices", "RuntimeHelpers", "InitializeArray", System_Runtime_CompilerServices_InitializeArray, TYPE_SYSTEM_VOID, 2, {TYPE_SYSTEM_ARRAY_NO_TYPE, TYPE_SYSTEM_RUNTIMEFIELDHANDLE}},
 
@@ -218,6 +228,6 @@ fnInternalCall InternalCall_Map(tMD_MethodDef *pMethod) {
 		}
 
 	}
-	Crash("InternalCall_Map(): Cannot map [%s]%s.%s", pMethod->pParentType->nameSpace, pMethod->pParentType->name, pMethod->name);
+	Crash("InternalCall_Map(): Cannot map %s.%s.%s", pMethod->pParentType->nameSpace, pMethod->pParentType->name, pMethod->name);
 	FAKE_RETURN;
 }

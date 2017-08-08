@@ -27,10 +27,12 @@ namespace System.Diagnostics {
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		extern public static void Break();
 
-        [MethodImpl(MethodImplOptions.InternalCall)]
-        extern private static void Internal_BreakPoint(int method, int offset);
+		public static bool Launch() { Break(); return false; }
 
-    }
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		extern private static void Internal_BreakPoint(int method, int offset);
+
+	}
 }
 
 #endif

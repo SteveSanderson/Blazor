@@ -19,6 +19,7 @@
 // THE SOFTWARE.
 
 #include <string.h>
+#include <wchar.h>
 
 #include "Compat.h"
 #include "Sys.h"
@@ -62,6 +63,22 @@ tAsyncCall* System_String_ctor_CharInt32(PTR pThis_, PTR pParams, PTR pReturnVal
 	for (i=0; i<len; i++) {
 		pSystemString->chars[i] = c;
 	}
+	*(HEAP_PTR*)pReturnValue = (HEAP_PTR)pSystemString;
+
+	return NULL;
+}
+
+tAsyncCall* System_String_ctor_CharA(PTR pThis_, PTR pParams, PTR pReturnValue) {
+	tSystemString *pSystemString;
+	HEAP_PTR charArray;
+	PTR charElements;
+	U32 startIndex = 0, length = SystemArray_GetLength(((HEAP_PTR*)pParams)[0]);
+
+	charArray = ((HEAP_PTR*)pParams)[0];
+
+	charElements = SystemArray_GetElements(charArray);
+	pSystemString = CreateStringHeapObj(length);
+	memcpy(pSystemString->chars, charElements + (startIndex << 1), length << 1);
 	*(HEAP_PTR*)pReturnValue = (HEAP_PTR)pSystemString;
 
 	return NULL;
@@ -398,4 +415,10 @@ STRING2 SystemString_GetString(HEAP_PTR pThis_, U32 *pLength) {
 
 U32 SystemString_GetNumBytes(HEAP_PTR pThis_) {
 	return (((tSystemString*)pThis_)->length << 1) + sizeof(tSystemString);
+}
+
+tAsyncCall* System_String_ToDouble(PTR pThis_, PTR pParams, PTR pReturnValue) {
+	tSystemString *pThis = (tSystemString*)pThis_;
+	*(double*)pReturnValue = wcstod((const wchar_t *)pThis->chars, NULL);
+	return NULL;
 }

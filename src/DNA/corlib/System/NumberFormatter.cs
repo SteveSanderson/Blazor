@@ -1554,20 +1554,17 @@ namespace System {
 			}
 
 			public NumberStore(double value) {
-				_digits = null;
+				_digits = new byte[] {};
 				_defByteSize = 64;
 				_defPrecision = 15;
 				_defMaxPrecision = _defPrecision + 2;
+				_NaN = double.IsNaN(value);
+				_infinity = double.IsInfinity(value);
+				_positive = value > 0;
+				_decPointPos = 0;
 
-				if (double.IsNaN(value) || double.IsInfinity(value)) {
-					_NaN = double.IsNaN(value);
-					_infinity = double.IsInfinity(value);
-					_positive = value > 0;
-					_decPointPos = 0;
+				if (_NaN || _infinity)
 					return;
-				} else {
-					_NaN = _infinity = false;
-				}
 
 				long bits = BitConverter.DoubleToInt64Bits(value);
 				_positive = (bits >= 0);
@@ -1583,7 +1580,7 @@ namespace System {
 
 				if (e == 0) {
 					e++;
-				} else if (e != 0) {
+				} else {
 					m |= (1L << 52);
 				}
 
@@ -1610,13 +1607,13 @@ namespace System {
 
 				if (e >= 0) {
 					for (int i = 0; i < e; i++) {
-						if (MultiplyBy(ref temp, ref length, 2)) {
+						if (MultiplyBy(temp, ref length, 2)) {
 							_decPointPos++;
 						}
 					}
 				} else {
 					for (int i = 0; i < -e; i++) {
-						if (MultiplyBy(ref temp, ref length, 5)) {
+						if (MultiplyBy(temp, ref length, 5)) {
 							_decPointPos++;
 						}
 					}
@@ -1641,20 +1638,19 @@ namespace System {
 
 				RoundEffectiveDigits(17, true, true);
 			}
+
 			public NumberStore(float value) {
-				_digits = null;
+				_digits = new byte[] {};
 				_defByteSize = 32;
 				_defPrecision = 7;
 				_defMaxPrecision = _defPrecision + 2;
+				_NaN = float.IsNaN(value);
+				_infinity = float.IsInfinity(value);
+				_positive = value > 0;
+				_decPointPos = 0;
 
-				if (float.IsNaN(value) || float.IsInfinity(value)) {
-					_NaN = float.IsNaN(value);
-					_infinity = float.IsInfinity(value);
-					_positive = value > 0;
-					_decPointPos = 0;
+				if (_NaN || _infinity)
 					return;
-				} else
-					_infinity = _NaN = false;
 
 				long bits = BitConverter.DoubleToInt64Bits(value);
 				_positive = (bits >= 0);
@@ -1670,7 +1666,7 @@ namespace System {
 
 				if (e == 0) {
 					e++;
-				} else if (e != 0) {
+				} else {
 					m |= (1L << 52);
 				}
 
@@ -1697,13 +1693,13 @@ namespace System {
 
 				if (e >= 0) {
 					for (int i = 0; i < e; i++) {
-						if (MultiplyBy(ref temp, ref length, 2)) {
+						if (MultiplyBy(temp, ref length, 2)) {
 							_decPointPos++;
 						}
 					}
 				} else {
 					for (int i = 0; i < -e; i++) {
-						if (MultiplyBy(ref temp, ref length, 5)) {
+						if (MultiplyBy(temp, ref length, 5)) {
 							_decPointPos++;
 						}
 					}
@@ -1729,7 +1725,7 @@ namespace System {
 				RoundEffectiveDigits(9, true, true);
 			}
 
-			internal bool MultiplyBy(ref byte[] buffer, ref int length, int amount) {
+			internal bool MultiplyBy(byte[] buffer, ref int length, int amount) {
 				int mod = 0;
 				int ret;
 				int start = buffer.Length - length - 1;

@@ -31,7 +31,9 @@ namespace System {
 		public const float PositiveInfinity = 1.0f / 0.0f;
 		public const float NegativeInfinity = -1.0f / 0.0f;
 
+#pragma warning disable 0169, 0649
 		private float m_value;
+#pragma warning restore 0169, 0649
 
 		public static bool IsNaN(float f) {
 #pragma warning disable 1718
@@ -61,9 +63,9 @@ namespace System {
 			return ((float)o).m_value == this.m_value;
 		}
 
-		public unsafe override int GetHashCode() {
+		public override int GetHashCode() {
 			float f = this.m_value;
-			return (*((int*)&f)).GetHashCode();
+			return BitConverter.DoubleToInt64Bits(f).GetHashCode();
 		}
 
 		public override string ToString() {

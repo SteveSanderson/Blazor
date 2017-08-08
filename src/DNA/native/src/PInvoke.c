@@ -174,9 +174,9 @@ U32 PInvoke_Call(tJITCallPInvoke *pCall, PTR pParams, PTR pReturnValue, tThread 
 	U32 _tempMemOfs = 0;
 	U32 i;
 	U32 funcParams = DEFAULT;
-	U64 u64Ret;
-	float fRet;
-	double dRet;
+	U64 u64Ret = 0;
+	float fRet = 0;
+	double dRet = 0;
 
 	// [Steve edit] Before we issue the call into JS code, we need to set the calling .NET thread's state
 	// to 'suspended' so that, if the JS code makes other calls into .NET, the DNA runtime doesn't try to

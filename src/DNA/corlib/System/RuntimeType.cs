@@ -20,13 +20,14 @@
 
 #if !LOCALTEST
 
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Collections.Generic;
 
 namespace System {
 
-	class RuntimeType : Type {
+	sealed class RuntimeType : Type {
 
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		extern private RuntimeType GetNestingParentType();
@@ -93,10 +94,29 @@ namespace System {
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		extern public override Type[] GetGenericArguments();
 
-        [MethodImpl(MethodImplOptions.InternalCall)]
-        extern public override Type GetElementType();
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		extern public override bool IsDefined(Type attributeType, bool inherit);
 
-    }
+		public override Object[] GetCustomAttributes(bool inherit)
+		{
+			return Internal_GetCustomAttributes(null, inherit);
+		}
+
+		public override Object[] GetCustomAttributes(Type attributeType, bool inherit)
+		{
+			if (attributeType == null)
+				throw new ArgumentNullException();
+
+			return Internal_GetCustomAttributes(attributeType, inherit);
+		}
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		extern private Object[] Internal_GetCustomAttributes(Type attributeType, bool inherit);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		extern public override Type GetElementType();
+
+	}
 
 }
 
