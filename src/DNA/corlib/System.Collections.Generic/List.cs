@@ -184,6 +184,22 @@ namespace System.Collections.Generic {
 			}
 		}
 
+		// public void Sort() {
+		// 	Array.Sort(this.items, 0, this.size);
+		// }
+
+		public void Sort(Comparison<T> comparison) {
+			Array.Sort(this.items, 0, this.size, comparison);
+		}
+
+		public void Sort(IComparer<T> comparer) {
+			Array.Sort(this.items, 0, this.size, comparer);
+		}
+
+		public void Sort(int index, int count, IComparer<T> comparer) {
+			Array.Sort(this.items, index, count, comparer);
+		}
+
 		public T[] ToArray() {
 			T[] array = new T[this.size];
 			Array.Copy(this.items, array, this.size);

@@ -135,10 +135,8 @@ tAsyncCall* System_Type_GetProperties(PTR pThis_, PTR pParams, PTR pReturnValue)
 		tPropertyInfo *pPropertyInfo = (tPropertyInfo*)Heap_AllocType(types[TYPE_SYSTEM_REFLECTION_PROPERTYINFO]);
 		SystemArray_StoreElement(ret, i, (PTR)&pPropertyInfo);
 
-		// Assign ownerType
+		// Assign ownerType and name
 		pPropertyInfo->ownerType = pThis_;
-
-		// Assign name
 		pPropertyInfo->name = SystemString_FromCharPtrASCII(pPropertyMetadata->name);
 
 		// Assign propertyType
@@ -153,6 +151,38 @@ tAsyncCall* System_Type_GetProperties(PTR pThis_, PTR pParams, PTR pReturnValue)
 		// Assign propertyMetadata
 		pPropertyInfo->index = index;
 		pPropertyInfo->pMetaData = pPropertyMetadata;
+	}
+
+	return NULL;
+}
+
+tAsyncCall* System_Type_GetMethods(PTR pThis_, PTR pParams, PTR pReturnValue)
+{
+	// Get metadata for the 'this' type
+	tRuntimeType *pRuntimeType = (tRuntimeType*)pThis_;
+	tMD_TypeDef *pTypeDef = pRuntimeType->pTypeDef;
+
+	// Instantiate a MethodInfo[]
+	tMD_TypeDef *pArrayType = Type_GetArrayTypeDef(types[TYPE_SYSTEM_REFLECTION_METHODINFO], NULL, NULL);
+	HEAP_PTR ret = SystemArray_NewVector(pArrayType, pTypeDef->numMethods);
+	// Allocate to return value straight away, so it cannot be GCed
+	*(HEAP_PTR*)pReturnValue = ret;
+
+	// Search for the method by name
+	for (U32 i = 0; i<pTypeDef->numMethods; i++) {
+		tMD_MethodDef *pMethodDef = pTypeDef->ppMethods[i];
+
+		// Instantiate a MethodInfo and put it in the array
+		tMethodInfo *pMethodInfo = (tMethodInfo*)Heap_AllocType(types[TYPE_SYSTEM_REFLECTION_METHODINFO]);
+		SystemArray_StoreElement(ret, i, (PTR)&pMethodInfo);
+
+		// Assign ownerType, name and flags
+		pMethodInfo->methodBase.ownerType = pThis_;
+		pMethodInfo->methodBase.name = SystemString_FromCharPtrASCII(pMethodDef->name);
+		pMethodInfo->methodBase.flags = pMethodDef->flags;
+
+		// Assign method def
+		pMethodInfo->methodBase.methodDef = pMethodDef;
 	}
 
 	return NULL;
@@ -176,11 +206,10 @@ tAsyncCall* System_Type_GetMethod(PTR pThis_, PTR pParams, PTR pReturnValue)
 			// Instantiate a MethodInfo
 			tMethodInfo *pMethodInfo = (tMethodInfo*)Heap_AllocType(types[TYPE_SYSTEM_REFLECTION_METHODINFO]);
 
-			// Assign ownerType
+			// Assign ownerType, name and flags
 			pMethodInfo->methodBase.ownerType = pThis_;
-
-			// Assign name
 			pMethodInfo->methodBase.name = SystemString_FromCharPtrASCII(pMethodDef->name);
+			pMethodInfo->methodBase.flags = pMethodDef->flags;
 
 			// Assign method def
 			pMethodInfo->methodBase.methodDef = pMethodDef;
@@ -192,5 +221,41 @@ tAsyncCall* System_Type_GetMethod(PTR pThis_, PTR pParams, PTR pReturnValue)
 
 	// Not found
 	*(HEAP_PTR*)pReturnValue = NULL;
+	return NULL;
+}
+
+tAsyncCall* System_Reflection_MethodInfo_MakeGenericMethod(PTR pThis_, PTR pParams, PTR pReturnValue)
+{
+	// get type arguments
+	HEAP_PTR pTypeArgs = ((HEAP_PTR*)pParams)[0];
+	U32 argCount = SystemArray_GetLength(pTypeArgs);
+	HEAP_PTR* pArray = (HEAP_PTR*)SystemArray_GetElements(pTypeArgs);
+
+	// Get metadata for the 'this' type
+	tMethodInfo *pMethodInfoThis = (tMethodInfo*)pThis_;
+	tMD_MethodDef *pCoreMethod = pMethodInfoThis->methodBase.methodDef;
+
+	// get arg types
+	tMD_TypeDef **ppTypeArgs = malloc(argCount * sizeof(tMD_TypeDef*));
+	for (U32 i = 0; i < argCount; i++) {
+		ppTypeArgs[i] = Heap_GetType(pArray[i]);
+	}
+
+	// specialize generic method
+	tMD_MethodDef *pMethodDef = Generics_GetMethodDefFromCoreMethod(pCoreMethod, pCoreMethod->pParentType, argCount, ppTypeArgs);
+	free(ppTypeArgs);
+
+	// Instantiate a MethodInfo
+	tMethodInfo *pMethodInfo = (tMethodInfo*)Heap_AllocType(types[TYPE_SYSTEM_REFLECTION_METHODINFO]);
+
+	// Assign ownerType, name and flags
+	pMethodInfo->methodBase.ownerType = pThis_;
+	pMethodInfo->methodBase.name = SystemString_FromCharPtrASCII(pMethodDef->name);
+	pMethodInfo->methodBase.flags = pMethodDef->flags;
+
+	// Assign method def
+	pMethodInfo->methodBase.methodDef = pMethodDef;
+
+	*(HEAP_PTR*)pReturnValue = (HEAP_PTR)pMethodInfo;
 	return NULL;
 }

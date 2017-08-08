@@ -72,6 +72,9 @@ struct tHeapEntry_ {
 	// unused
 	U8 padding;
 
+	// size in bytes
+	U32 byteSize;
+
 	// The type in this heap entry
 	tMD_TypeDef *pTypeDef;
 
@@ -305,7 +308,7 @@ static void GarbageCollect() {
 			while (pNode != nil) {
 				if (pMemRef < (void*)pNode) {
 					pNode = pNode->pLink[0];
-				} else if ((char*)pMemRef > ((char*)pNode) + GetSize(pNode) + sizeof(tHeapEntry)) {
+				} else if ((char*)pMemRef > ((char*)pNode) + pNode->byteSize) {
 					pNode = pNode->pLink[1];
 				} else {
 					// Found memory. See if it's already been marked.
@@ -467,6 +470,7 @@ HEAP_PTR Heap_Alloc(tMD_TypeDef *pTypeDef, U32 size) {
 	}
 
 	pHeapEntry = (tHeapEntry*)malloc(totalSize);
+	pHeapEntry->byteSize = totalSize;
 	pHeapEntry->pTypeDef = pTypeDef;
 	pHeapEntry->pSync = NULL;
 	pHeapEntry->needToFinalize = (pTypeDef->pFinalizer != NULL);

@@ -29,7 +29,7 @@
 U32 MetaData_CompareNameAndSig(STRING name, BLOB_ sigBlob, tMetaData *pSigMetaData, tMD_TypeDef **ppSigClassTypeArgs, tMD_TypeDef **ppSigMethodTypeArgs, tMD_MethodDef *pMethod, tMD_TypeDef **ppMethodClassTypeArgs, tMD_TypeDef **ppMethodMethodTypeArgs) {
 	if (strcmp(name, pMethod->name) == 0) {
 		SIG sig, thisSig;
-		U32 e, thisE, paramCount, i;
+		U32 e, thisE, paramCount, i, isGeneric;
 
 		sig = MetaData_GetBlob(sigBlob, NULL);
 		thisSig = MetaData_GetBlob(pMethod->signature, NULL);
@@ -42,7 +42,8 @@ U32 MetaData_CompareNameAndSig(STRING name, BLOB_ sigBlob, tMetaData *pSigMetaDa
 		}
 
 		// If method has generic arguments, check the generic type argument count
-		if (e & SIG_METHODDEF_GENERIC) {
+		isGeneric = e & SIG_CALLCONV_GENERIC;
+		if (isGeneric) {
 			e = MetaData_DecodeSigEntry(&sig);
 			thisE = MetaData_DecodeSigEntry(&thisSig);
 			// Generic argument count
@@ -66,7 +67,9 @@ U32 MetaData_CompareNameAndSig(STRING name, BLOB_ sigBlob, tMetaData *pSigMetaDa
 			pParamType = Type_GetTypeFromSig(pSigMetaData, &sig, ppSigClassTypeArgs, ppSigMethodTypeArgs);
 			pThisParamType = Type_GetTypeFromSig(pMethod->pMetaData, &thisSig, ppMethodClassTypeArgs, ppMethodMethodTypeArgs);
 			if (pParamType != pThisParamType) {
-				return 0;
+				if (!isGeneric || ppMethodMethodTypeArgs != NULL) {
+					return 0;
+				}
 			}
 		}
 		// All parameters the same, so found the right method
@@ -75,18 +78,20 @@ U32 MetaData_CompareNameAndSig(STRING name, BLOB_ sigBlob, tMetaData *pSigMetaDa
 	return 0;
 }
 
-static tMD_MethodDef* FindMethodInType(tMD_TypeDef *pTypeDef, STRING name, tMetaData *pSigMetaData, BLOB_ sigBlob, tMD_TypeDef **ppClassTypeArgs, tMD_TypeDef **ppMethodTypeArgs) {
-	U32 i;
-	tMD_TypeDef *pLookInType = pTypeDef;
+tMD_MethodDef* FindMethodInType(tMD_TypeDef *pTypeDef, STRING name, tMetaData *pSigMetaData, BLOB_ sigBlob, tMD_TypeDef **ppClassTypeArgs, tMD_TypeDef **ppMethodTypeArgs) {
 
-	do {
-		for (i=0; i<pLookInType->numMethods; i++) {
-			if (MetaData_CompareNameAndSig(name, sigBlob, pSigMetaData, ppClassTypeArgs, ppMethodTypeArgs, pLookInType->ppMethods[i], pLookInType->ppClassTypeArgs, ppMethodTypeArgs)) {
-				return pLookInType->ppMethods[i];
+	//dprintfn("Find method %s in type %s.%s", name, pTypeDef->nameSpace, pTypeDef->name);
+
+	tMD_TypeDef *pLookInType = pTypeDef;
+	while (pLookInType != NULL) {
+		for (U32 i=0; i<pLookInType->numMethods; i++) {
+			tMD_MethodDef *pMethodDef = pLookInType->ppMethods[i];
+			if (MetaData_CompareNameAndSig(name, sigBlob, pSigMetaData, ppClassTypeArgs, ppMethodTypeArgs, pMethodDef, pMethodDef->pParentType->ppClassTypeArgs, pMethodDef->ppMethodTypeArgs)) {
+				return pMethodDef;
 			}
 		}
 		pLookInType = pLookInType->pParent;
-	} while (pLookInType != NULL);
+	}
 
 	{
 		// Error reporting!!
@@ -99,10 +104,10 @@ static tMD_MethodDef* FindMethodInType(tMD_TypeDef *pTypeDef, STRING name, tMeta
 		*pMsg = 0;
 		sig = MetaData_GetBlob(sigBlob, &i);
 		entry = MetaData_DecodeSigEntry(&sig);
-		if ((entry & SIG_METHODDEF_HASTHIS) == 0) {
+		if ((entry & SIG_CALLCONV_HASTHIS) == 0) {
 			sprintf(strchr(pMsg, 0), "static ");
 		}
-		if (entry & SIG_METHODDEF_GENERIC) {
+		if (entry & SIG_CALLCONV_GENERIC) {
 			// read number of generic type args - don't care what it is
 			MetaData_DecodeSigEntry(&sig);
 		}
@@ -118,7 +123,7 @@ static tMD_MethodDef* FindMethodInType(tMD_TypeDef *pTypeDef, STRING name, tMeta
 				sprintf(strchr(pMsg, 0), ",");
 			}
 			if (pParamTypeDef != NULL) {
-				sprintf(strchr(pMsg, 0), pParamTypeDef->name);
+				sprintf(strchr(pMsg, 0), "%s", pParamTypeDef->name);
 			} else {
 				sprintf(strchr(pMsg, 0), "???");
 			}
@@ -126,6 +131,39 @@ static tMD_MethodDef* FindMethodInType(tMD_TypeDef *pTypeDef, STRING name, tMeta
 		Crash("FindMethodInType(): Cannot find method %s)", pMsg);
 	}
 	FAKE_RETURN;
+}
+
+// Find the method that has been overridden by pMethodDef.
+// This is to get the correct vTable offset for the method.
+// This must search the MethodImpl table to see if the default inheritence rules are being overridden.
+// Return NULL if this method does not override anything.
+tMD_MethodDef* FindVirtualOverriddenMethod(tMD_TypeDef *pTypeDef, tMD_MethodDef *pMethodDef) {
+	do {
+		// Search MethodImpl table
+		U32 top = pTypeDef->pMetaData->tables.numRows[MD_TABLE_METHODIMPL];
+		for (U32 i = top; i > 0; i--) {
+			tMD_MethodImpl *pMethodImpl = (tMD_MethodImpl*)MetaData_GetTableRow(pTypeDef->pMetaData, MAKE_TABLE_INDEX(MD_TABLE_METHODIMPL, i));
+			if (pMethodImpl->class_ == pTypeDef->tableIndex) {
+				tMD_MethodDef *pMethodDeclDef = MetaData_GetMethodDefFromDefRefOrSpec(pTypeDef->pMetaData, pMethodImpl->methodDeclaration, pTypeDef->ppClassTypeArgs, pMethodDef->ppMethodTypeArgs);
+				if (pMethodDeclDef->tableIndex == pMethodDef->tableIndex) {
+					IDX_TABLE methodToken = pMethodImpl->methodBody;
+					tMD_MethodDef *pMethod = (tMD_MethodDef*)MetaData_GetTableRow(pTypeDef->pMetaData, methodToken);
+					return pMethod;
+				}
+			}
+		}
+
+		// Use normal inheritence rules
+		// It must be a virtual method that's being overridden.
+		for (U32 i = pTypeDef->numVirtualMethods - 1; i != 0xffffffff; i--) {
+			if (MetaData_CompareNameAndSig(pMethodDef->name, pMethodDef->signature, pMethodDef->pMetaData, pMethodDef->pParentType->ppClassTypeArgs, pMethodDef->ppMethodTypeArgs, pTypeDef->pVTable[i], pTypeDef->ppClassTypeArgs, pTypeDef->pVTable[i]->ppMethodTypeArgs)) {
+				return pTypeDef->pVTable[i];
+			}
+		}
+		pTypeDef = pTypeDef->pParent;
+	} while (pTypeDef != NULL);
+
+	return NULL;
 }
 
 static tMD_FieldDef* FindFieldInType(tMD_TypeDef *pTypeDef, STRING name) {

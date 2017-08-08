@@ -24,7 +24,7 @@ using System;
 using System.Collections;
 
 namespace System.Collections.Generic {
-	public abstract class Comparer<T> : IComparer<T>,IComparer {
+	public abstract class Comparer<T> : IComparer<T>, IComparer {
 
 		private sealed class DefaultComparer : Comparer<T> {
 
@@ -45,7 +45,6 @@ namespace System.Collections.Generic {
 				}
 				throw new ArgumentException("Does not implement IComparable");
 			}
-
 		}
 
 		private sealed class DefaultComparerValueType : Comparer<T> {
@@ -61,7 +60,21 @@ namespace System.Collections.Generic {
 				}
 				throw new ArgumentException("Does not implement IComparable");
 			}
+		}
 
+		private sealed class ComparisonComparer : Comparer<T> {
+			private readonly Comparison<T> comparison;
+			public ComparisonComparer(Comparison<T> comparison) {
+				this.comparison = comparison;
+			}
+			public override int Compare(T x, T y) {
+				return comparison(x, y);
+			}
+		}
+
+		public static Comparer<T> Create(Comparison<T> comparison) {
+			if (comparison == null) throw new ArgumentNullException("comparison");
+			return new ComparisonComparer(comparison);
 		}
 
 		static Comparer() {

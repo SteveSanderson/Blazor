@@ -9,7 +9,9 @@ namespace System {
 		public const int MaxValue = 0x7fffffff;
 		public const int MinValue = -2147483648;
 
+#pragma warning disable 0169, 0649
 		internal int m_value;
+#pragma warning restore 0169, 0649
 
 		public override bool Equals(object obj) {
 			return (obj is int && ((int)obj).m_value == this.m_value);

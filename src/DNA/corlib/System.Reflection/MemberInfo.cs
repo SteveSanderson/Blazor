@@ -26,14 +26,21 @@ using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace System.Reflection {
-	public abstract class MemberInfo {
+	public abstract class MemberInfo : ICustomAttributeProvider {
+
 #pragma warning disable 0169, 0649
-        protected readonly Type _ownerType;
-        protected readonly string _name;
+		protected readonly Type _ownerType;
+		protected readonly string _name;
 #pragma warning restore 0169, 0649
 
-        protected MemberInfo() {
+	    protected MemberInfo() {
 		}
+
+		public abstract bool IsDefined(Type attributeType, bool inherit);
+
+		public abstract Object[] GetCustomAttributes(bool inherit);
+
+		public abstract Object[] GetCustomAttributes(Type attributeType, bool inherit);
 
         protected MemberInfo(Type ownerType, string name)
         {

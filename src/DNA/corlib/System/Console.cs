@@ -45,6 +45,25 @@ namespace System {
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		extern private static bool Internal_KeyAvailable();
 
+        sealed class InternalTextWriter : IO.TextWriter {
+            public override System.Text.Encoding Encoding {
+                get {
+                    return System.Text.Encoding.Default;
+                }
+            }
+
+            public override void Write(string s) {
+				Console.Write(s);
+            }
+            public override void Write(char value) {
+				Console.Write(value.ToString());
+            }
+        }
+
+		public static IO.TextWriter Error { get; } = new InternalTextWriter();
+
+		public static IO.TextWriter Out { get; } = new InternalTextWriter();
+
 		#region Write Methods
 
 		public static void Write(object value) {
