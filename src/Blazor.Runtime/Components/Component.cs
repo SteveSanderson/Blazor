@@ -25,11 +25,7 @@ namespace Blazor.Components
         // Try to find ways of encapsulating this better. Currently, derived components can interfere with this directly.
         protected readonly VDomBuilder builder = new VDomBuilder();
 
-        public static IDictionary<string, Action<VDomBuilder>> SectionWriters { get; } =
-            new Dictionary<string, Action<VDomBuilder>>();
-
         private DOMElement Element { get; set; }
-
         private bool _replaceElement;
 
         private readonly int _id;
@@ -53,7 +49,6 @@ namespace Blazor.Components
 
         public Component MountAsPage(string populateElementRef)
         {
-            SectionWriters.Clear();
             return Mount(populateElementRef, replace: false, enableLayouts: true);
         }
 
@@ -85,27 +80,7 @@ namespace Blazor.Components
                 // Render after Init/InitAsync have run synchronously, plus again after
                 // InitAsync's task completes (where applicable)
                 Init();
-
-                var url = Context.Url;
-                if (url[url.Length - 1] == '/')
-                {
-                    url = url.Substring(0, url.Length - 1);
-                }
-
-                var segments = url.Split(new char[] { '/' });
-                var idSegments = segments[segments.Length - 1];
-
-                int num;
-                Task initAsyncTask;
-                if (idSegments.Length > 0 && int.TryParse(idSegments, out num))
-                {
-                    initAsyncTask = InitAsync(num);
-                }
-                else
-                {
-                    initAsyncTask = InitAsync();
-                }
-
+                var initAsyncTask = InitAsync();
                 Render();
                 _firstRenderCompletedTask = initAsyncTask?.ContinueWith(_ => {
                     Render();
@@ -139,16 +114,11 @@ namespace Blazor.Components
         }
 
         protected abstract void RenderVirtualDom();
-
-        public abstract void DefineSections();
-
         protected abstract void ReceiveParameters(IDictionary<string, object> parameters);
 
         protected virtual void Init() { }
-        public virtual Task InitAsync() { return null; }
+        protected virtual Task InitAsync() { return null; }
 
-        public virtual Task InitAsync(int id) { return null; }
-        
         internal Component InstantiateAndRegisterChildComponent(int vdomItemIndex)
         {
             var vdomItem = builder.Items[vdomItemIndex];
@@ -237,6 +207,23 @@ namespace Blazor.Components
             // Always re-render after an event handler completes synchronously. Could make this controlled by
             // a flag on the EventInfo so you could do @onclick(..., AutoRender: false).
             Render();
+        }
+
+        public string AbsoluteUrl(string relativeUrl)
+        {
+            if (Env.IsServer)
+            {
+                return ServerAbsoluteUrl(relativeUrl);
+            }
+            else
+            {
+                return Browser.ResolveRelativeUrl(relativeUrl);
+            }
+        }
+
+        private string ServerAbsoluteUrl(string relativeUrl)
+        {
+            return new Uri(new Uri(Context.AbsoluteUrl), relativeUrl).ToString();
         }
     }
 }

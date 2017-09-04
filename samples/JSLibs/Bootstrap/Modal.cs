@@ -1,5 +1,5 @@
 ﻿using Blazor.Runtime.Interop;
-using static Blazor.Runtime.Interop.Document2;
+using static Blazor.Runtime.Interop.Document;
 
 namespace JSLibs.Bootstrap
 {

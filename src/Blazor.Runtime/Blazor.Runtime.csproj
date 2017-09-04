@@ -6,7 +6,4 @@
     <TargetFramework>netstandard1.6</TargetFramework>
     <PackageOutputPath>$(MSBuildThisFileDirectory)../../artifacts/</PackageOutputPath>
   </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="System.Security.Claims" Version="4.3.0" />
-  </ItemGroup>
 </Project>

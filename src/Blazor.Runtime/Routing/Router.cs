@@ -1,6 +1,5 @@
 ﻿using Blazor.Components;
 using Blazor.Runtime.Components;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
@@ -13,7 +12,6 @@ namespace Blazor.Routing
         private static string _currentPageComponentPath;
         private static Component _currentPageComponent;
         public static IEnumerable<Assembly> ViewAssemblies;
-        private static BlazorContext _context;
 
         public static void MountInElement(string selector)
         {
@@ -25,15 +23,7 @@ namespace Blazor.Routing
             var parsed = MiniJSON.Json.Deserialize(descriptor) as Dictionary<string, object>;
             var url = (string)parsed["url"];
             var absoluteUrl = (string)parsed["absoluteUrl"];
-            if (_context == null)
-            {
-                _context = new BlazorContext(absoluteUrl);
-            }
-            else
-            {
-                _context.Url = absoluteUrl;
-            }
-            return MountPageFromUrl(url, _context);
+            return MountPageFromUrl(url, new BlazorContext(absoluteUrl));
         }
 
         internal static Component MountPageFromUrl(string url, BlazorContext context)
@@ -52,27 +42,9 @@ namespace Blazor.Routing
 
         private static string UrlToComponentPath(string url)
         {
-            if (url.Equals("/"))
+            if (url.EndsWith("/"))
             {
                 url = url + "Index";
-            }
-            if (url[url.Length - 1] == '/')
-            {
-                url = url.Substring(0, url.Length - 1);
-            }
-            var split = url.Split(new char[] { '/' });
-            var id = split[split.Length - 1];
-            int res;
-            if (int.TryParse(id, out res))
-            {
-                // We have an int, remove id and continue
-                string temp = "/";
-                for (int i =0; i < split.Length - 1; i++)
-                {
-                    temp += split[i];
-                }
-                Console.WriteLine(temp);
-                return $".{temp.Replace('/', Path.DirectorySeparatorChar)}.cshtml";
             }
             
             return $".{url.Replace('/', Path.DirectorySeparatorChar)}.cshtml";

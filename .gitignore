@@ -6,6 +6,3 @@ obj
 .vs/
 /packages/
 /artifacts/
-.emsdk/
-PublishProfiles/
-node_modules/

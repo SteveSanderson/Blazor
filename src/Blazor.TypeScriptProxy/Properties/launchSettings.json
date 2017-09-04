@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "Blazor.TypeScriptProxy": {
-      "commandName": "Project",
-      "commandLineArgs": "..\\..\\samples\\ClientServerApp\\ClientServerApp.Client"
-    }
-  }
-}

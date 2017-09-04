@@ -43,7 +43,6 @@ struct tBreakPoint_ {
 static tBreakPoint* pBreakpoints;
 
 int Debugger_Reset() {
-    log_f(1, "Debugger_Reset called\n");
     // Clear all break points
     pBreakpoints = NULL;
 
@@ -56,18 +55,14 @@ int Debugger_Reset() {
 }
 
 int Debugger_Clear_BreakPoints() {
-    log_f(1, "Debugger_Clear_BreakPoints called\n");
-
     // Clear all break points
     pBreakpoints = NULL;
     return 0;
 }
 
 int Debugger_Continue() {
-    log_f(1, "Debugger_Continue called\n");
     if (waitingOnBreakPoint) {
         releaseBreakPoint = 1;
-        printf("DEBUGGER_CONTINUE\n");
 
         // Resume execution
         return Thread_Execute();
@@ -76,14 +71,12 @@ int Debugger_Continue() {
 }
 
 int Debugger_Step() {
-    log_f(1, "Debugger_Step called\n");
     alwaysBreak = 1;
     return 0;
 }
 
 int Debugger_SetBreakPoint(char* pID, int sequencePoint)
 {
-    log_f(1, "Debugger_SetBreakPoint(%s, %d) called\n", pID, sequencePoint);
     tBreakPoint* pNode = pBreakpoints;
     tBreakPoint* pTail = NULL;
 
@@ -113,24 +106,13 @@ int Debugger_SetBreakPoint(char* pID, int sequencePoint)
     }
     
     if (pNode->offset < 100) {
-        log_f(1, "Breakpoint successfully set\n", pID, sequencePoint);
         pNode->breakOnSequencePoints[pNode->offset++] = sequencePoint;
-    }
-
-    // Dump break points
-    tBreakPoint* pScan = pBreakpoints;
-    while (pScan != NULL) {
-        for (int i = 0; i < pScan->offset; i++) {
-            log_f(1, "Break point at (%s, %d) \n", pScan->pID, pScan->breakOnSequencePoints[i]);
-        }
-        pScan = pScan->next;
     }
 
     return 0;
 }
 
 tAsyncCall* System_Diagnostics_Debugger_Break(PTR pThis_, PTR pParams, PTR pReturnValue) {
-    printf("BREAK\n");
 #if defined(_WIN32) && defined(_DEBUG)
     __debugbreak();
 #endif
@@ -144,8 +126,6 @@ int CheckIfSequencePointIsBreakpoint(tMethodState* pMethodState, I32 sequencePoi
 
     pDebugEntry = pMethodState->pMethod->pJITted->pDebugMetadataEntry;
     U32 ilOffset = pDebugEntry->sequencePoints[sequencePoint];
-
-    // log_f(1, "(%s, %d, %04X) \n", pDebugEntry->pMethodName, sequencePoint, ilOffset);
 
     if (!alwaysBreak) {
         doBreakpoint = 0;
@@ -167,8 +147,6 @@ int CheckIfSequencePointIsBreakpoint(tMethodState* pMethodState, I32 sequencePoi
             return 0;
         }
     }
-
-    log_f(1, "BREAK_POINT hit (%s, %d, %04X) \n", pDebugEntry->pMethodName, sequencePoint, ilOffset);
 
     waitingOnBreakPoint = 1;
     alwaysBreak = 0;

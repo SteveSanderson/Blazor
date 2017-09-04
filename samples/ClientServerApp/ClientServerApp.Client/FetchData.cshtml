@@ -1,11 +1,8 @@
-﻿@page
-@model WeatherModel
-
-<h1>Weather forecast</h1>
+﻿<h1>Weather forecast</h1>
 
 <p>This component demonstrates fetching data from the server.</p>
 
-@if (Model.WeatherForecasts == null)
+@if (forecasts == null)
 {
     <p><em>Loading...</em></p>
 }
@@ -21,7 +18,7 @@ else
             </tr>
         </thead>
         <tbody>
-            @foreach (var forecast in Model.WeatherForecasts)
+            @foreach (var forecast in forecasts)
             {
                 <tr @key(forecast)>
                     <td>@forecast.DateFormatted</td>
@@ -32,4 +29,17 @@ else
             }
         </tbody>
     </table>
+}
+
+@functions {
+    WeatherForecast[] forecasts;
+
+    override protected async Task InitAsync()
+    {
+        using (var client = new HttpClient())
+        {
+            var json = await client.GetStringAsync(AbsoluteUrl("/api/SampleData/WeatherForecasts"));
+            forecasts = JsonUtil.Deserialize<WeatherForecast[]>(json);
+        }
+    }
 }

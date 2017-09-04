@@ -888,7 +888,7 @@ window['jsobject.js'] = (function () {
         window.Module = {
             wasmBinaryFile: '/_framework/wasm/dna.wasm',
             asmjsCodeFile: '/_framework/asmjs/dna.asm.js',
-            arguments: ["-vv", entryPoint],
+            arguments: [entryPoint],
             preRun: function () {
                 // Preload corlib.dll and other assemblies
                 Module.readAsync = FetchArrayBuffer;

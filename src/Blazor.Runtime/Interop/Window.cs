@@ -2,7 +2,7 @@
 {
     public class Window : JavaScriptInvocation
     {
-        public static Document2 Document => JavaScript.Document;
+        public static Document Document => JavaScript.Document;
 
         internal Window(JSObjectHandle currentHandle) : base(currentHandle)
         {

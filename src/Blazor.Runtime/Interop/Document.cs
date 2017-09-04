@@ -1,8 +1,8 @@
 ﻿namespace Blazor.Runtime.Interop
 {
-    public class Document2 : JavaScriptInvocation
+    public class Document : JavaScriptInvocation
     {
-        internal Document2(JSObjectHandle currentHandle) : base(currentHandle)
+        internal Document(JSObjectHandle currentHandle) : base(currentHandle)
         {
         }
 

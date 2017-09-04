@@ -1,6 +1,5 @@
 ﻿using Blazor.Components;
 using Microsoft.AspNetCore.Razor.Language.Intermediate;
-using Microsoft.AspNetCore.Razor.Language.CodeGeneration;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using System;
@@ -11,9 +10,6 @@ using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Razor.Language;
 using System.Reflection;
 using Microsoft.CodeAnalysis.Emit;
-using System.Text;
-using System.Runtime.CompilerServices;
-using System.Diagnostics;
 
 namespace RazorRenderer
 {
@@ -45,9 +41,6 @@ namespace RazorRenderer
             Log("Creating Razor engine...");
             var engine = RazorEngine.Create(builder =>
             {
-                var directivePass = builder.Features.OfType<IRazorDirectiveClassifierPass>().Single();
-                builder.Features.Remove(directivePass);
-                builder.Features.Add(new MyDirectiveIRPass());
                 var defaultCSharpLoweringPhase = builder.Phases.OfType<IRazorCSharpLoweringPhase>().Single();
                 builder.Phases.Remove(defaultCSharpLoweringPhase);
                 builder.Phases.Add(new VirtualDomCSharpLoweringPhase(defaultCSharpLoweringPhase));
@@ -58,18 +51,10 @@ namespace RazorRenderer
                     classNode.Name = RazorComponent.GetViewClassName(rootDir, codeDoc.Source.FileName);
                     if (!string.IsNullOrEmpty((string)codeDoc.Items["DetectedBaseClass"]))
                     {
-                        // UBER HACK
-                        if (codeDoc.Items["DetectedModel"] != null)
-                        {
-                            classNode.BaseType = $"{(string)codeDoc.Items["DetectedBaseClass"]}<{(string)codeDoc.Items["DetectedModel"]}>";
-                        }
-                        else
-                        {
-                            classNode.BaseType = (string)codeDoc.Items["DetectedBaseClass"];
-                        }
+                        classNode.BaseType = (string)codeDoc.Items["DetectedBaseClass"];
                     }
 
-                    AddIComponentRazorViewFactoryImplementation(classNode, codeDoc);
+                    AddIComponentRazorViewFactoryImplementation(classNode);
 
                     var layoutProperty = new CSharpStatementIRNode
                     {
@@ -118,7 +103,7 @@ namespace RazorRenderer
             }
         }
 
-        private static void AddIComponentRazorViewFactoryImplementation(ClassDeclarationIRNode classNode, RazorCodeDocument codeDoc)
+        private static void AddIComponentRazorViewFactoryImplementation(ClassDeclarationIRNode classNode)
         {
             // The Activator.CreateInstance feature that I added to the DNA runtime is very basic and doesn't
             // actually invoke the default constructor of the type being created. It just allocates memory for
@@ -137,45 +122,16 @@ namespace RazorRenderer
             classNode.Interfaces.Add(typeof(IRazorComponentFactory).FullName);
             var methodStatement = new CSharpStatementIRNode { Parent = classNode, Source = null };
             classNode.Children.Add(methodStatement);
-
-            var model = codeDoc.Items["DetectedModel"];
-            string content = "";
-            string isPage = "";
-            string addItems = "";
-            if (model != null)
+            methodStatement.Children.Add(new RazorIRToken
             {
-                content = $@"Model = new {model}();";
-            }
-            if ((bool)codeDoc.Items["DetectedPage"])
-            {
-                isPage += "classNode.IsPage = true;";
-            }
-
-            if ((codeDoc.Items["DetectedPageMatches"]) != null) 
-            {
-                var list = (List<string>)codeDoc.Items["DetectedPageMatches"];
-                addItems += "List<string> list = new List<string>();";
-                foreach (var item in list)
-                {
-                    addItems += $"\r\n list.Add(\"{item}\");";
-                }
-                addItems += "\r\n Items = list;";
-            }
-            var razorToken = new RazorIRToken
-            { 
                 Kind = RazorIRToken.TokenKind.CSharp,
                 Parent = classNode,
                 Content = $@"
                     {typeof(RazorComponent).FullName} {typeof(IRazorComponentFactory).FullName}.{nameof(IRazorComponentFactory.Instantiate)}()
                     {{
-                        {content} 
-                        var classNode = new {classNode.Name}();
-                        {isPage}
-                        {addItems}
-                        return classNode;
+                        return new {classNode.Name}();
                     }}"
-            };
-            methodStatement.Children.Add(razorToken);
+            });
         }
 
         static IList<SyntaxTree> GetSyntaxTrees(RazorEngine engine, string rootDir, string[] filenames)
@@ -215,21 +171,6 @@ namespace RazorRenderer
                 generatedCode = generatedCode.Replace(
                     "public async override global::System.Threading.Tasks.Task ExecuteAsync()",
                     "protected override void RenderVirtualDom()");
-
-                if ((bool)codeDoc.Items["DetectedPage"])
-                {
-                    if (codeDoc.Source.FileName.Contains("Validation"))
-                    {
-                        // TODO: very very temporary. Need to make this dynamic.
-                        generatedCode = generatedCode.Replace(
-                            "protected override void RenderVirtualDom()",
-                            ValidationHack.GetValidationStuffToAppend() +
-                            "protected override void RenderVirtualDom()");
-                        generatedCode = @"using System.Reflection;
-using System.ComponentModel.DataAnnotations; " + generatedCode;
-                    }
-                }
-
                 Log(generatedCode);
 
                 var syntaxTree = CSharpSyntaxTree.ParseText(generatedCode);
@@ -283,9 +224,6 @@ using System.ComponentModel.DataAnnotations; " + generatedCode;
         {
             string detectedLayout = null;
             string detectedTagName = null;
-            string detectedModel = null;
-            bool detectedPage = false;
-            List<string> detectedPageGroup = null;
             using (var ms = new MemoryStream())
             {
                 using (var sw = new StreamWriter(ms))
@@ -318,33 +256,6 @@ using System.ComponentModel.DataAnnotations; " + generatedCode;
                             continue;
                         }
 
-                        const string modelLinePrefix = "@model ";
-                        if (line.StartsWith(modelLinePrefix))
-                        {
-                            detectedModel = line.Substring(modelLinePrefix.Length);
-                            continue;
-                        }
-
-                        // The @page directive is only used to generate the page models.
-                        // Currently, blazor assumes that all razor components are pages.
-                        const string pageLinePrefix = "@page";
-                        if (line.StartsWith(pageLinePrefix))
-                        {
-                            detectedPage = true;
-                            var parameters = new Regex("^\\s*{\\s*([^}]+)}\\s*");
-                            var matches = parameters.Matches(line.Substring(pageLinePrefix.Length));
-                            if (matches.Count > 0)
-                            {
-                                detectedPageGroup = new List<string>();
-                                foreach (Match match in matches)
-                                {
-                                    var collection = match.Groups;
-                                    detectedPageGroup.Add(collection[0].Value);
-                                }
-                            }
-                            continue;
-                        }
-
                         var tagNameRegex = new Regex("^\\s*\\@TagName\\(\\s*\\\"([^\\\"]+)\\\"\\s*\\)");
                         var tagNameMatch = tagNameRegex.Match(line);
                         if (tagNameMatch.Success)
@@ -362,11 +273,8 @@ using System.ComponentModel.DataAnnotations; " + generatedCode;
                     var codeDoc = RazorCodeDocument.Create(sourceDoc);
                     codeDoc.Items["DetectedLayout"] = detectedLayout;
                     codeDoc.Items["DetectedTagName"] = detectedTagName;
-                    codeDoc.Items["DetectedModel"] = detectedModel;
                     codeDoc.Items["DetectedBaseClass"] = lastInheritsLine;
                     codeDoc.Items["UsingNamespaces"] = usingNamespaces;
-                    codeDoc.Items["DetectedPage"] = detectedPage;
-                    codeDoc.Items["DetectedPageMatches"] = detectedPageGroup;
 
                     return codeDoc;
                 }
@@ -424,14 +332,7 @@ using System.ComponentModel.DataAnnotations; " + generatedCode;
                 AssemblyLocation("System.Threading.Tasks"),
                 AssemblyLocation("System.Net.Http"),
                 AssemblyLocation("System.Private.Uri"),
-                AssemblyLocation("System.Security.Principal"),
-                AssemblyLocation("System.Security.Claims"),
-                AssemblyLocation("System.ComponentModel.Annotations"),
-                AssemblyLocation("System.ComponentModel.Primitives"),
-                AssemblyLocation("netstandard"),
-                AssemblyLocation("Newtonsoft.Json"),
                 AssemblyLocation(typeof(RazorComponent)), // Blazor
-                AssemblyLocation("JSTypeProxies")
             };
             var allReferences = assemblyReferences
                 .Concat(standardReferencePaths.Select(assemblyLocation => MetadataReference.CreateFromFile(assemblyLocation)))

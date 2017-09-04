@@ -10,10 +10,8 @@ namespace System.Net.Http
 
         public HttpRequestMessage(HttpMethod method, string requestUri)
         {
-            Console.WriteLine($"CALLED HttpRequestMessage.ctor({method}, {requestUri})");
             Method = method;
             Url = requestUri;
-            Console.WriteLine($"RETURNING HttpRequestMessage.ctor({method}, {requestUri})");
         }
 
         public HttpRequestMessage(IDictionary<string, object> dictionary)

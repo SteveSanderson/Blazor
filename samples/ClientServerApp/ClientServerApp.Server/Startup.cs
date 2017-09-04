@@ -64,14 +64,8 @@ namespace ClientServerApp.Server
                     template: "{controller=Home}/{action=Index}/{id?}");
             });
 
-            var clientDirectory = Path.Combine("..", "ClientServerApp.Client");
-            if (!Directory.Exists(clientDirectory))
-            {
-                clientDirectory = Directory.GetCurrentDirectory();
-            }
-
             // All other requests handled by serving the SPA
-            app.UseBlazorUI(clientDirectory, opts =>
+            app.UseBlazorUI(Path.Combine("..", "ClientServerApp.Client"), opts =>
             {
                 opts.EnableServerSidePrerendering = true;
                 opts.EnableDebugging = true;

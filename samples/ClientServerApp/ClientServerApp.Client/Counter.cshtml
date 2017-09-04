@@ -1,36 +1,26 @@
-﻿@using ClientServerApp.Shared
-@page"{id:int}"
-@model Hello
-
-<h1>Counter</h1>
+﻿<h1>Counter</h1>
 
 <p>This is a simple example of a component.</p>
 
 <p>
     Current count: <strong>@currentCount</strong> &nbsp;
-    <button @onclick(Increment)>Increment</button>
+    <button @onclick(IncrementCount)>Increment</button>
 </p>
 
 <p>It's also possible to include child components, pass data to them, and receive callbacks from them:</p>
 
 <counter-display current-count=@currentCount
-                 on-reset=@((Action)Reset) />
-
-<p>@Context.Items["hello"]</p>
-
-
-@section Scripts {
-    <p> More render section goodness. </p>
-}
+                 on-reset=@((Action)OnResetCounter) />
 
 @functions {
-    public int currentCount;
-    public void Increment()
+    int currentCount;
+
+    void IncrementCount()
     {
         currentCount++;
     }
 
-    public void Reset()
+    void OnResetCounter()
     {
         currentCount = 0;
         Render();
