@@ -14,7 +14,8 @@ namespace System {
 			if (d == null) {
 				return false;
 			}
-			return d.targetObj == this.targetObj && d.targetMethod.Equals(this.targetMethod);
+			// DNA currently can't handle boxing an IntPtr, so use the '==' overload instead (which doesn't have boxing)
+			return d.targetObj == this.targetObj && d.targetMethod == this.targetMethod;
 		}
 
 		public override int GetHashCode() {
