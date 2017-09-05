@@ -21,15 +21,17 @@
 #if !defined(__TYPES_H)
 #define __TYPES_H
 
+#include <stdint.h>
+
 // Indexes into the user-string heap
-typedef unsigned int IDX_USERSTRINGS;
+typedef uint32_t IDX_USERSTRINGS;
 
 // Index into a table. most significant byte stores which table, other 3 bytes store index
-typedef unsigned int IDX_TABLE;
+typedef uint32_t IDX_TABLE;
 
 // Flag types
-typedef unsigned int FLAGS32;
-typedef unsigned short FLAGS16;
+typedef uint32_t FLAGS32;
+typedef uint16_t FLAGS16;
 
 // Pointers
 typedef unsigned char* HEAP_PTR;
@@ -41,17 +43,17 @@ typedef unsigned char* BLOB_;
 typedef unsigned char* GUID_;
 
 // Int types
-typedef long long I64;
-typedef unsigned long long U64;
+typedef int64_t I64;
+typedef uint64_t U64;
 
 //#ifdef _WIN32
 
-typedef int I32;
-typedef unsigned int U32;
-typedef short I16;
-typedef unsigned short U16;
-typedef char I8;
-typedef unsigned char U8;
+typedef int32_t I32;
+typedef uint32_t U32;
+typedef int16_t I16;
+typedef uint16_t U16;
+typedef int8_t I8;      // define as int8 and not as char (causing sign mismatch on different compilers)
+typedef uint8_t U8;
 
 //#endif // _WIN32
 
@@ -72,7 +74,7 @@ union uConvFloat_ {
 };
 
 // other types!
-typedef unsigned short CHAR2;
+typedef uint16_t CHAR2;
 
 typedef struct tAsyncCall_ tAsyncCall;
 

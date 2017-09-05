@@ -30,55 +30,70 @@ namespace System {
 
         private static IDictionary<string, Type> typesByNameCache = new Dictionary<string, Type>();
 
-		public static readonly Type[] EmptyTypes = new Type[0];
+        public static readonly Type[] EmptyTypes = new Type[0];
 
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		extern public static Type GetTypeFromHandle(RuntimeTypeHandle handle);
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        extern public static Type GetTypeFromHandle(RuntimeTypeHandle handle);
 
-		public abstract Type BaseType {
-			get;
-		}
+        public abstract Type BaseType { get; }
 
-		public abstract bool IsEnum {
-			get;
-		}
+        public abstract bool IsEnum { get; }
 
-		public abstract string Namespace {
-			get;
-		}
+        public abstract string Namespace { get; }
 
-		public abstract string FullName {
-			get;
-		}
+        public abstract string FullName { get; }
 
-		public abstract bool IsGenericType {
-			get;
-		}
+        public abstract bool IsGenericType { get; }
 
-		public abstract Type GetGenericTypeDefinition();
+        public abstract Type GetGenericTypeDefinition();
 
-		public abstract Type[] GetGenericArguments();
+        public abstract Type[] GetGenericArguments();
 
         public abstract Type GetElementType();
 
         public virtual bool IsArray => GetElementType() != null;
 
+        public virtual bool IsByRef => false;
+
+        public virtual bool IsPointer => false;
+
         extern public bool IsValueType {
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
+            [MethodImpl(MethodImplOptions.InternalCall)]
+            get;
+        }
 
-		public override string ToString() {
-			return this.FullName;
-		}
+        public override string ToString() {
+            return this.FullName;
+        }
 
-        public static Type GetType(string typeName)
-        {
-            lock (typesByNameCache)
-            {
+        public virtual bool Equals (Type o) {
+            return Object.Equals(this, o);
+        }
+
+        public virtual Type[] GenericTypeArguments {
+            get {
+                if (IsGenericType && !IsGenericTypeDefinition) {
+                    return GetGenericArguments();
+                } else {
+                    return Type.EmptyTypes;
+                }
+            }
+        }
+
+        public virtual bool IsGenericTypeDefinition {
+            get { return false; }
+        }
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        extern public virtual bool IsSubclassOf(Type c);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        extern public virtual bool IsAssignableFrom(Type c);
+
+        public static Type GetType(string typeName) {
+            lock (typesByNameCache) {
                 Type cachedResult;
-                if (typesByNameCache.TryGetValue(typeName, out cachedResult))
-                {
+                if (typesByNameCache.TryGetValue(typeName, out cachedResult)) {
                     return cachedResult;
                 }
             }
@@ -86,15 +101,12 @@ namespace System {
             string assemblyName;
             string namespaceQualifiedTypeName;
 
-            if (typeName.IndexOf(',') > 0)
-            {
+            if (typeName.IndexOf(',') > 0) {
                 // Assembly is specified
                 var parts = typeName.Split(',');
                 assemblyName = parts[1].Trim();
                 namespaceQualifiedTypeName = parts[0];
-            }
-            else
-            {
+            } else {
                 // No assembly specified
                 assemblyName = null;
                 namespaceQualifiedTypeName = typeName;
@@ -105,10 +117,8 @@ namespace System {
             var className = namespaceQualifiedTypeName.Substring(namespaceSplitPoint + 1).Trim();
             var result = GetType(assemblyName, namespaceName, className);
 
-            if (result != null)
-            {
-                lock (typesByNameCache)
-                {
+            if (result != null) {
+                lock (typesByNameCache) {
                     typesByNameCache[typeName] = result;
                 }
             }
@@ -119,8 +129,10 @@ namespace System {
         [MethodImpl(MethodImplOptions.InternalCall)]
         extern public PropertyInfo[] GetProperties();
 
-        public MethodInfo GetMethod(string name)
-        {
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        extern public MethodInfo[] GetMethods();
+
+        public MethodInfo GetMethod(string name) {
             return (MethodInfo)GetMethodInternal(name);
         }
 
@@ -133,13 +145,11 @@ namespace System {
         [MethodImpl(MethodImplOptions.InternalCall)]
         extern private object GetMethodInternal(string name);
 
-        public static bool operator ==(Type t1, Type t2)
-        {
+        public static bool operator ==(Type t1, Type t2) {
             return t1?.FullName.Equals(t2?.FullName) == true;
         }
 
-        public static bool operator !=(Type t1, Type t2)
-        {
+        public static bool operator !=(Type t1, Type t2) {
             return t1?.FullName.Equals(t2?.FullName) == false;
         }
     }

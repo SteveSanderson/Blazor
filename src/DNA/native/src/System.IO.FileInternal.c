@@ -201,7 +201,7 @@ tAsyncCall* System_IO_FileInternal_GetFileSystemEntries(PTR pThis_, PTR pParams,
 	STRING2 pathPattern = SystemString_GetString(pathPatternHP, &pathPatternLen);
 	HEAP_PTR retArray;
 	U32 tempStoreSize = 32, tempStoreOfs = 0, i;
-	HEAP_PTR *pTempStore = malloc(tempStoreSize * sizeof(void*));
+	HEAP_PTR *pTempStore = (HEAP_PTR*)TMALLOC(tempStoreSize, void*);
 	PTR arrayElements;
 #ifdef _WIN32
 	unsigned short pathPatternNullTerm[256];

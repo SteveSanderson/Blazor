@@ -20,6 +20,7 @@
 
 #if !LOCALTEST
 
+using System.Globalization;
 namespace System {
 	public struct Decimal {
 
@@ -32,7 +33,24 @@ namespace System {
 #pragma warning restore 0169, 0649
 
         public static int[] GetBits(Decimal d) {
-			return new int[] { 0, 0, 0, 0 };
+			return new int[] { (int)d.lo, (int)d.mid, (int)d.hi, (int)d.flags };
+		}
+
+		public override string ToString() {
+			return ToString(null, null);
+		}
+
+		public string ToString(IFormatProvider fp) {
+			return ToString(null, fp);
+		}
+
+		public string ToString(string format) {
+			return ToString(format, null);
+		}
+
+		public string ToString(string format, IFormatProvider fp) {
+			NumberFormatInfo nfi = NumberFormatInfo.GetInstance(fp);
+			return NumberFormatter.NumberToString(format, this, nfi);
 		}
 
 	}

@@ -5,7 +5,8 @@ cd /d %~dp0
 set sourceFiles=
 for /f "delims=" %%a in ('dir /b src\*.c') do set sourceFiles=!sourceFiles! src\%%a
 
-set emccOptions= %sourceFiles% ^
+set emccOptions=%sourceFiles% ^
+	-DJS_INTEROP ^
 	-Wno-pointer-sign ^
 	-Oz ^
 	-s NO_EXIT_RUNTIME=1 ^

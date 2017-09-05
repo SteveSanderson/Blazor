@@ -146,6 +146,16 @@ tAsyncCall* System_RuntimeType_GetGenericArguments(PTR pThis_, PTR pParams, PTR 
 	return NULL;
 }
 
+tAsyncCall* System_RuntimeType_IsDefined(PTR pThis_, PTR pParams, PTR pReturnValue) {
+	tMD_TypeDef *pType = ((tRuntimeType*)pThis_)->pTypeDef;
+	return NULL;
+}
+
+tAsyncCall* System_RuntimeType_GetCustomAttributes(PTR pThis_, PTR pParams, PTR pReturnValue) {
+	tMD_TypeDef *pType = ((tRuntimeType*)pThis_)->pTypeDef;
+	return NULL;
+}
+
 tMD_TypeDef* RuntimeType_DeRef(PTR type) {
 	return ((tRuntimeType*)type)->pTypeDef;
 }

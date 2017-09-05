@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 
 namespace System.Globalization {
-	public class CultureInfo {
+	public class CultureInfo : IFormatProvider {
 
 		#region Static methods
 
@@ -267,6 +267,14 @@ namespace System.Globalization {
 			return this.name;
 		}
 
+		#region IFormatProvider Members
+
+		object IFormatProvider.GetFormat(Type formatType) {
+			// throw new Exception("The method or operation is not implemented.");
+			return null;
+		}
+
+		#endregion
 	}
 }
 

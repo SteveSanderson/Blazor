@@ -62,8 +62,8 @@ IDX_TABLE MetaData_DecodeSigEntryToken(SIG *pSig) {
 }
 
 tMetaData* MetaData() {
-	tMetaData *pRet = TMALLOC(tMetaData);
-	memset(pRet, 0, sizeof(tMetaData));
+	tMetaData *pRet = TCALLOCFOREVER(1, tMetaData);
+	//memset(pRet, 0, sizeof(tMetaData));
 	return pRet;
 }
 
@@ -180,7 +180,7 @@ static char* tableDefs[] = {
 	// 0x0F
 	"ssxsi*\x02*",
 	// 0x10
-	NULL,
+	"i*\x04*",
 	// 0x11
 	"B*",
 	// 0x12
@@ -226,9 +226,9 @@ static char* tableDefs[] = {
 	// 0x26
 	NULL,
 	// 0x27
-	NULL,
+	"i*i*S*S*9*",
 	// 0x28
-	NULL,
+	"i*i*S*9*",
 	// 0x29
 	"\x02*\x02*",
 	// 0x2A
@@ -248,7 +248,7 @@ static unsigned char* codedTags[] = {
 	// HasConstant
 	"\x04\x08\x17z",
 	// HasCustomAttribute
-	"\x06\x04\x01\x02\x08\x09\x0A\x00\x0E\x17\x14\x11\x1A\x1B\x20\x23\x26\x27\x28zzzzzzzzzzzzz",
+	"\x06\x04\x01\x02\x08\x09\x0A\x00\x0E\x17\x14\x11\x1A\x1B\x20\x23\x26\x27\x28\x2A\x2C\x2Bzzzzzzzzzz",
 	// HasFieldMarshall
 	"\x04\x08",
 	// HasDeclSecurity
@@ -340,7 +340,7 @@ static void* LoadSingleTable(tMetaData *pThis, tRVA *pRVA, int tableID, void **p
 	}
 
 	// Allocate memory for destination table
-	pDest = pRet = malloc(numRows * rowLen);
+	pDest = pRet = mallocForever(numRows * rowLen);
 
 	// Load table
 	for (row=0; row<numRows; row++) {
@@ -391,7 +391,7 @@ static void* LoadSingleTable(tMetaData *pThis, tRVA *pRVA, int tableID, void **p
 							unsigned char tag = *pSource & ((1 << tagBits) - 1);
 							int idxIntoTableID = pCoding[tag]; // The actual table index that we're looking for
 							if (idxIntoTableID < 0 || idxIntoTableID > MAX_TABLES) {
-								printf("Error: Bad table index: 0x%02x\n", idxIntoTableID);
+								printf("Error: tableID=%02x, row=%d, i=%d, d=%c, tag=%d : Bad table index: 0x%02x\n", tableID, row, i, d, tag, idxIntoTableID);
 								exit(1);
 							}
 							if (pThis->tables.codedIndex32Bit[ofs]) {

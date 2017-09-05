@@ -114,6 +114,10 @@ struct tJITCallPInvoke_ {
 	tMD_ImplMap *pImplMap;
 };
 
+#include "JIT_OpCodes.h"
+
+#ifdef SWITCH_ON_JIT_OP
+#else
 typedef struct tJITCodeInfo_ {
 	// The beginning and end of the actual native code to run the JIT opcode.
 	void *pStart;
@@ -121,10 +125,9 @@ typedef struct tJITCodeInfo_ {
 	U32 isDynamic;
 } tJITCodeInfo;
 
-#include "JIT_OpCodes.h"
-
 extern tJITCodeInfo jitCodeInfo[JIT_OPCODE_MAXNUM];
 extern tJITCodeInfo jitCodeGoNext;
+#endif
 
 void JIT_Execute_Init();
 

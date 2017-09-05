@@ -212,5 +212,17 @@ doneArgs:;
 
 	//Crash("FINISHED!!!");
 
+#ifdef DIAG_MEMORY_LEAKS
+	// cleanup memory
+	Heap_GarbageCollect();
+	Finalizer_Free();
+	freeForever();
+
+#ifdef _WIN32
+	// looking for memory leaks
+	_CrtDumpMemoryLeaks();
+#endif
+#endif
+
 	return retValue;
 }

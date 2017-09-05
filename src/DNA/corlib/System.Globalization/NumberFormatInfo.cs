@@ -172,8 +172,9 @@ namespace System.Globalization {
 
 		#region IFormatProvider Members
 
-		public object GetFormat(Type formatType) {
-			throw new Exception("The method or operation is not implemented.");
+		object IFormatProvider.GetFormat(Type formatType) {
+			// throw new Exception("The method or operation is not implemented.");
+			return null;
 		}
 
 		#endregion

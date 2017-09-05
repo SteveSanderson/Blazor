@@ -38,65 +38,73 @@
 #include "System.Reflection.MethodBase.h"
 #include "System.Diagnostics.Debugger.h"
 
+#ifdef SWITCH_ON_JIT_OP
+// Disable warning about unreferenced label
+#pragma warning(disable:4102)
+#else
 // Global array which stores the absolute addresses of the start and end of all JIT code
 // fragment machine code.
 tJITCodeInfo jitCodeInfo[JIT_OPCODE_MAXNUM];
 tJITCodeInfo jitCodeGoNext;
+#endif
 
 // Get the next op-code
-#define GET_OP() *(pCurOp++)
+#define GET_OP() (*(pCurOp++))
+//#define GET_OP() (dprintfn("GETOP : stackOfs = %d", (U32)(pCurEvalStack - pCurrentMethodState->pEvalStack)), *(pCurOp++))
+
+// PUSH/POP returns nothing - it just alters the stack offset correctly
+#define PUSH(numBytes) (pCurEvalStack += numBytes) //, dprintfn("PUSH %d: stackOfs = %d", numBytes, (U32)(pCurEvalStack - pCurrentMethodState->pEvalStack)), pCurEvalStack)
+#define POP(numBytes) (pCurEvalStack -= numBytes) //, dprintfn("POP  %d: stackOfs = %d", numBytes, (U32)(pCurEvalStack - pCurrentMethodState->pEvalStack)), pCurEvalStack)
 
 // Push a PTR value on the top of the stack
-#define PUSH_PTR(ptr) *(PTR*)pCurEvalStack = (PTR)(ptr); pCurEvalStack += sizeof(void*)
+#define PUSH_PTR(ptr) *(PTR*)pCurEvalStack = (PTR)(ptr); PUSH(sizeof(void*))
 // Push an arbitrarily-sized value-type onto the top of the stack
-#define PUSH_VALUETYPE(ptr, valueSize, stackInc) memcpy(pCurEvalStack, ptr, valueSize); pCurEvalStack += stackInc
+#define PUSH_VALUETYPE(ptr, valueSize, stackInc) memcpy(pCurEvalStack, ptr, valueSize); PUSH(stackInc)
 // Push a U32 value on the top of the stack
-#define PUSH_U32(value) *(U32*)pCurEvalStack = (U32)(value); pCurEvalStack += 4
+#define PUSH_U32(value) *(U32*)pCurEvalStack = (U32)(value); PUSH(4)
 // Push a U64 value on the top of the stack
-#define PUSH_U64(value) *(U64*)pCurEvalStack = (U64)(value); pCurEvalStack += 8
+#define PUSH_U64(value) *(U64*)pCurEvalStack = (U64)(value); PUSH(8)
 // Push a float value on the top of the stack
-#define PUSH_FLOAT(value) *(float*)pCurEvalStack = (float)(value); pCurEvalStack += 4;
+#define PUSH_FLOAT(value) *(float*)pCurEvalStack = (float)(value); PUSH(4)
 // Push a double value on the top of the stack
-#define PUSH_DOUBLE(value) *(double*)pCurEvalStack = (double)(value); pCurEvalStack += 8;
+#define PUSH_DOUBLE(value) *(double*)pCurEvalStack = (double)(value); PUSH(8)
 // Push a 4-byte heap pointer on to the top of the stack
-#define PUSH_O(pHeap) *(void**)pCurEvalStack = (void*)(pHeap); pCurEvalStack += sizeof(void*)
+#define PUSH_O(pHeap) *(HEAP_PTR*)pCurEvalStack = (HEAP_PTR)(pHeap); PUSH(4)
 // DUP4() duplicates the top 4 bytes on the eval stack
-#define DUP4() *(U32*)pCurEvalStack = *(U32*)(pCurEvalStack - 4); pCurEvalStack += 4
+#define DUP4() *(U32*)pCurEvalStack = *(U32*)(pCurEvalStack - 4); PUSH(4)
 // DUP8() duplicates the top 4 bytes on the eval stack
-#define DUP8() *(U64*)pCurEvalStack = *(U64*)(pCurEvalStack - 8); pCurEvalStack += 8
+#define DUP8() *(U64*)pCurEvalStack = *(U64*)(pCurEvalStack - 8); PUSH(8)
 // DUP() duplicates numBytes bytes from the top of the stack
-#define DUP(numBytes) memcpy(pCurEvalStack, pCurEvalStack - numBytes, numBytes); pCurEvalStack += numBytes
+#define DUP(numBytes) memcpy(pCurEvalStack, pCurEvalStack - numBytes, numBytes); PUSH(numBytes)
 // Pop a U32 value from the stack
-#define POP_U32() (*(U32*)(pCurEvalStack -= 4))
+#define POP_U32() (*(U32*)(POP(4)))
 // Pop a U64 value from the stack
-#define POP_U64() (*(U64*)(pCurEvalStack -= 8))
+#define POP_U64() (*(U64*)(POP(8)))
 // Pop a float value from the stack
-#define POP_FLOAT() (*(float*)(pCurEvalStack -= 4))
+#define POP_FLOAT() (*(float*)(POP(4)))
 // Pop a double value from the stack
-#define POP_DOUBLE() (*(double*)(pCurEvalStack -= 8))
+#define POP_DOUBLE() (*(double*)(POP(8)))
 // Pop 2 U32's from the stack
-#define POP_U32_U32(v1,v2) pCurEvalStack -= 8; v1 = *(U32*)pCurEvalStack; v2 = *(U32*)(pCurEvalStack + 4)
+#define POP_U32_U32(v1,v2) POP(8); v1 = *(U32*)pCurEvalStack; v2 = *(U32*)(pCurEvalStack + 4)
 // Pop 2 U64's from the stack
-#define POP_U64_U64(v1,v2) pCurEvalStack -= 16; v1 = *(U64*)pCurEvalStack; v2 = *(U64*)(pCurEvalStack + 8)
+#define POP_U64_U64(v1,v2) POP(16); v1 = *(U64*)pCurEvalStack; v2 = *(U64*)(pCurEvalStack + 8)
 // Pop 2 F32's from the stack
-#define POP_F32_F32(v1,v2) pCurEvalStack -= 8; v1 = *(float*)pCurEvalStack; v2 = *(float*)(pCurEvalStack + 4)
+#define POP_F32_F32(v1,v2) POP(8); v1 = *(float*)pCurEvalStack; v2 = *(float*)(pCurEvalStack + 4)
 // Pop 2 F64's from the stack
-#define POP_F64_F64(v1,v2) pCurEvalStack -= 16; v1 = *(double*)pCurEvalStack; v2 = *(double*)(pCurEvalStack + 8)
+#define POP_F64_F64(v1,v2) POP(16); v1 = *(double*)pCurEvalStack; v2 = *(double*)(pCurEvalStack + 8)
 // Pop a PTR value from the stack
-#define POP_PTR() (*(PTR*)(pCurEvalStack -= sizeof(void*)))
+#define POP_PTR() (*(PTR*)(POP(sizeof(void*))))
 // Pop an arbitrarily-sized value-type from the stack (copies it to the specified memory location)
-#define POP_VALUETYPE(ptr, valueSize, stackDec) memcpy(ptr, pCurEvalStack -= stackDec, valueSize)
+#define POP_VALUETYPE(ptr, valueSize, stackDec) memcpy(ptr, POP(stackDec), valueSize)
 // Pop a Object (heap) pointer value from the stack
-#define POP_O() (*(HEAP_PTR*)(pCurEvalStack -= 4))
-// POP() returns nothing - it just alters the stack offset correctly
-#define POP(numBytes) pCurEvalStack -= numBytes
+#define POP_O() (*(HEAP_PTR*)(POP(4)))
 // POP_ALL() empties the evaluation stack
 #define POP_ALL() pCurEvalStack = pCurrentMethodState->pEvalStack
 
 #define STACK_ADDR(type) *(type*)(pCurEvalStack - sizeof(type))
 // General binary ops
 #define BINARY_OP(returnType, type1, type2, op) \
-	pCurEvalStack -= sizeof(type1) + sizeof(type2) - sizeof(returnType); \
+	POP(sizeof(type1) + sizeof(type2) - sizeof(returnType)); \
 	*(returnType*)(pCurEvalStack - sizeof(returnType)) = \
 	*(type1*)(pCurEvalStack - sizeof(returnType)) op \
 	*(type2*)(pCurEvalStack - sizeof(returnType) + sizeof(type1))
@@ -106,7 +114,7 @@ tJITCodeInfo jitCodeGoNext;
 // Set the new method state (for use when the method state changes - in calls mainly)
 #define SAVE_METHOD_STATE() \
 	pCurrentMethodState->stackOfs = (U32)(pCurEvalStack - pCurrentMethodState->pEvalStack); \
-	pCurrentMethodState->ipOffset = (U32)(pCurOp - pOps)
+	pCurrentMethodState->ipOffset = (U32)(pCurOp - pOps) \
 
 #define LOAD_METHOD_STATE() \
 	pCurrentMethodState = pThread->pCurrentMethodState; \
@@ -190,9 +198,24 @@ U32 opcodeNumUses[JIT_OPCODE_MAXNUM];
 
 #else
 
-#define OPCODE_USE(op)
+#define OPCODE_USE(op) //dprintfn("JIT op: 0x%03x (%s)", op, Sys_JIT_OpCodeName(op))
 
 #endif
+
+#ifdef SWITCH_ON_JIT_OP
+
+#define CHECK_FOR_BREAKPOINT() \
+	if (pOpSequencePoints != NULL) { \
+		I32 currentOpSequencePoint = pOpSequencePoints[pCurOp - pOps]; \
+		if (currentOpSequencePoint >= 0) { \
+			CheckIfSequencePointIsBreakpoint(pCurrentMethodState, currentOpSequencePoint); \
+		} \
+	}
+
+#define GO_NEXT() \
+	goto goNext;
+
+#else
 
 #define CHECK_FOR_BREAKPOINT() \
 	CheckIfCurrentInstructionHasBreakpoint(pCurrentMethodState, pCurOp - pOps, pOpSequencePoints);
@@ -221,10 +244,21 @@ U32 opcodeNumUses[JIT_OPCODE_MAXNUM];
 
 #endif
 #endif
+#endif
 
 #define GO_NEXT_CHECK() \
 	if (--numInst == 0) goto done; \
 	GO_NEXT()
+
+#ifdef SWITCH_ON_JIT_OP
+
+#define GET_LABELS(op) \
+	case op: goto op##_start;
+
+#define GET_LABELS_DYNAMIC(op, extraBytes) \
+	case op: goto op##_start;
+
+#else
 
 #define GET_LABELS(op) \
 	GET_LABEL(pAddr, op##_start); \
@@ -239,6 +273,8 @@ U32 opcodeNumUses[JIT_OPCODE_MAXNUM];
 	GET_LABEL(pAddr, op##_end); \
 	jitCodeInfo[op].pEnd = pAddr; \
 	jitCodeInfo[op].isDynamic = 0x100 | (extraBytes & 0xff)
+
+#endif
 
 #define RUN_FINALIZER() {tMethodState *pMS = RunFinalizer(pThread);if(pMS) {CHANGE_METHOD_STATE(pMS);}}
 
@@ -269,7 +305,20 @@ U32 JIT_Execute(tThread *pThread, U32 numInst) {
 	PTR pMem;
 
 	if (pThread == NULL) {
+
+#ifdef SWITCH_ON_JIT_OP
+		return 0;
+	}
+
+	LOAD_METHOD_STATE();
+	GO_NEXT();
+
+goNext:
+	CHECK_FOR_BREAKPOINT();
+	switch (GET_OP()) {
+#else
 		void *pAddr;
+
 		// Special case to get all the label addresses
 		// Default all op-codes to noCode.
 		GET_LABEL(pAddr, noCode);
@@ -283,6 +332,7 @@ U32 JIT_Execute(tThread *pThread, U32 numInst) {
 		GET_LABEL(jitCodeGoNext.pStart, JIT_GoNext_start);
 		GET_LABEL(jitCodeGoNext.pEnd, JIT_GoNext_end);
 		jitCodeGoNext.isDynamic = 0;
+#endif
 
 		// Get all defined opcodes
 		GET_LABELS_DYNAMIC(JIT_NOP, 0);
@@ -411,6 +461,7 @@ U32 JIT_Execute(tThread *pThread, U32 numInst) {
 		GET_LABELS_DYNAMIC(JIT_CGT_UN_I32I32, 0);
 		GET_LABELS_DYNAMIC(JIT_CLT_I32I32, 0);
 		GET_LABELS_DYNAMIC(JIT_CLT_UN_I32I32, 0);
+
 		GET_LABELS_DYNAMIC(JIT_CEQ_I64I64, 0);
 		GET_LABELS_DYNAMIC(JIT_CGT_I64I64, 0);
 		GET_LABELS_DYNAMIC(JIT_CGT_UN_I64I64, 0);
@@ -437,6 +488,8 @@ U32 JIT_Execute(tThread *pThread, U32 numInst) {
 		GET_LABELS_DYNAMIC(JIT_NOT_I32, 0);
 		GET_LABELS_DYNAMIC(JIT_NEG_I64, 0);
 		GET_LABELS_DYNAMIC(JIT_NOT_I64, 0);
+		GET_LABELS_DYNAMIC(JIT_NEG_F32, 0);
+		GET_LABELS_DYNAMIC(JIT_NEG_F64, 0);
 
 		GET_LABELS(JIT_BOX_NULLABLE);
 		GET_LABELS_DYNAMIC(JIT_LOAD_F64, 8);
@@ -485,6 +538,11 @@ U32 JIT_Execute(tThread *pThread, U32 numInst) {
 		GET_LABELS(JIT_BLE_UN_I32I32);
 		GET_LABELS(JIT_BLT_UN_I32I32);
 
+		GET_LABELS(JIT_BGE_UN_I64I64);
+		GET_LABELS(JIT_BGT_UN_I64I64);
+		GET_LABELS(JIT_BLE_UN_I64I64);
+		GET_LABELS(JIT_BLT_UN_I64I64);
+
 		GET_LABELS_DYNAMIC(JIT_SHL_I32, 0);
 		GET_LABELS_DYNAMIC(JIT_SHR_I32, 0);
 		GET_LABELS_DYNAMIC(JIT_SHR_UN_I32, 0);
@@ -494,6 +552,8 @@ U32 JIT_Execute(tThread *pThread, U32 numInst) {
 
 		GET_LABELS(JIT_BRANCH_FALSE);
 		GET_LABELS(JIT_BRANCH_TRUE);
+		GET_LABELS(JIT_BRANCH64_FALSE);
+		GET_LABELS(JIT_BRANCH64_TRUE);
 		GET_LABELS(JIT_LOADTOKEN_TYPE);
 		
 		GET_LABELS(JIT_LOADTOKEN_FIELD);
@@ -512,6 +572,9 @@ U32 JIT_Execute(tThread *pThread, U32 numInst) {
 		GET_LABELS(JIT_STOREINDIRECT_U8);
 		GET_LABELS(JIT_STOREINDIRECT_U16);
 		GET_LABELS(JIT_STOREINDIRECT_U32);
+		GET_LABELS(JIT_STOREINDIRECT_U64);
+		GET_LABELS(JIT_STOREINDIRECT_R32);
+		GET_LABELS(JIT_STOREINDIRECT_R64);
 
 		GET_LABELS_DYNAMIC(JIT_CONV_I32_I32, 4);
 		GET_LABELS_DYNAMIC(JIT_CONV_I32_U32, 4);
@@ -574,10 +637,15 @@ U32 JIT_Execute(tThread *pThread, U32 numInst) {
 
 		GET_LABELS_DYNAMIC(JIT_CEQ_F32F32, 0);
 		GET_LABELS_DYNAMIC(JIT_CGT_F32F32, 0);
+		GET_LABELS_DYNAMIC(JIT_CGT_UN_F32F32, 0);
 		GET_LABELS_DYNAMIC(JIT_CLT_F32F32, 0);
+		GET_LABELS_DYNAMIC(JIT_CLT_UN_F32F32, 0);
+
 		GET_LABELS_DYNAMIC(JIT_CEQ_F64F64, 0);
 		GET_LABELS_DYNAMIC(JIT_CGT_F64F64, 0);
+		GET_LABELS_DYNAMIC(JIT_CGT_UN_F64F64, 0);
 		GET_LABELS_DYNAMIC(JIT_CLT_F64F64, 0);
+		GET_LABELS_DYNAMIC(JIT_CLT_UN_F64F64, 0);
 
 		GET_LABELS_DYNAMIC(JIT_ADD_F32F32, 0);
 		GET_LABELS_DYNAMIC(JIT_ADD_F64F64, 0);
@@ -594,18 +662,26 @@ U32 JIT_Execute(tThread *pThread, U32 numInst) {
 		GET_LABELS_DYNAMIC(JIT_LOAD_I4_2, 0);
 
 		GET_LABELS_DYNAMIC(JIT_LOADFIELD_4, 4);
+		GET_LABELS_DYNAMIC(JIT_LOADFIELD_8, 8);
 
+#ifdef SWITCH_ON_JIT_OP
+	default: goto noCode;
+	}
+#else
 		return 0;
 	}
+#endif
 
 #ifdef DIAG_OPCODE_TIMES
 	U64 opcodeStartTime = rdtsc();
-	U32 realOp;
 #endif
 
+#ifdef SWITCH_ON_JIT_OP
+#else
 	LOAD_METHOD_STATE();
 
 	GO_NEXT();
+#endif
 
 noCode:
 	Crash("No code for op-code");
@@ -950,6 +1026,7 @@ JIT_STOREINDIRECT_U8_start:
 JIT_STOREINDIRECT_U16_start:
 JIT_STOREINDIRECT_U32_start:
 JIT_STOREINDIRECT_REF_start:
+JIT_STOREINDIRECT_R32_start:
 	OPCODE_USE(JIT_STOREINDIRECT_U32);
 	{
 		U32 value = POP_U32(); // The value to store
@@ -960,6 +1037,19 @@ JIT_STOREINDIRECT_U8_end:
 JIT_STOREINDIRECT_U16_end:
 JIT_STOREINDIRECT_U32_end:
 JIT_STOREINDIRECT_REF_end:
+JIT_STOREINDIRECT_R32_end:
+	GO_NEXT();
+
+JIT_STOREINDIRECT_U64_start:
+JIT_STOREINDIRECT_R64_start:
+	OPCODE_USE(JIT_STOREINDIRECT_U64);
+	{
+		U64 value = POP_U64(); // Value
+		PTR pMem = POP_PTR(); // The address to store to
+		*(U64*)pMem = value;
+	}
+JIT_STOREINDIRECT_U64_end:
+JIT_STOREINDIRECT_R64_end:
 	GO_NEXT();
 
 JIT_STORE_OBJECT_VALUETYPE_start:
@@ -1026,7 +1116,7 @@ JIT_CALL_NATIVE_end:
 
 JIT_RETURN_start:
 	OPCODE_USE(JIT_RETURN);
-	//printf("Returned from %s() to %s()\n", pCurrentMethodState->pMethod->name, (pCurrentMethodState->pCaller)?pCurrentMethodState->pCaller->pMethod->name:"<none>");
+	// dprintfn("Returned from %s() to %s()", pCurrentMethodState->pMethod->name, (pCurrentMethodState->pCaller)?pCurrentMethodState->pCaller->pMethod->name:(STRING)"<none>");
 	if (pCurrentMethodState->pCaller == NULL) {
 		// End of thread!
 		if (pCurrentMethodState->pMethod->pReturnType == types[TYPE_SYSTEM_INT32]) {
@@ -1051,7 +1141,7 @@ JIT_RETURN_start:
 		// Copy return value to callers evaluation stack
 		if (u32Value > 0) {
 			memmove(pCurEvalStack, pMem, u32Value);
-			pCurEvalStack += u32Value;
+			PUSH(u32Value);
 		}
 		// Delete the current method state and go back to callers method state
 		MethodState_Delete(pThread, &pOldMethodState);
@@ -1076,7 +1166,7 @@ JIT_INVOKE_DELEGATE_start:
 			pDelegateMethod = (tMD_MethodDef*)GET_OP();
 			// Take the params off the stack. This is the pointer to the tDelegate & params
 			//pCurrentMethodState->stackOfs -= pDelegateMethod->parameterStackSize;
-			pCurEvalStack -= pDelegateMethod->parameterStackSize;
+			POP(pDelegateMethod->parameterStackSize);
 			// Allocate memory for delegate params
 			pCurrentMethodState->pDelegateParams = malloc(pDelegateMethod->parameterStackSize - sizeof(void*));
 			memcpy(
@@ -1089,7 +1179,7 @@ JIT_INVOKE_DELEGATE_start:
 		} else {
 			pDelegateMethod = Delegate_GetMethod(pCurrentMethodState->pNextDelegate);
 			if (pDelegateMethod->pReturnType != NULL) {
-				pCurEvalStack -= pDelegateMethod->pReturnType->stackSize;
+				POP(pDelegateMethod->pReturnType->stackSize);
 			}
 			// Get the actual delegate heap pointer
 			pDelegate = pCurrentMethodState->pNextDelegate;
@@ -1122,7 +1212,7 @@ JIT_INVOKE_SYSTEM_REFLECTION_METHODBASE_start:
 		tMD_MethodDef *pInvokeMethod = (tMD_MethodDef*)GET_OP();
 
 		// Take the MethodBase.Invoke params off the stack.
-		pCurEvalStack -= pInvokeMethod->parameterStackSize;
+		POP(pInvokeMethod->parameterStackSize);
 
 		// Get a pointer to the MethodBase instance (e.g., a MethodInfo or ConstructorInfo),
 		// and from that, determine which method we're going to invoke
@@ -1134,29 +1224,26 @@ JIT_INVOKE_SYSTEM_REFLECTION_METHODBASE_start:
 		pCurrentMethodState->pReflectionInvokeReturnType = pCallMethod->pReturnType;
 
 		// Get the 'this' pointer for the call and the params array
-		PTR invocationThis = (PTR)(*(tMethodBase**)(pCurEvalStack + sizeof(HEAP_PTR)));
-		HEAP_PTR invocationParamsArray = *(HEAP_PTR*)(pCurEvalStack + sizeof(HEAP_PTR) + sizeof(PTR));		
+		PTR invocationThis = *(PTR*)(pCurEvalStack + sizeof(HEAP_PTR));
+		HEAP_PTR invocationParamsArray = *(HEAP_PTR*)(pCurEvalStack + sizeof(HEAP_PTR) + sizeof(PTR));
 
 		// Put the new 'this' on the stack
 		PTR pPrevEvalStack = pCurEvalStack;
-		PUSH_PTR(invocationThis);
+		if (invocationThis != NULL) {
+			PUSH_PTR(invocationThis);
+		}
 
 		// Put any other params on the stack
 		if (invocationParamsArray != NULL) {
 			U32 invocationParamsArrayLength = SystemArray_GetLength(invocationParamsArray);
-			PTR invocationParamsArrayElements = SystemArray_GetElements(invocationParamsArray);
+			HEAP_PTR* invocationParamsArrayElements = (HEAP_PTR*)SystemArray_GetElements(invocationParamsArray);
 			for (U32 paramIndex = 0; paramIndex < invocationParamsArrayLength; paramIndex++) {
-				HEAP_PTR currentParam = (HEAP_PTR)(((U32*)(invocationParamsArrayElements))[paramIndex]);
-				if (currentParam == NULL) {
-					PUSH_O(NULL);
+				HEAP_PTR currentParam = invocationParamsArrayElements[paramIndex];
+				tMD_TypeDef *pParamType = Heap_GetType(currentParam);
+				if (pParamType->isValueType) {
+					PUSH_VALUETYPE(currentParam, pParamType->stackSize, pParamType->stackSize);
 				} else {
-					tMD_TypeDef *currentParamType = Heap_GetType(currentParam);
-
-					if (Type_IsValueType(currentParamType)) {
-						PUSH_VALUETYPE(currentParam, currentParamType->stackSize, currentParamType->stackSize);
-					} else {
-						PUSH_O(currentParam);
-					}
+					PUSH_O(currentParam);
 				}
 			}
 		}
@@ -1208,7 +1295,7 @@ JIT_CALL_O_start:
 JIT_CALL_INTERFACE_start:
 	op = JIT_CALL_INTERFACE;
 allCallStart:
-	OPCODE_USE(JIT_CALL_O);
+	OPCODE_USE(op);
 	{
 		tMD_MethodDef *pCallMethod;
 		tMethodState *pCallMethodState;
@@ -1219,6 +1306,7 @@ allCallStart:
 		}
 
 		pCallMethod = (tMD_MethodDef*)GET_OP();
+		//dprintfn("Calling method: %s", Sys_GetMethodDesc(pCallMethod));
 		heapPtr = NULL;
 
 		if (op == JIT_BOX_CALLVIRT) {
@@ -1229,53 +1317,54 @@ allCallStart:
 			*(HEAP_PTR*)pMem = heapPtr;
 		} else if (op == JIT_DEREF_CALLVIRT) {
 			pMem = pCurEvalStack - pCallMethod->parameterStackSize;
-			*(HEAP_PTR*)pMem = **(HEAP_PTR**)pMem;
+			heapPtr = **(HEAP_PTR**)pMem;
+			*(HEAP_PTR*)pMem = heapPtr;
+		}
+
+		// Get the actual object that is becoming 'this'
+		if (heapPtr == NULL) {
+			heapPtr = *(HEAP_PTR*)(pCurEvalStack - pCallMethod->parameterStackSize);
 		}
 
 		// If it's a virtual call then find the real correct method to call
 		if (op == JIT_CALLVIRT_O || op == JIT_BOX_CALLVIRT || op == JIT_DEREF_CALLVIRT) {
 			tMD_TypeDef *pThisType;
-			// Get the actual object that is becoming 'this'
-			if (heapPtr == NULL) {
-				heapPtr = *(HEAP_PTR*)(pCurEvalStack - pCallMethod->parameterStackSize);
-			}
+
 			if (heapPtr == NULL) {
 				//Crash("NULL 'this' in Virtual call: %s", Sys_GetMethodDesc(pCallMethod));
 				THROW(types[TYPE_SYSTEM_NULLREFERENCEEXCEPTION]);
 			}
 			pThisType = Heap_GetType(heapPtr);
 			if (METHOD_ISVIRTUAL(pCallMethod)) {
+				// Assert(pCallMethod->parameterStackSize == pThisType->pVTable[pCallMethod->vTableOfs]->parameterStackSize);
 				pCallMethod = pThisType->pVTable[pCallMethod->vTableOfs];
+				//dprintfn("Calling virtual method: %s", pCallMethod->name);
 			}
 		} else if (op == JIT_CALL_INTERFACE) {
 			tMD_TypeDef *pInterface, *pThisType;
-			U32 vIndex;
-			I32 i;
-
 			pInterface = pCallMethod->pParentType;
-			// Get the actual object that is becoming 'this'
-			heapPtr = *(HEAP_PTR*)(pCurEvalStack - pCallMethod->parameterStackSize);
 			pThisType = Heap_GetType(heapPtr);
+
 			// Find the interface mapping on the 'this' type.
-			vIndex = 0xffffffff;
 			// This must be searched backwards so if an interface is implemented more than
 			// once in the type hierarchy, the most recent definition gets called
-			for (i=(I32)pThisType->numInterfaces-1; i >= 0; i--) {
+			for (I32 i=(I32)pThisType->numInterfaces-1; i >= 0; i--) {
 				if (pThisType->pInterfaceMaps[i].pInterface == pInterface) {
 					// Found the right interface map
 					if (pThisType->pInterfaceMaps[i].pVTableLookup != NULL) {
-						vIndex = pThisType->pInterfaceMaps[i].pVTableLookup[pCallMethod->vTableOfs];
-						break;
+						U32 vIndex = pThisType->pInterfaceMaps[i].pVTableLookup[pCallMethod->vTableOfs];
+						pCallMethod = pThisType->pVTable[vIndex];
+					} else {
+						pCallMethod = pThisType->pInterfaceMaps[i].ppMethodVLookup[pCallMethod->vTableOfs];
 					}
-					pCallMethod = pThisType->pInterfaceMaps[i].ppMethodVLookup[pCallMethod->vTableOfs];
+					//dprintfn("Calling interface method: %s", pCallMethod->name);
 					goto callMethodSet;
 				}
 			}
-			Assert(vIndex != 0xffffffff);
-			pCallMethod = pThisType->pVTable[vIndex];
+			Crash("%s.%s is missing interface method: %s", pThisType->nameSpace, pThisType->name, Sys_GetMethodDesc(pCallMethod));
+			//dprintfn("Calling interface method: %s", pCallMethod->name);
 		}
 callMethodSet:
-		//printf("Calling method: %s\n", Sys_GetMethodDesc(pCallMethod));
 		// Set up the new method state for the called method
 		pCallMethodState = MethodState_Direct(pThread, pCallMethod, pCurrentMethodState, 0);
 		// Set up the parameter stack for the method being called
@@ -1343,6 +1432,30 @@ JIT_BRANCH_FALSE_start:
 		}
 	}
 JIT_BRANCH_FALSE_end:
+	GO_NEXT_CHECK();
+
+JIT_BRANCH64_TRUE_start:
+	OPCODE_USE(JIT_BRANCH64_TRUE);
+	{
+		U64 value = POP_U64();
+		U32 ofs = GET_OP();
+		if (value != 0) {
+			pCurOp = pOps + ofs;
+		}
+	}
+JIT_BRANCH64_TRUE_end:
+	GO_NEXT_CHECK();
+
+JIT_BRANCH64_FALSE_start:
+	OPCODE_USE(JIT_BRANCH64_FALSE);
+	{
+		U64 value = POP_U64();
+		U32 ofs = GET_OP();
+		if (value == 0) {
+			pCurOp = pOps + ofs;
+		}
+	}
+JIT_BRANCH64_FALSE_end:
 	GO_NEXT_CHECK();
 
 JIT_BEQ_I32I32_start:
@@ -1746,6 +1859,60 @@ JIT_BLT_UN_I32I32_start:
 JIT_BLT_UN_I32I32_end:
 	GO_NEXT_CHECK();
 
+
+JIT_BGE_UN_I64I64_start:
+	OPCODE_USE(JIT_BGE_UN_I64I64);
+	{
+		U64 v1, v2, ofs;
+		POP_U64_U64(v1, v2);
+		ofs = GET_OP();
+		if (v1 >= v2) {
+			pCurOp = pOps + ofs;
+		}
+	}
+JIT_BGE_UN_I64I64_end:
+	GO_NEXT_CHECK();
+
+JIT_BGT_UN_I64I64_start:
+	OPCODE_USE(JIT_BGT_UN_I64I64);
+	{
+		U64 v1, v2, ofs;
+		POP_U64_U64(v1, v2);
+		ofs = GET_OP();
+		if (v1 > v2) {
+			pCurOp = pOps + ofs;
+		}
+	}
+JIT_BGT_UN_I64I64_end:
+	GO_NEXT_CHECK();
+
+JIT_BLE_UN_I64I64_start:
+	OPCODE_USE(JIT_BLE_UN_I64I64);
+	{
+		U64 v1, v2, ofs;
+		POP_U64_U64(v1, v2);
+		ofs = GET_OP();
+		if (v1 <= v2) {
+			pCurOp = pOps + ofs;
+		}
+	}
+JIT_BLE_UN_I64I64_end:
+	GO_NEXT_CHECK();
+
+JIT_BLT_UN_I64I64_start:
+	OPCODE_USE(JIT_BLT_UN_I64I64);
+	{
+		U64 v1, v2, ofs;
+		POP_U64_U64(v1, v2);
+		ofs = GET_OP();
+		if (v1 < v2) {
+			pCurOp = pOps + ofs;
+		}
+	}
+JIT_BLT_UN_I64I64_end:
+	GO_NEXT_CHECK();
+
+
 JIT_CEQ_I32I32_start: // Handles I32 and O
 	OPCODE_USE(JIT_CEQ_I32I32);
 	BINARY_OP(U32, U32, U32, ==);
@@ -1819,27 +1986,35 @@ JIT_CEQ_F64F64_end:
 	GO_NEXT();
 
 JIT_CGT_F32F32_start:
+JIT_CGT_UN_F32F32_start:
 	OPCODE_USE(JIT_CGT_F32F32);
 	BINARY_OP(U32, float, float, >);
 JIT_CGT_F32F32_end:
+JIT_CGT_UN_F32F32_end:
 	GO_NEXT();
 
 JIT_CGT_F64F64_start:
+JIT_CGT_UN_F64F64_start:
 	OPCODE_USE(JIT_CGT_F64F64);
 	BINARY_OP(U32, double, double, >);
 JIT_CGT_F64F64_end:
+JIT_CGT_UN_F64F64_end:
 	GO_NEXT();
 
 JIT_CLT_F32F32_start:
+JIT_CLT_UN_F32F32_start:
 	OPCODE_USE(JIT_CLT_F32F32);
 	BINARY_OP(U32, float, float, <);
 JIT_CLT_F32F32_end:
+JIT_CLT_UN_F32F32_end:
 	GO_NEXT();
 
 JIT_CLT_F64F64_start:
+JIT_CLT_UN_F64F64_start:
 	OPCODE_USE(JIT_CLT_F64F64);
 	BINARY_OP(U32, double, double, <);
 JIT_CLT_F64F64_end:
+JIT_CLT_UN_F64F64_end:
 	GO_NEXT();
 
 JIT_ADD_OVF_I32I32_start:
@@ -2116,6 +2291,18 @@ JIT_NEG_I64_start:
 	OPCODE_USE(JIT_NEG_I64);
 	UNARY_OP(I64, -);
 JIT_NEG_I64_end:
+	GO_NEXT();
+
+JIT_NEG_F32_start:
+	OPCODE_USE(JIT_NEG_F32);
+	UNARY_OP(float, -);
+JIT_NEG_F32_end:
+	GO_NEXT();
+
+JIT_NEG_F64_start:
+	OPCODE_USE(JIT_NEG_F64);
+	UNARY_OP(double, -);
+JIT_NEG_F64_end:
 	GO_NEXT();
 
 JIT_NOT_I32_start:
@@ -2507,7 +2694,7 @@ JIT_NEWOBJECT_VALUETYPE_start:
 		CreateParameters(pCallMethodState->pParamsLocals, pConstructorDef, &pTempPtr, pMem);
 		pCurEvalStack = pTempPtr;
 		// Set the stack state so it's correct for the constructor return
-		pCurEvalStack += pConstructorDef->pParentType->stackSize;
+		PUSH(pConstructorDef->pParentType->stackSize);
 		// Set up the local variables for the new method state
 		CHANGE_METHOD_STATE(pCallMethodState);
 		// Run any pending Finalizers
@@ -2522,7 +2709,7 @@ JIT_IS_INSTANCE_start:
 JIT_CAST_CLASS_start:
 	op = JIT_CAST_CLASS;
 jitCastClass:
-	OPCODE_USE(JIT_CAST_CLASS);
+	OPCODE_USE(op);
 	{
 		tMD_TypeDef *pToType, *pTestType;
 		HEAP_PTR heapPtr;
@@ -2667,7 +2854,7 @@ JIT_LOAD_ELEMENT_start:
 		U32 size = GET_OP(); // size of type on stack
 		*(U32*)pCurEvalStack = 0; // This is required to zero out the stack for types that are stored in <4 bytes in arrays
 		SystemArray_LoadElement(heapPtr, idx, pCurEvalStack);
-		pCurEvalStack += size;
+		PUSH(size);
 	}
 JIT_LOAD_ELEMENT_end:
 	GO_NEXT();
@@ -2771,7 +2958,7 @@ JIT_STOREFIELD_VALUETYPE_start:
 		PTR pMem;
 
 		pFieldDef = (tMD_FieldDef*)GET_OP();
-		pCurEvalStack -= pFieldDef->memSize;
+		POP(pFieldDef->memSize);
 		pMem = pCurEvalStack;
 		heapPtr = POP_O();
 		memcpy(heapPtr + pFieldDef->memOffset, pMem, pFieldDef->memSize);
@@ -2798,10 +2985,20 @@ JIT_LOADFIELD_4_start:
 	OPCODE_USE(JIT_LOADFIELD_4);
 	{
 		U32 ofs = GET_OP();
-		PTR heapPtr = POP_O();
+		heapPtr = POP_O();
 		PUSH_U32(*(U32*)(heapPtr + ofs));
 	}
 JIT_LOADFIELD_4_end:
+	GO_NEXT();
+
+JIT_LOADFIELD_8_start:
+	OPCODE_USE(JIT_LOADFIELD_8);
+	{
+		U32 ofs = GET_OP();
+		heapPtr = POP_O();
+		PUSH_U64(*(U64*)(heapPtr + ofs));
+	}
+JIT_LOADFIELD_8_end:
 	GO_NEXT();
 
 JIT_LOADFIELD_VALUETYPE_start:
@@ -2818,7 +3015,7 @@ JIT_LOADFIELD_VALUETYPE_start:
 		// My guess is that at some point they refactored from using 'pEvalStack' to 'pCurEvalStack', but
 		// didn't update this method (because nothing in corlib reads fields from structs).
 		// I think the following line moves the stack pointer along correctly instead:
-		pCurEvalStack -= u32Value;
+		POP(u32Value);
 		
 		//pMem = pEvalStack + pCurrentMethodState->stackOfs + pFieldDef->memOffset;
 		pMem = pCurEvalStack + pFieldDef->memOffset;
@@ -3042,7 +3239,7 @@ JIT_BOX_NULLABLE_start:
 		tMD_TypeDef *pType = (tMD_TypeDef*)GET_OP();
 
 		// Take the nullable type off the stack. The +4 is because the of the HasValue field (Bool, size = 4 bytes)
-		pCurEvalStack -= pType->stackSize + 4;
+		POP(pType->stackSize + 4);
 		// If .HasValue
 		if (*(U32*)pCurEvalStack) {
 			// Box the underlying type
@@ -3081,7 +3278,7 @@ JIT_UNBOX_NULLABLE_start:
 			PUSH_U32(0);
 			// And increase the stack pointer by the size of the underlying type
 			// (the contents don't matter)
-			pCurEvalStack += pTypeDef->stackSize;
+			PUSH(pTypeDef->stackSize);
 		} else {
 			// Push .HasValue (= true)
 			PUSH_U32(1);
@@ -3202,6 +3399,7 @@ finallyUnwindStack:
 		// Set the IP to the catch handler
 		pCurrentMethodState->ipOffset = pThread->pCatchExceptionHandler->handlerStart;
 		// Set the current method state
+		pThread->pCurrentMethodState = pCurrentMethodState;
 		LOAD_METHOD_STATE();
 		// Push onto this stack-frame's evaluation stack the opject thrown
 		POP_ALL();

@@ -32,18 +32,18 @@
 #include "Type.h"
 #include "CLIFile.h"
 
-tAsyncCall* System_Type_GetTypeFromHandle(PTR pThis_, PTR pParams, PTR pReturnValue) {
-	tMD_TypeDef *pTypeDef = *(tMD_TypeDef**)pParams;
+tAsyncCall* System_Type_get_IsValueType(PTR pThis_, PTR pParams, PTR pReturnValue) {
+	tRuntimeType *pRuntimeType = (tRuntimeType*)pThis_;
 
-	*(HEAP_PTR*)pReturnValue = Type_GetTypeObject(pTypeDef);
+	*(U32*)pReturnValue = pRuntimeType->pTypeDef->isValueType;
 
 	return NULL;
 }
 
-tAsyncCall* System_Type_get_IsValueType(PTR pThis_, PTR pParams, PTR pReturnValue) {
-	tRuntimeType *pRuntimeType = (tRuntimeType*)pThis_;
-	
-	*(U32*)pReturnValue = pRuntimeType->pTypeDef->isValueType;
+tAsyncCall* System_Type_GetTypeFromHandle(PTR pThis_, PTR pParams, PTR pReturnValue) {
+	tMD_TypeDef *pTypeDef = *(tMD_TypeDef**)pParams;
+
+	*(HEAP_PTR*)pReturnValue = Type_GetTypeObject(pTypeDef);
 
 	return NULL;
 }
@@ -135,10 +135,8 @@ tAsyncCall* System_Type_GetProperties(PTR pThis_, PTR pParams, PTR pReturnValue)
 		tPropertyInfo *pPropertyInfo = (tPropertyInfo*)Heap_AllocType(types[TYPE_SYSTEM_REFLECTION_PROPERTYINFO]);
 		SystemArray_StoreElement(ret, i, (PTR)&pPropertyInfo);
 
-		// Assign ownerType
+		// Assign ownerType and name
 		pPropertyInfo->ownerType = pThis_;
-
-		// Assign name
 		pPropertyInfo->name = SystemString_FromCharPtrASCII(pPropertyMetadata->name);
 
 		// Assign propertyType
@@ -153,6 +151,38 @@ tAsyncCall* System_Type_GetProperties(PTR pThis_, PTR pParams, PTR pReturnValue)
 		// Assign propertyMetadata
 		pPropertyInfo->index = index;
 		pPropertyInfo->pMetaData = pPropertyMetadata;
+	}
+
+	return NULL;
+}
+
+tAsyncCall* System_Type_GetMethods(PTR pThis_, PTR pParams, PTR pReturnValue)
+{
+	// Get metadata for the 'this' type
+	tRuntimeType *pRuntimeType = (tRuntimeType*)pThis_;
+	tMD_TypeDef *pTypeDef = pRuntimeType->pTypeDef;
+
+	// Instantiate a MethodInfo[]
+	tMD_TypeDef *pArrayType = Type_GetArrayTypeDef(types[TYPE_SYSTEM_REFLECTION_METHODINFO], NULL, NULL);
+	HEAP_PTR ret = SystemArray_NewVector(pArrayType, pTypeDef->numMethods);
+	// Allocate to return value straight away, so it cannot be GCed
+	*(HEAP_PTR*)pReturnValue = ret;
+
+	// Search for the method by name
+	for (U32 i = 0; i<pTypeDef->numMethods; i++) {
+		tMD_MethodDef *pMethodDef = pTypeDef->ppMethods[i];
+
+		// Instantiate a MethodInfo and put it in the array
+		tMethodInfo *pMethodInfo = (tMethodInfo*)Heap_AllocType(types[TYPE_SYSTEM_REFLECTION_METHODINFO]);
+		SystemArray_StoreElement(ret, i, (PTR)&pMethodInfo);
+
+		// Assign ownerType, name and flags
+		pMethodInfo->methodBase.ownerType = pThis_;
+		pMethodInfo->methodBase.name = SystemString_FromCharPtrASCII(pMethodDef->name);
+		pMethodInfo->methodBase.flags = pMethodDef->flags;
+
+		// Assign method def
+		pMethodInfo->methodBase.methodDef = pMethodDef;
 	}
 
 	return NULL;
@@ -176,11 +206,10 @@ tAsyncCall* System_Type_GetMethod(PTR pThis_, PTR pParams, PTR pReturnValue)
 			// Instantiate a MethodInfo
 			tMethodInfo *pMethodInfo = (tMethodInfo*)Heap_AllocType(types[TYPE_SYSTEM_REFLECTION_METHODINFO]);
 
-			// Assign ownerType
+			// Assign ownerType, name and flags
 			pMethodInfo->methodBase.ownerType = pThis_;
-
-			// Assign name
 			pMethodInfo->methodBase.name = SystemString_FromCharPtrASCII(pMethodDef->name);
+			pMethodInfo->methodBase.flags = pMethodDef->flags;
 
 			// Assign method def
 			pMethodInfo->methodBase.methodDef = pMethodDef;
@@ -192,5 +221,21 @@ tAsyncCall* System_Type_GetMethod(PTR pThis_, PTR pParams, PTR pReturnValue)
 
 	// Not found
 	*(HEAP_PTR*)pReturnValue = NULL;
+	return NULL;
+}
+
+tAsyncCall* System_Type_IsAssignableFrom(PTR pThis_, PTR pParams, PTR pReturnValue) {
+	tMD_TypeDef *pThisType = RuntimeType_DeRef(pThis_);
+	tMD_TypeDef *pFromType = RuntimeType_DeRef((PTR)((tMD_TypeDef**)pParams)[0]);
+	
+	*(U32*)pReturnValue = Type_IsAssignableFrom(pThisType, pFromType);
+	return NULL;
+}
+
+tAsyncCall* System_Type_IsSubclassOf(PTR pThis_, PTR pParams, PTR pReturnValue) {
+	tMD_TypeDef *pBaseType = RuntimeType_DeRef(pThis_);
+	tMD_TypeDef *pTestType = RuntimeType_DeRef((PTR)((tMD_TypeDef**)pParams)[0]);
+	
+	*(U32*)pReturnValue = Type_IsDerivedFromOrSame(pBaseType, pTestType);
 	return NULL;
 }

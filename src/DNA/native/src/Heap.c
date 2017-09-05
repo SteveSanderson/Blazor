@@ -72,6 +72,10 @@ struct tHeapEntry_ {
 	// unused
 	U8 padding;
 
+#ifdef STORE_HEAPENTRY_SIZE
+	U32 totalSize;
+#endif
+
 	// The type in this heap entry
 	tMD_TypeDef *pTypeDef;
 
@@ -97,6 +101,8 @@ static U32 trackHeapSize;
 static U32 heapSizeMax;
 // The number of allocated memory nodes
 static U32 numNodes = 0;
+// The number of pinned memory nodes
+static U32 numPinned = 0;
 // The number of collections done
 static U32 numCollections = 0;
 
@@ -105,20 +111,25 @@ static U32 numCollections = 0;
 U64 gcTotalTime = 0;
 #endif
 
-#define MIN_HEAP_SIZE 50000
-#define MAX_HEAP_EXCESS 200000
+#define MIN_HEAP_SIZE 1000000
+#define MAX_HEAP_EXCESS 4000000
 
 void Heap_Init() {
 	// Initialise vars
 	trackHeapSize = 0;
 	heapSizeMax = MIN_HEAP_SIZE;
 	// Create nil node - for leaf termination
-	nil = TMALLOCFOREVER(tHeapEntry);
-	memset(nil, 0, sizeof(tHeapEntry));
+	nil = TCALLOCFOREVER(1, tHeapEntry);
+	//memset(nil, 0, sizeof(tHeapEntry));
 	nil->pLink[0] = nil->pLink[1] = nil;
 	// Set the heap tree as empty
 	pHeapTreeRoot = nil;
 }
+
+#ifdef STORE_HEAPENTRY_SIZE
+#define HEAPENTRY_TOTALSIZE(pNode) pNode->totalSize
+#else
+#define HEAPENTRY_TOTALSIZE(pNode) GetSize(pNode) + sizeof(tHeapEntry)
 
 // Get the size of a heap entry, NOT including the header
 // This works by returning the size of the type, unless the type is an array or a string,
@@ -136,6 +147,7 @@ static U32 GetSize(tHeapEntry *pHeapEntry) {
 	// If it's not string or array, just return the instance memory size
 	return pType->instanceMemSize;
 }
+#endif
 
 static tHeapEntry* TreeSkew(tHeapEntry *pRoot) {
 	if (pRoot->pLink[0]->level == pRoot->level && pRoot->level != 0) {
@@ -158,6 +170,39 @@ static tHeapEntry* TreeSplit(tHeapEntry *pRoot) {
 	return pRoot;
 }
 
+static tHeapEntry* TreeBalance(tHeapEntry *pRoot) {
+	if (pRoot->pLink[0]->level < pRoot->level - 1 || pRoot->pLink[1]->level < pRoot->level - 1) {
+		if (pRoot->pLink[1]->level > --pRoot->level) {
+			pRoot->pLink[1]->level = pRoot->level;
+		}
+		pRoot = TreeSkew(pRoot);
+		pRoot->pLink[1] = TreeSkew(pRoot->pLink[1]);
+		pRoot->pLink[1]->pLink[1] = TreeSkew(pRoot->pLink[1]->pLink[1]);
+		pRoot = TreeSplit(pRoot);
+		pRoot->pLink[1] = TreeSplit(pRoot->pLink[1]);
+	}
+	return pRoot;
+}
+
+static tHeapEntry* TreeSearch(tHeapEntry *pNode, char *pMemRef) {
+	// Find this piece of heap memory in the tracking tree.
+	// Note that the 2nd memory address comparison MUST be >, not >= as might be expected,
+	// to allow for a zero-sized memory to be detected (and not garbage collected) properly.
+	// E.g. The object class has zero memory.
+	while (pNode != nil) {
+		if (pMemRef < (char*)pNode) {
+			pNode = pNode->pLink[0];
+		}
+		else if (pMemRef > (char*)pNode + HEAPENTRY_TOTALSIZE(pNode)) {
+			pNode = pNode->pLink[1];
+		}
+		else {
+			break;
+		}
+	}
+	return pNode;
+}
+
 static tHeapEntry* TreeInsert(tHeapEntry *pRoot, tHeapEntry *pEntry) {
 	if (pRoot == nil) {
 		pRoot = pEntry;
@@ -165,36 +210,10 @@ static tHeapEntry* TreeInsert(tHeapEntry *pRoot, tHeapEntry *pEntry) {
 		pRoot->pLink[0] = pRoot->pLink[1] = nil;
 		pRoot->marked = 0;
 	} else {
-		tHeapEntry *pNode = pHeapTreeRoot;
-		tHeapEntry *pUp[MAX_TREE_DEPTH];
-		I32 top = 0, dir;
-		// Find leaf position to insert into tree. This first step is unbalanced
-		for (;;) {
-			pUp[top++] = pNode;
-			dir = pNode < pEntry; // 0 for left, 1 for right
-			if (pNode->pLink[dir] == nil) {
-				break;
-			}
-			pNode = pNode->pLink[dir];
-		}
-		// Create new node
-		pNode->pLink[dir] = pEntry;
-		pEntry->level = 1;
-		pEntry->pLink[0] = pEntry->pLink[1] = nil;
-		pEntry->marked = 0;
-		// Balance the tree
-		while (--top >= 0) {
-			if (top != 0) {
-				dir = pUp[top-1]->pLink[1] == pUp[top];
-			}
-			pUp[top] = TreeSkew(pUp[top]);
-			pUp[top] = TreeSplit(pUp[top]);
-			if (top != 0) {
-				pUp[top-1]->pLink[dir] = pUp[top];
-			} else {
-				pRoot = pUp[0];
-			}
-		}
+		I32 dir = pRoot < pEntry; // 0 for left, 1 for right
+		pRoot->pLink[dir] = TreeInsert(pRoot->pLink[dir], pEntry);
+		pRoot = TreeSkew(pRoot);
+		pRoot = TreeSplit(pRoot);
 	}
 	return pRoot;
 }
@@ -227,50 +246,25 @@ static tHeapEntry* TreeRemove(tHeapEntry *pRoot, tHeapEntry *pDelete) {
 				pRoot = pHeir;
 				// Delete the node that's been sent down
 				pRoot->pLink[0] = TreeRemove(pRoot->pLink[0], pL0);
-			} else {
+			}
+			else {
 				pRoot = pRoot->pLink[pRoot->pLink[0] == nil];
 			}
-		} else {
+		}
+		else {
 			I32 dir = pRoot < pDelete;
 			pRoot->pLink[dir] = TreeRemove(pRoot->pLink[dir], pDelete);
 		}
 	}
 
-	if (pRoot->pLink[0]->level < pRoot->level-1 || pRoot->pLink[1]->level < pRoot->level-1) {
-		if (pRoot->pLink[1]->level > --pRoot->level) {
-			pRoot->pLink[1]->level = pRoot->level;
-		}
-		pRoot = TreeSkew(pRoot);
-		pRoot->pLink[1] = TreeSkew(pRoot->pLink[1]);
-		pRoot->pLink[1]->pLink[1] = TreeSkew(pRoot->pLink[1]->pLink[1]);
-		pRoot = TreeSplit(pRoot);
-		pRoot->pLink[1] = TreeSplit(pRoot->pLink[1]);
-	}
-
-	return pRoot;
+	return TreeBalance(pRoot);
 }
 
-static void GarbageCollect() {
+static void GC_Mark() {
 	tHeapRoots heapRoots;
-	tHeapEntry *pNode;
-	tHeapEntry *pUp[MAX_TREE_DEPTH * 2];
-	I32 top;
-	tHeapEntry *pToDelete = NULL;
-	U32 orgHeapSize = trackHeapSize;
-	U32 orgNumNodes = numNodes;
-#ifdef DIAG_GC
-	U64 startTime;
-#endif
-
-	numCollections++;
-
-#ifdef DIAG_GC
-	startTime = microTime();
-#endif
-
 	heapRoots.capacity = 64;
 	heapRoots.num = 0;
-	heapRoots.pHeapEntries = malloc(heapRoots.capacity * sizeof(tHeapRootEntry));
+	heapRoots.pHeapEntries = TMALLOC(heapRoots.capacity, tHeapRootEntry);
 
 	Thread_GetHeapRoots(&heapRoots);
 	CLIFile_GetHeapRoots(&heapRoots);
@@ -278,7 +272,6 @@ static void GarbageCollect() {
 	// Mark phase
 	while (heapRoots.num > 0) {
 		tHeapRootEntry *pRootsEntry;
-		U32 i;
 		U32 moreRootsAdded = 0;
 		U32 rootsEntryNumPointers;
 		void **pRootsEntryMem;
@@ -291,51 +284,41 @@ static void GarbageCollect() {
 		pRootsEntry->numPointers = 0;
 		pRootsEntry->pMem = NULL;
 		// Iterate through all pointers in it
-		for (i=0; i<rootsEntryNumPointers; i++) {
+		for (U32 i = 0; i < rootsEntryNumPointers; i++) {
 			void *pMemRef = pRootsEntryMem[i];
 			// Quick escape for known non-memory 
 			if (pMemRef == NULL) {
 				continue;
 			}
 			// Find this piece of heap memory in the tracking tree.
-			// Note that the 2nd memory address comparison MUST be >, not >= as might be expected,
-			// to allow for a zero-sized memory to be detected (and not garbage collected) properly.
-			// E.g. The object class has zero memory.
-			pNode = pHeapTreeRoot;
-			while (pNode != nil) {
-				if (pMemRef < (void*)pNode) {
-					pNode = pNode->pLink[0];
-				} else if ((char*)pMemRef > ((char*)pNode) + GetSize(pNode) + sizeof(tHeapEntry)) {
-					pNode = pNode->pLink[1];
-				} else {
-					// Found memory. See if it's already been marked.
-					// If it's already marked, then don't do anything.
-					// It it's not marked, then add all of its memory to the roots, and mark it.
-					if (pNode->marked == 0) {
-						tMD_TypeDef *pType = pNode->pTypeDef;
+			tHeapEntry *pNode = TreeSearch(pHeapTreeRoot, pMemRef);
+			if (pNode != nil) {
+				// Found memory. See if it's already been marked.
+				// If it's already marked, then don't do anything.
+				// It it's not marked, then add all of its memory to the roots, and mark it.
+				if (pNode->marked == 0) {
+					tMD_TypeDef *pType = pNode->pTypeDef;
 
-						// Not yet marked, so mark it, and add it to heap roots.
-						pNode->marked = 1;
-	
-						// Don't look at the contents of strings, arrays of primitive types, or WeakReferences
-						if (pType->stackType == EVALSTACK_O ||
-							pType->stackType == EVALSTACK_VALUETYPE ||
-							pType->stackType == EVALSTACK_PTR) {
+					// Not yet marked, so mark it, and add it to heap roots.
+					pNode->marked = 1;
 
-							if (pType != types[TYPE_SYSTEM_STRING] &&
-								(!TYPE_ISARRAY(pType) ||
+					// Don't look at the contents of strings, arrays of primitive types, or WeakReferences
+					if (pType->stackType == EVALSTACK_O ||
+						pType->stackType == EVALSTACK_VALUETYPE ||
+						pType->stackType == EVALSTACK_PTR) {
+
+						if (pType != types[TYPE_SYSTEM_STRING] &&
+							(!TYPE_ISARRAY(pType) ||
 								pType->pArrayElementType->stackType == EVALSTACK_O ||
 								pType->pArrayElementType->stackType == EVALSTACK_VALUETYPE ||
 								pType->pArrayElementType->stackType == EVALSTACK_PTR)) {
 
-								if (pType != types[TYPE_SYSTEM_WEAKREFERENCE]) {
-									Heap_SetRoots(&heapRoots,pNode->memory, GetSize(pNode));
-									moreRootsAdded = 1;
-								}
+							if (pType != types[TYPE_SYSTEM_WEAKREFERENCE]) {
+								Heap_SetRoots(&heapRoots, pNode->memory, HEAPENTRY_TOTALSIZE(pNode) - sizeof(tHeapEntry));
+								moreRootsAdded = 1;
 							}
 						}
 					}
-					break;
 				}
 			}
 		}
@@ -345,11 +328,19 @@ static void GarbageCollect() {
 	}
 
 	free(heapRoots.pHeapEntries);
+}
+
+static void GC_Sweep() {
+
+	tHeapEntry *pUp[MAX_TREE_DEPTH * 2];
+	tHeapEntry *pToDelete = NULL;
+	tHeapEntry *pNode;
 
 	// Sweep phase
 	// Traverse nodes
 	pUp[0] = pHeapTreeRoot;
-	top = 1;
+	I32 top = 1;
+	numPinned = 0;
 	while (top != 0) {
 		// Get this node
 		pNode = pUp[--top];
@@ -359,13 +350,17 @@ static void GarbageCollect() {
 				// Still in use (but not marked undeletable), so unmark
 				pNode->marked = 0;
 			}
-		} else {
+			else {
+				numPinned++;
+			}
+		}
+		else {
 			// Not in use any more, so put in deletion queue if it does not need Finalizing
 			// If it does need Finalizing, then don't garbage collect, and put in Finalization queue.
 			if (pNode->needToFinalize) {
 				if (pNode->needToFinalize == 1) {
 					AddFinalizer((HEAP_PTR)pNode + sizeof(tHeapEntry));
-					// Mark it has having been placed in the finalization queue.
+					// Mark it as having been placed in the finalization queue.
 					// When it has been finalized, then this will be set to 0
 					pNode->needToFinalize = 2;
 					// If this object is being targetted by weak-ref(s), handle it
@@ -374,7 +369,8 @@ static void GarbageCollect() {
 						free(pNode->pSync);
 					}
 				}
-			} else {
+			}
+			else {
 				// If this object is being targetted by weak-ref(s), handle it
 				if (pNode->pSync != NULL) {
 					RemoveWeakRefTarget(pNode, 1);
@@ -401,16 +397,34 @@ static void GarbageCollect() {
 		pToDelete = (tHeapEntry*)(pToDelete->pSync);
 		pHeapTreeRoot = TreeRemove(pHeapTreeRoot, pThis);
 		numNodes--;
-		trackHeapSize -= GetSize(pThis) + sizeof(tHeapEntry);
+		trackHeapSize -= HEAPENTRY_TOTALSIZE(pThis);
 		free(pThis);
 	}
+}
+
+static void GarbageCollect() {
+	U32 orgHeapSize = trackHeapSize;
+	U32 orgNumNodes = numNodes;
+	U32 orgPinned = numPinned;
+#ifdef DIAG_GC
+	U64 startTime;
+#endif
+
+	numCollections++;
+
+#ifdef DIAG_GC
+	startTime = microTime();
+#endif
+
+	GC_Mark();
+	GC_Sweep();
 
 #ifdef DIAG_GC
 	gcTotalTime += microTime() - startTime;
 #endif
 
-	log_f(1, "--- GARBAGE --- [Size: %d -> %d] [Nodes: %d -> %d]\n",
-		orgHeapSize, trackHeapSize, orgNumNodes, numNodes);
+	log_f(1, "--- GARBAGE --- [Size: %d -> %d] [Nodes: %d -> %d] [Pinned: %d -> %d]\n",
+		orgHeapSize, trackHeapSize, orgNumNodes, numNodes, orgPinned, numPinned);
 
 #ifdef DIAG_GC
 	log_f(1, "GC time = %d ms\n", gcTotalTime / 1000);
@@ -466,11 +480,14 @@ HEAP_PTR Heap_Alloc(tMD_TypeDef *pTypeDef, U32 size) {
 		}
 	}
 
-	pHeapEntry = (tHeapEntry*)malloc(totalSize);
+	pHeapEntry = (tHeapEntry*)calloc(1, totalSize);
+	//memset(pHeapEntry, 0, totalSize);
+#ifdef STORE_HEAPENTRY_SIZE
+	pHeapEntry->totalSize = totalSize;
+#endif
 	pHeapEntry->pTypeDef = pTypeDef;
 	pHeapEntry->pSync = NULL;
 	pHeapEntry->needToFinalize = (pTypeDef->pFinalizer != NULL);
-	memset(pHeapEntry->memory, 0, size);
 	trackHeapSize += totalSize;
 
 	pHeapTreeRoot = TreeInsert(pHeapTreeRoot, pHeapEntry);
@@ -511,7 +528,7 @@ HEAP_PTR Heap_Box(tMD_TypeDef *pType, PTR pMem) {
 HEAP_PTR Heap_Clone(HEAP_PTR obj) {
 	tHeapEntry *pObj = GET_HEAPENTRY(obj);
 	HEAP_PTR clone;
-	U32 size = GetSize(pObj);
+	U32 size = HEAPENTRY_TOTALSIZE(pObj) - sizeof(tHeapEntry);
 
 	clone = Heap_Alloc(pObj->pTypeDef, size);
 	memcpy(clone, pObj->memory, size);
@@ -521,8 +538,8 @@ HEAP_PTR Heap_Clone(HEAP_PTR obj) {
 
 static tSync* EnsureSync(tHeapEntry *pHeapEntry) {
 	if (pHeapEntry->pSync == NULL) {
-		tSync *pSync = TMALLOC(tSync);
-		memset(pSync, 0, sizeof(tSync));
+		tSync *pSync = TCALLOC(1, tSync);
+		//memset(pSync, 0, sizeof(tSync));
 		pHeapEntry->pSync = pSync;
 	}
 	return pHeapEntry->pSync;

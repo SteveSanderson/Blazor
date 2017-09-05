@@ -43,7 +43,8 @@ struct tFilesLoaded_ {
 // In .NET Core, the core libraries are split over numerous assemblies. For simplicity,
 // the DNA corlib just puts them in one assembly
 static STRING assembliesMappedToDnaCorlib[] = {
-	"mscorlib"
+	"mscorlib",
+	"netstandard"
 	// Also, "System.*" is implemented below
 };
 static int numAssembliesMappedToDnaCorlib = sizeof(assembliesMappedToDnaCorlib)/sizeof(STRING);
@@ -157,7 +158,7 @@ static void* LoadFileFromDisk(char *pFileName) {
 
 char* GetNullTerminatedString(PTR pData, int* length)
 {
-    *length = strlen(pData) + 1;
+    *length = (int)strlen(pData) + 1;
     return pData;
 }
 
@@ -175,7 +176,7 @@ static unsigned int GetU32(unsigned char *pSource, int* length) {
 }
 
 static tDebugMetaData* LoadDebugFile(PTR pData) {
-    tDebugMetaData *pRet = TMALLOC(tDebugMetaData);
+    tDebugMetaData *pRet = TMALLOC(1, tDebugMetaData);
     tDebugMetaDataEntry* pPrevious = NULL;
     tDebugMetaDataEntry* pFirst = NULL;
     int moduleLength;
@@ -186,7 +187,7 @@ static tDebugMetaData* LoadDebugFile(PTR pData) {
     int IdLength;
 
     while (*pData) {
-        tDebugMetaDataEntry* pEntry = TMALLOC(tDebugMetaDataEntry);
+        tDebugMetaDataEntry* pEntry = TMALLOC(1, tDebugMetaDataEntry);
         IdLength = 0;
         pEntry->sequencePointsCount = 0;
         pEntry->pModuleName = GetNullTerminatedString(pData, &moduleLength);
@@ -238,7 +239,7 @@ static tDebugMetaData* LoadDebugFile(PTR pData) {
 }
 
 static tCLIFile* LoadPEFile(void *pData) {
-	tCLIFile *pRet = TMALLOC(tCLIFile);
+	tCLIFile *pRet = TMALLOCFOREVER(1, tCLIFile);
 
 	unsigned char *pMSDOSHeader = (unsigned char*)&(((unsigned char*)pData)[0]);
 	unsigned char *pPEHeader;
@@ -386,7 +387,7 @@ tCLIFile* CLIFile_Load(char *pFileName) {
 
     // Assume it ends in .dll
     char* pDebugFileName = (char*)mallocForever((U32)strlen(pFileName) + 1);
-    U32 fileLengthWithoutExt = strlen(pFileName) - 3;
+    U32 fileLengthWithoutExt = (int)strlen(pFileName) - 3;
     strncpy(pDebugFileName, pFileName, fileLengthWithoutExt);
     strncpy(pDebugFileName + fileLengthWithoutExt, "wdb", 3);
     *(pDebugFileName + fileLengthWithoutExt + 3) = '\0';
@@ -402,7 +403,7 @@ tCLIFile* CLIFile_Load(char *pFileName) {
     }
 
 	// Record that we've loaded this file
-	pNewFile = TMALLOCFOREVER(tFilesLoaded);
+	pNewFile = TMALLOCFOREVER(1, tFilesLoaded);
 	pNewFile->pCLIFile = pRet;
 	pNewFile->pNext = pFilesLoaded;
 	pFilesLoaded = pNewFile;

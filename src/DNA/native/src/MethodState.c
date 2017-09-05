@@ -232,7 +232,7 @@ void MethodState_Delete(tThread *pThread, tMethodState **ppMethodState) {
 		free(pThis->pDelegateParams);
 	}
 
-	// Note that the way the stack free funtion works means that only the 1st allocated chunk
+	// Note that the way the stack free function works means that only the first allocated chunk
 	// needs to be free'd, as this function just sets the current allocation offset to the address given.
 	Thread_StackFree(pThread, pThis);
 

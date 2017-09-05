@@ -29,7 +29,7 @@ typedef struct tThreadStack_ tThreadStack;
 #include "Heap.h"
 #include "Types.h"
 
-#define THREADSTACK_CHUNK_SIZE 10000
+#define THREADSTACK_CHUNK_SIZE 30000
 
 struct tThreadStack_ {
 	// This chunk of stack memory

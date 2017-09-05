@@ -22,6 +22,8 @@
 #define __FINALIZER_H
 
 void Finalizer_Init();
+void Finalizer_Free();
+int Finalizer_Count();
 
 void AddFinalizer(PTR ptr);
 HEAP_PTR GetNextFinalizer();

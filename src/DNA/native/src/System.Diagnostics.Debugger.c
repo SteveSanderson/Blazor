@@ -91,7 +91,7 @@ int Debugger_SetBreakPoint(char* pID, int sequencePoint)
 
     // Didn't find the node
     if (pNode == NULL) {
-        pNode = TMALLOC(tBreakPoint);
+        pNode = TMALLOC(1, tBreakPoint);
         pNode->pID = mallocForever((U32)strlen(pID) + 1);
         strcpy(pNode->pID, pID);
         pNode->offset = 0;
@@ -154,7 +154,7 @@ int CheckIfSequencePointIsBreakpoint(tMethodState* pMethodState, I32 sequencePoi
     // TODO: Handle overflow
     unsigned char payload[1024];
     sprintf(payload, "{\"command\":\"breakpoint\", \"ilOffset\":%d, \"sequencePoint\":%d,\"ID\":\"%s\"}", ilOffset, sequencePoint, pDebugEntry->pID);
-#ifndef _WIN32
+#ifdef JS_INTEROP
     invokeJsFunc("browser.js", "SendDebuggerMessage", payload);
 #else
     printf("%s\n", payload);

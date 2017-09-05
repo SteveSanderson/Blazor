@@ -20,12 +20,13 @@
 
 
 #include "Compat.h"
+#include "Sys.h"
 
 #include "RVA.h"
 
 tRVA* RVA() {
 	tRVA *pRet;
-	pRet = TMALLOC(tRVA);
+	pRet = TMALLOCFOREVER(1, tRVA);
 	return pRet;
 }
 
@@ -34,11 +35,11 @@ tRVA_Item* RVA_Create(tRVA *pThis, void *pFile, void *pSectionHeader) {
 	unsigned int rawOfs;
 	unsigned int rawSize;
 
-	pRet = TMALLOC(tRVA_Item);
+	pRet = TMALLOCFOREVER(1, tRVA_Item);
 	pRet->baseAddress = *(unsigned int*)&((char*)pSectionHeader)[12];
 	pRet->size = *(unsigned int*)&((char*)pSectionHeader)[8];
-	pRet->pData = malloc(pRet->size);
-	memset(pRet->pData, 0, pRet->size);
+	pRet->pData = callocForever(1, pRet->size);
+	//memset(pRet->pData, 0, pRet->size);
 	pRet->pNext = pThis->pFirstRVA;
 	pThis->pFirstRVA = pRet;
 

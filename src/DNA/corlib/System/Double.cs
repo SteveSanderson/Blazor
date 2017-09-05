@@ -31,7 +31,9 @@ namespace System {
 		public const double NegativeInfinity = -1.0d / 0.0d;
 		public const double PositiveInfinity = 1.0d / 0.0d;
 
+#pragma warning disable 0169, 0649
 		internal double m_value;
+#pragma warning restore 0169, 0649
 
 		public static bool IsNaN(double d) {
 #pragma warning disable 1718
@@ -61,9 +63,9 @@ namespace System {
 			return ((double)o) == this.m_value;
 		}
 
-		public override unsafe int GetHashCode() {
+		public override int GetHashCode() {
 			double d = m_value;
-			return (*((long*)&d)).GetHashCode();
+			return BitConverter.DoubleToInt64Bits(d).GetHashCode();
 		}
 
 		public override string ToString() {
@@ -118,6 +120,63 @@ namespace System {
 				return double.IsNaN(x);
 			}
 			return this.m_value == x;
+		}
+
+		#endregion
+
+		#region Parsing
+
+		public static bool TryParse(String s, out double result)
+		{
+			return TryParse(s, NumberStyles.Float | NumberStyles.AllowThousands, NumberFormatInfo.CurrentInfo, out result);
+		}
+
+		public static bool TryParse(String s, NumberStyles style, IFormatProvider provider, out double result)
+		{
+			// NumberFormatInfo.ValidateParseStyleFloatingPoint(style);
+			return TryParse(s, style, NumberFormatInfo.GetInstance(provider), out result);
+		}
+
+		private static bool TryParse(String s, NumberStyles style, NumberFormatInfo info, out double result)
+		{
+			if (s == null)
+			{
+				result = 0;
+				return false;
+			}
+			
+			result = s.ToDouble(info); // returns zero on parsing error
+
+			String sTrim = s.Trim();
+			bool isZero = true;
+			int len = sTrim.Length;
+			for (int i = 0; i < len; i++) {
+				var c = sTrim[i];
+				if (c != '0' || c != '.') {
+					isZero = false;
+					break;
+				}
+			}
+			bool success = (result != 0.0) || isZero;
+			//bool success = Number.TryParseDouble(s, style, info, out result);
+			if (!success)
+			{
+				if (sTrim.Equals(info.PositiveInfinitySymbol))
+				{
+					result = PositiveInfinity;
+				}
+				else if (sTrim.Equals(info.NegativeInfinitySymbol))
+				{
+					result = NegativeInfinity;
+				}
+				else if (sTrim.Equals(info.NaNSymbol))
+				{
+					result = NaN;
+				}
+				else
+					return false; // We really failed
+			}
+			return true;
 		}
 
 		#endregion

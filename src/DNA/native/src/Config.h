@@ -46,7 +46,9 @@
 // Measure how long the entire .NET programme execution takes
 #define DIAG_TOTAL_TIME
 
-
+#ifdef _DEBUG
+//#define DIAG_MEMORY_LEAKS
+#endif
 
 // Non-diagnostic stuff
 
@@ -57,5 +59,19 @@
 //#define GEN_COMBINED_OPCODES
 #define GEN_COMBINED_OPCODES_MAX_MEMORY 0x4000
 #define GEN_COMBINED_OPCODES_CALL_TRIGGER 20
+
+// Performance improvements
+
+// minor perf improvement: space vs speed trade-off
+// (disabled by default)
+#ifdef _DEBUG
+//#define STORE_HEAPENTRY_SIZE
+#endif
+
+// perf improvement: switch on JIT ops instead of labels
+// (enabled in WIN64 by default, but works well in 32-bit too)
+#ifdef _WIN64
+#define SWITCH_ON_JIT_OP
+#endif
 
 #endif

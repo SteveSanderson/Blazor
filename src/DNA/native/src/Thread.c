@@ -64,7 +64,7 @@ tThread* Thread() {
 	pThis->state = THREADSTATE_UNSTARTED;
 
 	// Allocate the first chunk of thread-local stack
-	pThis->pThreadStack = TMALLOC(tThreadStack);
+	pThis->pThreadStack = TMALLOC(1, tThreadStack);
 	pThis->pThreadStack->ofs = 0;
 	pThis->pThreadStack->pNext = NULL;
 

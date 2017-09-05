@@ -23,6 +23,13 @@
 
 #include "Config.h"
 
+#if defined(DIAG_MEMORY_LEAKS) && defined(_WIN32)
+// looking for memory leaks
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
+#endif
+
 /*#ifdef _DEBUG
 void* mallocTrace(int s, char *pFile, int line);
 #define malloc(s) mallocTrace(s, __FILE__, __LINE__)
@@ -32,6 +39,14 @@ void* mallocTrace(int s, char *pFile, int line);
 #define Assert(cond) if (!(cond)) Crash("Assert failed: %s, line %d", __FILE__, __LINE__);
 #else
 #define Assert(cond)
+#endif
+
+#ifdef DEBUG_PRINT
+#define dprintf(format, ...) printf(format, __VA_ARGS__)
+#define dprintfn(format, ...) printf(format "\n", __VA_ARGS__)
+#else
+#define dprintf(format, ...) ((void) 0)
+#define dprintfn(format, ...) ((void) 0)
 #endif
 
 #define FAKE_RETURN exit(101)
@@ -48,11 +63,18 @@ void log_f(U32 level, char *pMsg, ...);
 char* Sys_GetMethodDesc(tMD_MethodDef *pMethod);
 
 void* mallocForever(U32 size);
+void* callocForever(U32 count, U32 size);
+void freeForever();
 
 U64 msTime();
 #if defined(DIAG_METHOD_CALLS) || defined(DIAG_OPCODE_TIMES) || defined(DIAG_GC) || defined(DIAG_TOTAL_TIME)
 U64 microTime();
 #endif
 void SleepMS(U32 ms);
+
+#ifdef DEBUG_PRINT
+char* Sys_CIL_OpCodeName(U32 op);
+char* Sys_JIT_OpCodeName(U32 op);
+#endif
 
 #endif

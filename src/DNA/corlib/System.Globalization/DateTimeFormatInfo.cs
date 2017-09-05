@@ -3,7 +3,7 @@
 using System.IO;
 using System.Threading;
 namespace System.Globalization {
-	public sealed class DateTimeFormatInfo {
+	public sealed class DateTimeFormatInfo : IFormatProvider {
 
 		public static DateTimeFormatInfo InvariantInfo {
 			get {
@@ -164,6 +164,15 @@ namespace System.Globalization {
 		public string GetMonthName(int m) {
 			return this.monthNames[m];
 		}
+
+		#region IFormatProvider Members
+
+		object IFormatProvider.GetFormat(Type formatType) {
+			// throw new Exception("The method or operation is not implemented.");
+			return null;
+		}
+
+		#endregion
 	}
 }
 

@@ -38,6 +38,8 @@ tAsyncCall* System_RuntimeType_get_IsEnum(PTR pThis_, PTR pParams, PTR pReturnVa
 tAsyncCall* System_RuntimeType_get_IsGenericType(PTR pThis_, PTR pParams, PTR pReturnValue);
 tAsyncCall* System_RuntimeType_Internal_GetGenericTypeDefinition(PTR pThis_, PTR pParams, PTR pReturnValue);
 tAsyncCall* System_RuntimeType_GetGenericArguments(PTR pThis_, PTR pParams, PTR pReturnValue);
+tAsyncCall* System_RuntimeType_IsDefined(PTR pThis_, PTR pParams, PTR pReturnValue);
+tAsyncCall* System_RuntimeType_GetCustomAttributes(PTR pThis_, PTR pParams, PTR pReturnValue);
 tAsyncCall* System_RuntimeType_GetElementType(PTR pThis_, PTR pParams, PTR pReturnValue);
 
 // Create a new heap object which is the RuntimeType object for the given type.

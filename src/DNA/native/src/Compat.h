@@ -26,6 +26,7 @@
 #include <fcntl.h>
 
 #ifdef _WIN32
+
 #include <winsock2.h> // winsock2.h must be included before windows.h
 #include <io.h>
 #include <windows.h>
@@ -86,7 +87,9 @@
 
 #endif // _WIN32
 
-#define TMALLOC(t) (t*)malloc(sizeof(t))
-#define TMALLOCFOREVER(t) (t*)mallocForever(sizeof(t))
+#define TMALLOC(c, t) (t*)malloc(c * sizeof(t))
+#define TCALLOC(c, t) (t*)calloc(c, sizeof(t))
+#define TMALLOCFOREVER(c, t) (t*)mallocForever(c * sizeof(t))
+#define TCALLOCFOREVER(c, t) (t*)callocForever(c, sizeof(t))
 
 #endif
