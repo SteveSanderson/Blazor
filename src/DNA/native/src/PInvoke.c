@@ -95,9 +95,10 @@ fnPInvoke PInvoke_GetFunction(tMetaData *pMetaData, tMD_ImplMap *pImplMap) {
 
 	libName = MetaData_GetModuleRefName(pMetaData, pImplMap->importScope);
 
-#ifndef _WIN32
-	return (fnPInvoke)invokeJsFunc;
-#else 
+// ** memson => we can't really do this.
+//#ifndef _WIN32
+//	return (fnPInvoke)invokeJsFunc;
+//#else 
 	
 	pLib = GetLib(libName);
 	if (pLib == NULL) {
@@ -105,7 +106,10 @@ fnPInvoke PInvoke_GetFunction(tMetaData *pMetaData, tMD_ImplMap *pImplMap) {
 		return NULL;
 	}
 
+#if _WIN32
 	pProc = GetProcAddress(pLib->pLib, pImplMap->importName);
+#else
+	pProc = dlsym(pLib->pLib, pImplMap->importName);
 #endif
 	return pProc;
 
@@ -169,7 +173,7 @@ U32 PInvoke_Call(tJITCallPInvoke *pCall, PTR pParams, PTR pReturnValue, tThread 
 	tMD_MethodDef *pMethod = pCall->pMethod;
 	tMD_TypeDef *pReturnType = pMethod->pReturnType;
 	tMD_ImplMap *pImplMap = pCall->pImplMap;
-	fnPInvoke pFn = pCall->fn;
+	void *pFn = pCall->fn; //fnPInvoke pFn = pCall->fn;
 	U32 _argOfs = 0, _argdOfs = 0, paramOfs = 0;
 	U32 _tempMemOfs = 0;
 	U32 i;
@@ -195,14 +199,18 @@ U32 PInvoke_Call(tJITCallPInvoke *pCall, PTR pParams, PTR pReturnValue, tThread 
 		}
 	}
 
-	// Prepend the 'libName' and 'funcName' strings to the set of arguments
-	// NOTE: These aren't currently used in js-interop.js, but they would be if I found a way
-	// to pass an arbitrary set of args without declaring the C func type in advance
-	_args[0] = (U32)MetaData_GetModuleRefName(pCall->pMethod->pMetaData, pCall->pImplMap->importScope);
-	_args[1] = (U32)pCall->pMethod->name;
-	_argOfs += 2;
-	SET_ARG_TYPE(0, DEFAULT);
-	SET_ARG_TYPE(1, DEFAULT);
+    // ** memsom => adding these in screws with the calling convention and means we can't correctly 
+	// ** calulate the offset. I'd suggest looking at libffi or dyncast if you really want to do this
+	// ** dynamically. Or another way would be to specifically pre-/post-fix the function name with 
+	// ** something you can then use to know you need to add these extra params. 
+	//// Prepend the 'libName' and 'funcName' strings to the set of arguments
+	//// NOTE: These aren't currently used in js-interop.js, but they would be if I found a way
+	//// to pass an arbitrary set of args without declaring the C func type in advance
+	//_args[0] = (U32)MetaData_GetModuleRefName(pCall->pMethod->pMetaData, pCall->pImplMap->importScope);
+	//_args[1] = (U32)pCall->pMethod->name;
+	//_argOfs += 2;
+	//SET_ARG_TYPE(0, DEFAULT);
+	//SET_ARG_TYPE(1, DEFAULT);
 
 	numParams = pMethod->numberOfParameters;
 	for (param = 0, paramTypeNum = 0; param<numParams; param++, paramTypeNum++) {
@@ -247,19 +255,26 @@ U32 PInvoke_Call(tJITCallPInvoke *pCall, PTR pParams, PTR pReturnValue, tThread 
 		} else {
 			Crash("PInvoke_Call() Cannot handle parameter of type: %s", pParamType->name);
 		}
-		SET_ARG_TYPE(paramTypeNum + 2, paramType);
+         
+		// ** memson => this was basically miscalculating the offset for the function pointer.
+		// ** so, if we had "U32 func(U32);", this should have been 15, which maps to fp _ufu,
+		// ** but we were getting 195, which does not exist. This seems to be because Steve
+		// ** was trying to add in these two magic params.  
+		SET_ARG_TYPE(paramTypeNum, paramType); //SET_ARG_TYPE(paramTypeNum + 2, paramType); <-- this change in Blazor completely breaks the P/Invoke parameter lookup
 	}
 
-	// [Steve edit] I'm hard-coding the pinvoke function pointer type here, as a workaround for
-	// Emscripten's function pointer limitations.
-	// See the longer comment in JIT.h for details.
-	if (funcParams != 255) {
-		Crash("PInvoke_Call() currently only supports calls of type 255; you tried to make a call of type %i.\n", funcParams);
-	}
-	int intRet = pFn((STRING)_args[0], (STRING)_args[1], (STRING)_args[2]);
-	u64Ret = (U64)intRet;
-
-	/*
+    // ** memson => hardcoding anything here is the reason this broke.
+	// ** it's probably better to just create a function in c# with the correct
+	// ** param list. This then doesn't break the reso of this code.
+	//	// [Steve edit] I'm hard-coding the pinvoke function pointer type here, as a workaround for
+	//	// Emscripten's function pointer limitations.
+	//	// See the longer comment in JIT.h for details.
+	//	if (funcParams != 255) {
+	//		Crash("PInvoke_Call() currently only supports calls of type 255; you tried to make a call of type %i.\n", funcParams);
+	//	}
+	//	int intRet = pFn((STRING)_args[0], (STRING)_args[1], (STRING)_args[2]);
+	//	u64Ret = (U64)intRet;
+	
 	switch (funcParams) {
 
 #include "PInvoke_CaseCode.h"
@@ -290,8 +305,8 @@ U32 PInvoke_Call(tJITCallPInvoke *pCall, PTR pParams, PTR pReturnValue, tThread 
 
 	default:
 		Crash("PInvoke_Call() Cannot handle the function parameters: 0x%08x", funcParams);
-	}
-	*/
+	}	
+
 
 	for (i=0; i<_tempMemOfs; i++) {
 		free(_pTempMem[i]);
