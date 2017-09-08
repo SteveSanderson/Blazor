@@ -26,6 +26,8 @@
 #include "String.h"
 
 extern char* invokeJsFunc(STRING libName, STRING funcName, STRING arg0);
+typedef void* fnPInvoke;
+ 
 fnPInvoke PInvoke_GetFunction(tMetaData *pMetaData, tMD_ImplMap *pImplMap);
 U32 PInvoke_Call(tJITCallPInvoke *pCall, PTR pParams, PTR pReturnValue, tThread *pCallingThread);
 
