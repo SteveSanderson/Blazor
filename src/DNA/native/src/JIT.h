@@ -141,7 +141,7 @@ U32 JIT_Execute(tThread *pThread, U32 numInst);
 extern U64 opcodeTimes[JIT_OPCODE_MAXNUM];
 #endif
 
-#ifdef DIAG_OPCODE_USE
+#ifdef DIAG_OPCODE_USES
 #include "JIT_OpCodes.h"
 extern U32 opcodeNumUses[JIT_OPCODE_MAXNUM];
 #endif

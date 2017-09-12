@@ -29,6 +29,9 @@ tAsyncCall* Reflection_MemberInfo_GetCustomAttributes(PTR pThis_, PTR pParams, P
 	} else if (strcmp(thisType->name, "PropertyInfo") == 0) {
 		tPropertyInfo *pPropertyInfo = (tPropertyInfo *)pMemberInfo;
 		searchForAttributesOnMemberIndex = pPropertyInfo->index;
+	} else if (strcmp(thisType->name, "MethodInfo") == 0) {
+		tMethodInfo *pMethodInfo = (tMethodInfo *)pMemberInfo;
+		searchForAttributesOnMemberIndex = pMethodInfo->methodBase.methodDef->tableIndex;
 	} else {
 		Crash("Not implemented: Getting custom attributes for a %s\n", thisType->name);
 		return NULL;
@@ -58,9 +61,11 @@ tAsyncCall* Reflection_MemberInfo_GetCustomAttributes(PTR pThis_, PTR pParams, P
 			// The 'type' value references the constructor method
 			tMD_MethodDef* pCtorMethodDef = MetaData_GetMethodDefFromDefRefOrSpec(pMetaData, pCustomAttribute->type, NULL, NULL);
 			tMD_TypeDef* pCtorTypeDef = MetaData_GetTypeDefFromMethodDef(pCtorMethodDef);
-			if (pCtorMethodDef->isFilled == 0) {
-				MetaData_Fill_MethodDef(pCtorTypeDef, pCtorMethodDef, NULL, NULL);
-			}
+
+			MetaData_Fill_TypeDef(pCtorTypeDef, NULL, NULL);
+			//if (pCtorMethodDef->isFilled == 0) {
+			//	MetaData_Fill_MethodDef(pCtorTypeDef, pCtorMethodDef, NULL, NULL);
+			//}
 
 			// Create a InternalCustomAttributeInfo 
 			PTR arrayEntryPtr = SystemArray_LoadElementAddress(ret, insertionIndex++);
@@ -125,7 +130,8 @@ tAsyncCall* Reflection_MemberInfo_GetCustomAttributes(PTR pThis_, PTR pParams, P
 				}
 			}
 
-			unsigned int numNamedParams = MetaData_DecodeSigEntry(&blob);
+			MetaData_DecodeSigEntry(&blob); // something
+			U32 numNamedParams = MetaData_DecodeSigEntry(&blob);
 			if (numNamedParams > 0) {
 				Crash("GetCustomAttributes: Unsupported attributes with named params on attribute %s\n", pCtorTypeDef->name);
 				return NULL;

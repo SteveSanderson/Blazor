@@ -127,23 +127,31 @@ namespace System {
         }
 
         [MethodImpl(MethodImplOptions.InternalCall)]
-        extern public PropertyInfo[] GetProperties();
+        extern public Type[] GetNestedTypes();
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        extern public Type GetNestedType(string name);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        extern public Type[] GetInterfaces();
 
         [MethodImpl(MethodImplOptions.InternalCall)]
         extern public MethodInfo[] GetMethods();
 
-        public MethodInfo GetMethod(string name) {
-            return (MethodInfo)GetMethodInternal(name);
-        }
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        extern public MethodInfo GetMethod(string name);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        extern public PropertyInfo[] GetProperties();
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        extern public PropertyInfo GetProperty(string name);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
         extern public static void EnsureAssemblyLoaded(string assemblyName);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
         extern private static Type GetType(string assemblyName, string namespaceName, string className);
-
-        [MethodImpl(MethodImplOptions.InternalCall)]
-        extern private object GetMethodInternal(string name);
 
         public static bool operator ==(Type t1, Type t2) {
             return t1?.FullName.Equals(t2?.FullName) == true;

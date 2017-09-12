@@ -191,7 +191,7 @@ static __inline unsigned __int64 __cdecl rdtsc() {
 }
 #endif
 
-#ifdef DIAG_OPCODE_USE
+#ifdef DIAG_OPCODE_USES
 U32 opcodeNumUses[JIT_OPCODE_MAXNUM];
 
 #define OPCODE_USE(op) opcodeNumUses[op]++;
@@ -307,6 +307,7 @@ U32 JIT_Execute(tThread *pThread, U32 numInst) {
 	if (pThread == NULL) {
 
 #ifdef SWITCH_ON_JIT_OP
+		// no label initialization needed
 		return 0;
 	}
 
@@ -315,7 +316,9 @@ U32 JIT_Execute(tThread *pThread, U32 numInst) {
 
 goNext:
 	CHECK_FOR_BREAKPOINT();
-	switch (GET_OP()) {
+	op = GET_OP();
+	switch (op) {
+
 #else
 		void *pAddr;
 
@@ -432,6 +435,7 @@ goNext:
 		GET_LABELS(JIT_STOREFIELD_VALUETYPE);
 
 		GET_LABELS(JIT_LOADSTATICFIELD_CHECKTYPEINIT_INT32);
+		GET_LABELS(JIT_LOADSTATICFIELD_CHECKTYPEINIT_INT64);
 		GET_LABELS(JIT_LOADSTATICFIELD_CHECKTYPEINIT_VALUETYPE);
 		GET_LABELS(JIT_LOADSTATICFIELD_CHECKTYPEINIT_O);
 		GET_LABELS(JIT_LOADSTATICFIELD_CHECKTYPEINIT_INTNATIVE);
@@ -1328,22 +1332,26 @@ allCallStart:
 
 		// If it's a virtual call then find the real correct method to call
 		if (op == JIT_CALLVIRT_O || op == JIT_BOX_CALLVIRT || op == JIT_DEREF_CALLVIRT) {
-			tMD_TypeDef *pThisType;
 
 			if (heapPtr == NULL) {
 				//Crash("NULL 'this' in Virtual call: %s", Sys_GetMethodDesc(pCallMethod));
 				THROW(types[TYPE_SYSTEM_NULLREFERENCEEXCEPTION]);
 			}
-			pThisType = Heap_GetType(heapPtr);
 			if (METHOD_ISVIRTUAL(pCallMethod)) {
-				// Assert(pCallMethod->parameterStackSize == pThisType->pVTable[pCallMethod->vTableOfs]->parameterStackSize);
-				pCallMethod = pThisType->pVTable[pCallMethod->vTableOfs];
+				tMD_TypeDef *pThisType = Heap_GetType(heapPtr);
+				tMD_MethodDef* pVirtualMethod = pThisType->pVTable[pCallMethod->vTableOfs];
+				if (pVirtualMethod->isGenericDefinition) {
+					tMD_MethodDef* pInstMethod = Generics_GetMethodDefFromCoreMethod(pVirtualMethod, pVirtualMethod->pParentType, pCallMethod->numMethodTypeArgs, pCallMethod->ppMethodTypeArgs);
+					pCallMethod = pInstMethod;
+				} else {
+					//Assert(pCallMethod->parameterStackSize == pVirtualMethod->parameterStackSize);
+					pCallMethod = pVirtualMethod;
+				}
 				//dprintfn("Calling virtual method: %s", pCallMethod->name);
 			}
 		} else if (op == JIT_CALL_INTERFACE) {
-			tMD_TypeDef *pInterface, *pThisType;
-			pInterface = pCallMethod->pParentType;
-			pThisType = Heap_GetType(heapPtr);
+			tMD_TypeDef *pThisType = Heap_GetType(heapPtr);
+			tMD_TypeDef *pInterface = pCallMethod->pParentType;
 
 			// Find the interface mapping on the 'this' type.
 			// This must be searched backwards so if an interface is implemented more than
@@ -2722,8 +2730,11 @@ jitCastClass:
 		}
 		pTestType = Heap_GetType(heapPtr);
 		if (TYPE_ISARRAY(pTestType) && TYPE_ISARRAY(pToType)) {
-			// Arrays are handled specially - check if the element type is compatible
-			if (Type_IsAssignableFrom(pToType->pArrayElementType, pTestType->pArrayElementType)) {
+			// Arrays are handled specially - check if the element type is compatible (or exact match for value types)
+
+			if (pTestType->pArrayElementType->isValueType ?
+				pToType->pArrayElementType == pTestType->pArrayElementType :
+				Type_IsAssignableFrom(pToType->pArrayElementType, pTestType->pArrayElementType)) {
 				PUSH_O(heapPtr);
 				goto JIT_IS_INSTANCE_end;
 			}
@@ -3097,6 +3108,7 @@ JIT_LOADSTATICFIELD_CHECKTYPEINIT_VALUETYPE_start:
 	op = JIT_LOADSTATICFIELD_CHECKTYPEINIT_VALUETYPE;
 	goto loadStaticFieldStart;
 JIT_LOADSTATICFIELD_CHECKTYPEINIT_F64_start:
+JIT_LOADSTATICFIELD_CHECKTYPEINIT_INT64_start:
 	op = JIT_LOADSTATICFIELD_CHECKTYPEINIT_F64;
 	goto loadStaticFieldStart;
 JIT_LOADSTATICFIELD_CHECKTYPEINIT_INT32_start:
@@ -3149,6 +3161,7 @@ loadStaticFieldStart:
 	}
 JIT_LOADSTATICFIELDADDRESS_CHECKTYPEINIT_end:
 JIT_LOADSTATICFIELD_CHECKTYPEINIT_VALUETYPE_end:
+JIT_LOADSTATICFIELD_CHECKTYPEINIT_INT64_end:
 JIT_LOADSTATICFIELD_CHECKTYPEINIT_INT32_end:
 JIT_LOADSTATICFIELD_CHECKTYPEINIT_F32_end:
 JIT_LOADSTATICFIELD_CHECKTYPEINIT_F64_end:

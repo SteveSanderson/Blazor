@@ -65,7 +65,7 @@ void log_f(U32 level, char *pMsg, ...) {
 	}
 }
 
-static char methodName[2048];
+static char methodName[8192]; // must be big enough to handle the biggest types
 char* Sys_GetMethodDesc(tMD_MethodDef *pMethod) {
 	U32 i;
 

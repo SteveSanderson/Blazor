@@ -238,7 +238,9 @@ struct tMD_MethodDef_ {
 	// If this is a virtual method then this contains the offset into the vTable for this method.
 	// This offset is the table index - not the byte offset.
 	U32 vTableOfs;
-	// If this is method has generic parameters, then store the method type args
+	// The number of method type args, if this method has generic parameters
+	U32 numMethodTypeArgs;
+	// The method type args, if this method has generic parameters
 	tMD_TypeDef **ppMethodTypeArgs;
 	// If this is a generic core method, then store type instances here.
 	tGenericMethodInstance *pGenericMethodInstances;
@@ -257,10 +259,10 @@ struct tMD_MethodDef_ {
 #endif
 
 #ifdef DIAG_METHOD_CALLS
-	// Number of times this method has been called
-	U32 callCount;
 	// Total time (inclusive of children) in this function
 	U64 totalTime;
+	// Number of times this method has been called
+	U32 callCount;
 #endif
 };
 #define MD_TABLE_METHODDEF 0x06

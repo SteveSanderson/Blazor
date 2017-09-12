@@ -32,6 +32,8 @@
 #include "Type.h"
 #include "System.Array.h"
 
+#include "errno.h"
+
 typedef struct tSystemString_ tSystemString;
 // This structure must tie up with string.cs
 struct tSystemString_ {
@@ -46,7 +48,7 @@ static tSystemString* CreateStringHeapObj(U32 len) {
 	tSystemString *pSystemString;
 	U32 totalSize;
 	
-	totalSize = sizeof(tSystemString) + (len << 1);
+	totalSize = sizeof(tSystemString) + ((len + 1) << 1);
 	pSystemString = (tSystemString*)Heap_Alloc(types[TYPE_SYSTEM_STRING], totalSize);
 	pSystemString->length = len;
 	return pSystemString;
@@ -414,12 +416,78 @@ STRING2 SystemString_GetString(HEAP_PTR pThis_, U32 *pLength) {
 }
 
 U32 SystemString_GetNumBytes(HEAP_PTR pThis_) {
-	return (((tSystemString*)pThis_)->length << 1) + sizeof(tSystemString);
+	tSystemString *pThis = (tSystemString*)pThis_;
+	return ((pThis->length + 1) << 1) + sizeof(tSystemString);
 }
 
-tAsyncCall* System_String_ToDouble(PTR pThis_, PTR pParams, PTR pReturnValue) {
+tAsyncCall* System_String_InternalToInt32(PTR pThis_, PTR pParams, PTR pReturnValue) {
 	tSystemString *pThis = (tSystemString*)pThis_;
-	// TODO: use the NumberFormatInfo in pParams
-	*(double*)pReturnValue = wcstod((const wchar_t *)pThis->chars, NULL);
+	U32 *pError = ((U32**)pParams)[0];
+	const wchar_t *str = (const wchar_t *)pThis->chars;
+	wchar_t *end;
+	errno = 0;
+	I32 ret = wcstol(str, &end, 0);
+	*pError = end != (str + pThis->length) || (ret == 0 && errno != 0);
+	*(I32*)pReturnValue = ret;
+	return NULL;
+}
+
+tAsyncCall* System_String_InternalToInt64(PTR pThis_, PTR pParams, PTR pReturnValue) {
+	tSystemString *pThis = (tSystemString*)pThis_;
+	U32 *pError = ((U32**)pParams)[0];
+	const wchar_t *str = (const wchar_t *)pThis->chars;
+	wchar_t *end;
+	errno = 0;
+	I64 ret = wcstoll(str, &end, 0);
+	*pError = end != (str + pThis->length) || (ret == 0 && errno != 0);
+	*(I64*)pReturnValue = ret;
+	return NULL;
+}
+
+tAsyncCall* System_String_InternalToUInt32(PTR pThis_, PTR pParams, PTR pReturnValue) {
+	tSystemString *pThis = (tSystemString*)pThis_;
+	U32 *pError = ((U32**)pParams)[0];
+	const wchar_t *str = (const wchar_t *)pThis->chars;
+	wchar_t *end;
+	errno = 0;
+	U32 ret = wcstoul(str, &end, 0);
+	*pError = end != (str + pThis->length) || (ret == 0 && errno != 0);
+	*(U32*)pReturnValue = ret;
+	return NULL;
+}
+
+tAsyncCall* System_String_InternalToUInt64(PTR pThis_, PTR pParams, PTR pReturnValue) {
+	tSystemString *pThis = (tSystemString*)pThis_;
+	U32 *pError = ((U32**)pParams)[0];
+	const wchar_t *str = (const wchar_t *)pThis->chars;
+	wchar_t *end;
+	errno = 0;
+	U64 ret = wcstoull(str, &end, 0);
+	*pError = end != (str + pThis->length) || (ret == 0 && errno != 0);
+	*(U64*)pReturnValue = ret;
+	return NULL;
+}
+
+tAsyncCall* System_String_InternalToSingle(PTR pThis_, PTR pParams, PTR pReturnValue) {
+	tSystemString *pThis = (tSystemString*)pThis_;
+	U32 *pError = ((U32**)pParams)[0];
+	const wchar_t *str = (const wchar_t *)pThis->chars;
+	wchar_t *end;
+	errno = 0;
+	float ret = wcstof(str, &end);
+	*pError = end != (str + pThis->length) || (ret == 0 && errno != 0);
+	*(float*)pReturnValue = ret;
+	return NULL;
+}
+
+tAsyncCall* System_String_InternalToDouble(PTR pThis_, PTR pParams, PTR pReturnValue) {
+	tSystemString *pThis = (tSystemString*)pThis_;
+	U32 *pError = ((U32**)pParams)[0];
+	const wchar_t *str = (const wchar_t *)pThis->chars;
+	wchar_t *end;
+	errno = 0;
+	double ret = wcstod(str, &end);
+	*pError = end != (str + pThis->length) || (ret == 0 && errno != 0);
+	*(double*)pReturnValue = ret;
 	return NULL;
 }

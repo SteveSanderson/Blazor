@@ -849,6 +849,8 @@ cilBrCond:
 					//pTypeA->stackType == EVALSTACK_O && pTypeB->stackType == EVALSTACK_INT32 ||
 					//pTypeA->stackType == EVALSTACK_INT32 && pTypeB->stackType == EVALSTACK_O) {
 					PushOp(JIT_BEQ_I32I32 + (op - u32Value2));
+				} else if (pTypeA->stackType == EVALSTACK_PTR && pTypeB->stackType == EVALSTACK_PTR) {
+					PushOp((sizeof(void*) == 4 ? JIT_BEQ_I32I32 : JIT_BEQ_I64I64) + (op - u32Value2));
 				} else {
 					Crash("JITit(): Cannot perform conditional branch on stack types: %d and %d", pTypeA->stackType, pTypeB->stackType);
 				}
@@ -955,6 +957,7 @@ cilBinaryArithOp:
 			case CIL_CONV_OVF_I4: // Fix this later - will never overflow
 			case CIL_CONV_OVF_I4_UN: // Fix this later - will never overflow
 			case CIL_CONV_I: // Only on 32-bit
+			case CIL_CONV_OVF_I: // Only on 32-bit
 			case CIL_CONV_OVF_I_UN: // Only on 32-bit; Fix this later - will never overflow
 				toBitCount = 32;
 				toType = TYPE_SYSTEM_INT32;
@@ -977,6 +980,7 @@ cilConvInt32:
 			case CIL_CONV_OVF_U4: // Fix this later - will never overflow
 			case CIL_CONV_OVF_U4_UN: // Fix this later - will never overflow
 			case CIL_CONV_U: // Only on 32-bit
+			case CIL_CONV_OVF_U: // Only on 32-bit
 			case CIL_CONV_OVF_U_UN: // Only on 32-bit; Fix this later - will never overflow
 				toBitCount = 32;
 				toType = TYPE_SYSTEM_UINT32;

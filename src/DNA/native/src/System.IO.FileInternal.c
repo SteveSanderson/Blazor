@@ -124,6 +124,37 @@ tAsyncCall* System_IO_FileInternal_Close(PTR pThis_, PTR pParams, PTR pReturnVal
 	return NULL;
 }
 
+tAsyncCall* System_IO_FileInternal_Length(PTR pThis_, PTR pParams, PTR pReturnValue) {
+	I32 ret = 0, error = 0;
+	I64 filesize = 0;
+	unsigned char filename[256];
+	U32 i, filenameLen;
+
+	STRING2 filename2 = SystemString_GetString(((HEAP_PTR*)pParams)[0], &filenameLen);
+	U32 *pError = ((U32**)pParams)[1];
+	for (i = 0; i<filenameLen; i++) {
+		filename[i] = (unsigned char)filename2[i];
+	}
+	filename[i] = 0;
+
+#ifdef _WIN32
+	struct _stati64 statbuf;
+	ret = _stati64(filename, &statbuf);
+#else
+	struct stat statbuf;
+	ret = stat(filename, &statbuf);
+#endif
+	if (ret < 0) {
+		error = errno;
+	} else {
+		filesize = statbuf.st_size;
+	}
+
+	*pError = error;
+	*(I64*)pReturnValue = filesize;
+	return NULL;
+}
+
 tAsyncCall* System_IO_FileInternal_GetCurrentDirectory(PTR pThis_, PTR pParams, PTR pReturnValue) {
 	U32 *pError = ((U32**)pParams)[0];
 	HEAP_PTR curDir;

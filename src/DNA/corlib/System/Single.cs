@@ -68,6 +68,52 @@ namespace System {
 			return BitConverter.DoubleToInt64Bits(f).GetHashCode();
 		}
 
+		#region Parsing
+
+		public static float Parse(string s) {
+			return Parse(s, NumberStyles.Float, null);
+		}
+
+		public static float Parse(string s, NumberStyles style) {
+			return Parse(s, style, null);
+		}
+
+		public static float Parse(string s, IFormatProvider formatProvider) {
+			return Parse(s, NumberStyles.Float, formatProvider);
+		}
+
+		public static float Parse(string s, NumberStyles style, IFormatProvider formatProvider) {
+			if (s == null) {
+				throw new ArgumentNullException();
+			}
+			//TODO: use style and provider
+			int error = 0;
+			float result = s.InternalToSingle(out error);
+			if (error != 0) {
+				throw String.GetFormatException(error);
+			}
+			return result;
+		}
+
+		public static bool TryParse(string s, out float result) {
+			return TryParse(s, NumberStyles.Float, null, out result);
+		}
+
+		public static bool TryParse(string s, NumberStyles style, IFormatProvider provider, out float result) {
+			if (s == null) {
+				result = 0;
+				return false;
+			}
+			//TODO: use style and provider
+			int error;
+			result = s.InternalToSingle(out error);
+			return error == 0;
+		}
+
+		#endregion
+
+		#region ToString methods
+
 		public override string ToString() {
 			return ToString(null, null);
 		}
@@ -84,6 +130,8 @@ namespace System {
 			NumberFormatInfo nfi = NumberFormatInfo.GetInstance(provider);
 			return NumberFormatter.NumberToString(format, this.m_value, nfi);
 		}
+
+		#endregion
 
 		#region IComparable Members
 

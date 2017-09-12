@@ -68,6 +68,52 @@ namespace System {
 			return BitConverter.DoubleToInt64Bits(d).GetHashCode();
 		}
 
+		#region Parsing
+
+		public static double Parse(string s) {
+			return Parse(s, NumberStyles.Float, null);
+		}
+
+		public static double Parse(string s, NumberStyles style) {
+			return Parse(s, style, null);
+		}
+
+		public static double Parse(string s, IFormatProvider formatProvider) {
+			return Parse(s, NumberStyles.Float, formatProvider);
+		}
+
+		public static double Parse(string s, NumberStyles style, IFormatProvider formatProvider) {
+			if (s == null) {
+				throw new ArgumentNullException();
+			}
+			//TODO: use style and provider
+			int error = 0;
+			double result = s.InternalToDouble(out error);
+			if (error != 0) {
+				throw String.GetFormatException(error);
+			}
+			return result;
+		}
+
+		public static bool TryParse(string s, out double result) {
+			return TryParse(s, NumberStyles.Float, null, out result);
+		}
+
+		public static bool TryParse(string s, NumberStyles style, IFormatProvider provider, out double result) {
+			if (s == null) {
+				result = 0;
+				return false;
+			}
+			//TODO: use style and provider
+			int error;
+			result = s.InternalToDouble(out error);
+			return error == 0;
+		}
+
+		#endregion
+
+		#region ToString methods
+
 		public override string ToString() {
 			return ToString(null, null);
 		}
@@ -84,6 +130,8 @@ namespace System {
 			NumberFormatInfo nfi = NumberFormatInfo.GetInstance(fp);
 			return NumberFormatter.NumberToString(format, this.m_value, nfi);
 		}
+
+		#endregion
 
 		#region IComparable Members
 
@@ -120,63 +168,6 @@ namespace System {
 				return double.IsNaN(x);
 			}
 			return this.m_value == x;
-		}
-
-		#endregion
-
-		#region Parsing
-
-		public static bool TryParse(String s, out double result)
-		{
-			return TryParse(s, NumberStyles.Float | NumberStyles.AllowThousands, NumberFormatInfo.CurrentInfo, out result);
-		}
-
-		public static bool TryParse(String s, NumberStyles style, IFormatProvider provider, out double result)
-		{
-			// NumberFormatInfo.ValidateParseStyleFloatingPoint(style);
-			return TryParse(s, style, NumberFormatInfo.GetInstance(provider), out result);
-		}
-
-		private static bool TryParse(String s, NumberStyles style, NumberFormatInfo info, out double result)
-		{
-			if (s == null)
-			{
-				result = 0;
-				return false;
-			}
-			
-			result = s.ToDouble(info); // returns zero on parsing error
-
-			String sTrim = s.Trim();
-			bool isZero = true;
-			int len = sTrim.Length;
-			for (int i = 0; i < len; i++) {
-				var c = sTrim[i];
-				if (c != '0' || c != '.') {
-					isZero = false;
-					break;
-				}
-			}
-			bool success = (result != 0.0) || isZero;
-			//bool success = Number.TryParseDouble(s, style, info, out result);
-			if (!success)
-			{
-				if (sTrim.Equals(info.PositiveInfinitySymbol))
-				{
-					result = PositiveInfinity;
-				}
-				else if (sTrim.Equals(info.NegativeInfinitySymbol))
-				{
-					result = NegativeInfinity;
-				}
-				else if (sTrim.Equals(info.NaNSymbol))
-				{
-					result = NaN;
-				}
-				else
-					return false; // We really failed
-			}
-			return true;
 		}
 
 		#endregion

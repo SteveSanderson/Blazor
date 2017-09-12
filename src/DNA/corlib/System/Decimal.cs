@@ -23,16 +23,35 @@
 using System.Globalization;
 namespace System {
 	public struct Decimal {
+		// some constants
+		private const uint MAX_SCALE = 28;
+		private const uint SIGN_FLAG = 0x80000000;
+		private const int SCALE_SHIFT = 16;
+		private const uint RESERVED_SS32_BITS = 0x7F00FFFF;
 
 		// internal representation of decimal
 #pragma warning disable 0169, 0649
-        private uint flags;
+		private uint flags;
 		private uint hi;
 		private uint lo;
 		private uint mid;
 #pragma warning restore 0169, 0649
 
-        public static int[] GetBits(Decimal d) {
+		public Decimal(int[] bits) {
+			if (bits == null || bits.Length != 4) {
+				throw new ArgumentException("bits");
+			}
+			lo = (uint) bits[0];
+			mid = (uint) bits[1];
+			hi = (uint) bits[2];
+			flags = (uint) bits[3];
+			byte scale = (byte)(flags >> SCALE_SHIFT);
+			if (scale > MAX_SCALE || (flags & RESERVED_SS32_BITS) != 0) {
+				throw new ArgumentException ("Invalid bits[3]");
+			}
+		}
+
+		public static int[] GetBits(Decimal d) {
 			return new int[] { (int)d.lo, (int)d.mid, (int)d.hi, (int)d.flags };
 		}
 

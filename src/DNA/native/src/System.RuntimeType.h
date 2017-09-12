@@ -30,6 +30,12 @@ struct tRuntimeType_ {
 	tMD_TypeDef *pTypeDef;
 };
 
+// De-ref a runtime type pointer
+tMD_TypeDef* RuntimeType_DeRef(PTR type);
+
+// Create a new heap object which is the RuntimeType object for the given type.
+HEAP_PTR RuntimeType_New(tMD_TypeDef *pTypeDef);
+
 tAsyncCall* System_RuntimeType_get_Name(PTR pThis_, PTR pParams, PTR pReturnValue);
 tAsyncCall* System_RuntimeType_get_Namespace(PTR pThis_, PTR pParams, PTR pReturnValue);
 tAsyncCall* System_RuntimeType_GetNestingParentType(PTR pThis_, PTR pParams, PTR pReturnValue);
@@ -41,10 +47,5 @@ tAsyncCall* System_RuntimeType_GetGenericArguments(PTR pThis_, PTR pParams, PTR 
 tAsyncCall* System_RuntimeType_IsDefined(PTR pThis_, PTR pParams, PTR pReturnValue);
 tAsyncCall* System_RuntimeType_GetCustomAttributes(PTR pThis_, PTR pParams, PTR pReturnValue);
 tAsyncCall* System_RuntimeType_GetElementType(PTR pThis_, PTR pParams, PTR pReturnValue);
-
-// Create a new heap object which is the RuntimeType object for the given type.
-HEAP_PTR RuntimeType_New(tMD_TypeDef *pTypeDef);
-// De-ref a runtime type pointer
-tMD_TypeDef* RuntimeType_DeRef(PTR type);
 
 #endif

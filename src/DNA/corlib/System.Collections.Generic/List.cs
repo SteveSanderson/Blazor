@@ -95,6 +95,10 @@ namespace System.Collections.Generic {
 			}
 		}
 
+		public void TrimExcess() {
+			// does nothing
+		}
+
 		private void EnsureSpace(int space) {
 			if (this.size + space > this.items.Length) {
 				Array.Resize<T>(ref this.items, Math.Max(this.items.Length << 1, 4));

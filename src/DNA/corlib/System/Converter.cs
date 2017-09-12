@@ -24,6 +24,7 @@ namespace System {
 	public delegate TOutput Converter<TInput, TOutput>(TInput input);
 
     public class Convert {
+        public static int ToInt32(Byte b) => (int)b;
         public static int ToInt32(Single f) => (int)f;
         public static int ToInt32(Double d) => (int)d;
 
@@ -43,6 +44,11 @@ namespace System {
             }
             return res;
         }
+
+        public static uint ToUInt32(UInt64 i) => (uint)i;
+        public static decimal ToDecimal(Int32 i) => throw new NotImplementedException();
+        public static decimal ToDecimal(string str) => throw new NotImplementedException();
+
     }
 }
 

@@ -39,6 +39,52 @@ namespace System {
 			return (int)(m_value & 0xffffffff) ^ (int)(m_value >> 32);
 		}
 
+		#region Parse methods
+
+		public static long Parse(string s) {
+			return Parse(s, NumberStyles.Integer, null);
+		}
+
+		public static long Parse(string s, NumberStyles style) {
+			return Parse(s, style, null);
+		}
+
+		public static long Parse(string s, IFormatProvider formatProvider) {
+			return Parse(s, NumberStyles.Integer, formatProvider);
+		}
+
+		public static long Parse(string s, NumberStyles style, IFormatProvider formatProvider) {
+			if (s == null) {
+				throw new ArgumentNullException();
+			}
+			//TODO: use style and provider
+			int error = 0;
+			long result = s.InternalToInt64(out error);
+			if (error != 0) {
+				throw String.GetFormatException(error);
+			}
+			return result;
+		}
+
+		public static bool TryParse(string s, out long result) {
+			return TryParse(s, NumberStyles.Integer, null, out result);
+		}
+
+		private static bool TryParse(string s, NumberStyles style, IFormatProvider provider, out long result) {
+			if (s == null) {
+				result = 0;
+				return false;
+			}
+			//TODO: use style and provider
+			int error = 0;
+			result = s.InternalToInt64(out error);
+			return error == 0;
+		}
+
+		#endregion
+
+		#region ToString methods
+
 		public override string ToString() {
 			return NumberFormatter.FormatGeneral(new NumberFormatter.NumberStore(this.m_value));
 		}
@@ -55,6 +101,8 @@ namespace System {
 			NumberFormatInfo nfi = NumberFormatInfo.GetInstance(formatProvider);
 			return NumberFormatter.NumberToString(format, m_value, nfi);
 		}
+
+		#endregion
 
 		#region IComparable Members
 

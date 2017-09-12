@@ -59,38 +59,53 @@ tMD_TypeDef* Generics_GetGenericTypeFromSig
 	return pRet;
 }
 
+// TODO: This is not the most efficient way of doing this, as it has to search through all the
+// entries in the GenericParams table for all lookups. This can be improved.
 static tMD_GenericParam* FindGenericParam(tMD_TypeDef *pCoreType, U32 typeArgIndex) {
+	tMD_GenericParam *pGenericParam;
+	pGenericParam = (tMD_GenericParam*)MetaData_GetTableRow(pCoreType->pMetaData, MAKE_TABLE_INDEX(MD_TABLE_GENERICPARAM, 1));
 	U32 rows = pCoreType->pMetaData->tables.numRows[MD_TABLE_GENERICPARAM];
-	tMD_GenericParam *pGenericParam = (tMD_GenericParam*)MetaData_GetTableRow(pCoreType->pMetaData, MAKE_TABLE_INDEX(MD_TABLE_GENERICPARAM, 1));
-	IDX_TABLE value = pCoreType->tableIndex;
-
-	// binary search in GenericParams table
-	int lo = 0;
-	int hi = rows - 1;
-	while (lo <= hi) {
-		int i = lo + ((hi - lo) >> 1);
-		if (pGenericParam[i].owner < value) { lo = i + 1; }
-		else {
-			if (pGenericParam[i].owner > value) { hi = i - 1; }
-			else {
-				while (pGenericParam[i].owner == value) {
-					if (pGenericParam[i].number < typeArgIndex) { ++i; }
-					else {
-						if (pGenericParam[i].number > typeArgIndex) { --i; }
-						else { return (pGenericParam + i); }
-					}
-				}
-			}
+	IDX_TABLE ownerToken = pCoreType->tableIndex;
+	for (U32 i = 0; i < rows; i++, pGenericParam++) {
+		if (pGenericParam->owner == ownerToken && pGenericParam->number == typeArgIndex) {
+			return pGenericParam;
 		}
 	}
 	return NULL;
 }
 
+//static tMD_GenericParam* FindGenericParam(tMD_TypeDef *pCoreType, U32 typeArgIndex) {
+//	U32 rows = pCoreType->pMetaData->tables.numRows[MD_TABLE_GENERICPARAM];
+//	tMD_GenericParam *pGenericParam = (tMD_GenericParam*)MetaData_GetTableRow(pCoreType->pMetaData, MAKE_TABLE_INDEX(MD_TABLE_GENERICPARAM, 1));
+//	IDX_TABLE ownerToken = pCoreType->tableIndex;
+//
+//	// binary search in GenericParams table
+//	int lo = 0;
+//	int hi = rows - 1;
+//	while (lo <= hi) {
+//		int i = lo + ((hi - lo) >> 1);
+//		if (pGenericParam[i].owner < ownerToken) { lo = i + 1; }
+//		else {
+//			if (pGenericParam[i].owner > ownerToken) { hi = i - 1; }
+//			else {
+//				while (pGenericParam[i].owner == ownerToken) {
+//					if (pGenericParam[i].number < typeArgIndex) { ++i; }
+//					else {
+//						if (pGenericParam[i].number > typeArgIndex) { --i; }
+//						else { return (pGenericParam + i); }
+//					}
+//				}
+//			}
+//		}
+//	}
+//	return NULL;
+//}
+
 tMD_TypeDef* Generics_GetGenericTypeFromCoreType(tMD_TypeDef *pCoreType, U32 numTypeArgs, tMD_TypeDef **ppTypeArgs) {
 	tGenericInstance *pInst;
 	tMD_TypeDef *pTypeDef;
 	U32 i;
-	unsigned char name[2048];
+	unsigned char name[8192]; // must be big enough to handle the biggest types
 	tMetaData *pMetaData;
 
 	pMetaData = pCoreType->pMetaData;
@@ -227,6 +242,9 @@ tMD_MethodDef* Generics_GetMethodDefFromCoreMethod
 	pMethod->name = pCoreMethod->name;
 	pMethod->signature = pCoreMethod->signature;
 	pMethod->vTableOfs = pCoreMethod->vTableOfs;
+
+	// TODO: refactor to store pInst itself, to speedup the lookup at runtime
+	pMethod->numMethodTypeArgs = pInst->numTypeArgs;
 	pMethod->ppMethodTypeArgs = pInst->pTypeArgs;
 
 	MetaData_Fill_MethodDef(pParentType, pMethod, pParentType->ppClassTypeArgs, pInst->pTypeArgs);

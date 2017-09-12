@@ -324,12 +324,8 @@ tMD_TypeDef* Type_GetTypeFromSig(tMetaData *pMetaData, SIG *pSig, tMD_TypeDef **
 			if (ppMethodTypeArgs != NULL) {
 				return ppMethodTypeArgs[entry];
 			} else {
-				if (ppClassTypeArgs != NULL) {
-					return ppClassTypeArgs[entry];
-				} else {
-					// Can't do anything sensible, as we don't have any type args
-					return NULL;
-				}
+				// Can't do anything sensible, as we don't have any type args
+				return NULL;
 			}
 
 		default:
@@ -399,14 +395,14 @@ static tTypeInit typeInit[] = {
 	{mscorlib, SystemThreading, "ThreadStart", EVALSTACK_O, 0, 0, 0                        , TYPE_SYSTEM_THREADING_THREADSTART },  // 34
 	{mscorlib, SystemThreading, "ParameterizedThreadStart", EVALSTACK_O, 0, 0, 0           , TYPE_SYSTEM_THREADING_PARAMETERIZEDTHREADSTART },  // 35
 	{mscorlib, System, "WeakReference", EVALSTACK_O, 4, 4, 0                               , TYPE_SYSTEM_WEAKREFERENCE },  // 36
-	{mscorlib, SystemIO, "FileMode", EVALSTACK_O, 0, 0, 0                                  , TYPE_SYSTEM_IO_FILEMODE },  // 37
-	{mscorlib, SystemIO, "FileAccess", EVALSTACK_O, 0, 0, 0                                , TYPE_SYSTEM_IO_FILEACCESS },  // 38
-	{mscorlib, SystemIO, "FileShare", EVALSTACK_O, 0, 0, 0                                 , TYPE_SYSTEM_IO_FILESHARE },  // 39
+	{mscorlib, SystemIO, "FileMode", EVALSTACK_INT32, 4, 4, 4                              , TYPE_SYSTEM_IO_FILEMODE },  // 37
+	{mscorlib, SystemIO, "FileAccess", EVALSTACK_INT32, 4, 4, 4                            , TYPE_SYSTEM_IO_FILEACCESS },  // 38
+	{mscorlib, SystemIO, "FileShare", EVALSTACK_INT32, 4, 4, 4                             , TYPE_SYSTEM_IO_FILESHARE },  // 39
 	{NULL, NULL, (char*)TYPE_SYSTEM_BYTE, 0, 0, 0, 0                                       , TYPE_SYSTEM_ARRAY_BYTE },  // 40
-	{mscorlib, SystemGlobalization, "UnicodeCategory", EVALSTACK_INT32,	0, 0, 0            , TYPE_SYSTEM_GLOBALIZATION_UNICODECATEGORY },  // 41
+	{mscorlib, SystemGlobalization, "UnicodeCategory", EVALSTACK_INT32,	4, 4, 4            , TYPE_SYSTEM_GLOBALIZATION_UNICODECATEGORY },  // 41
 	{mscorlib, System, "OverflowException", EVALSTACK_O,				0, 0, 0            , TYPE_SYSTEM_OVERFLOWEXCEPTION },  // 42
-	{mscorlib, System, "PlatformID", EVALSTACK_INT32,					0, 0, 0            , TYPE_SYSTEM_PLATFORMID },  // 43
-	{mscorlib, SystemIO, "FileAttributes", EVALSTACK_O, 0, 0, 0                            , TYPE_SYSTEM_IO_FILESYSTEMATTRIBUTES },  // 44
+	{mscorlib, System, "PlatformID", EVALSTACK_INT32,					4, 4, 4            , TYPE_SYSTEM_PLATFORMID },  // 43
+	{mscorlib, SystemIO, "FileAttributes", EVALSTACK_INT32, 4, 4, 4                        , TYPE_SYSTEM_IO_FILESYSTEMATTRIBUTES },  // 44
 	{mscorlib, System, "UIntPtr", EVALSTACK_PTR,		sizeof(void*), sizeof(void*), 0    , TYPE_SYSTEM_UINTPTR },  // 45
 	{mscorlib, System, "Nullable`1", EVALSTACK_VALUETYPE, 0, 0, 0                          , TYPE_SYSTEM_NULLABLE },  // 46
 	{NULL, NULL, (char*)TYPE_SYSTEM_TYPE, 0, 0, 0, 0                                       , TYPE_SYSTEM_ARRAY_TYPE },  // 47
@@ -417,6 +413,7 @@ static tTypeInit typeInit[] = {
 	{mscorlib, System, "Attribute", EVALSTACK_O, 4, 4, sizeof(tSystemAttribute)            , TYPE_SYSTEM_ATTRIBUTE },  // 52
 	{mscorlib, SystemReflection, "InternalCustomAttributeInfo", EVALSTACK_VALUETYPE, sizeof(tInternalCustomAttributeInfo),
 		sizeof(tInternalCustomAttributeInfo), sizeof(tInternalCustomAttributeInfo)         , TYPE_SYSTEM_REFLECTION_INTERNALCUSTOMATTRIBUTEINFO },  // 53
+	{mscorlib, SystemGlobalization, "NumberStyles", EVALSTACK_INT32, 4, 4, 4               , TYPE_SYSTEM_GLOBALIZATION_NUMBERSTYLES },  // 54
 };
 
 int CorLibDone = 0;
@@ -505,6 +502,9 @@ U32 Type_IsDerivedFromOrSame(tMD_TypeDef *pBaseType, tMD_TypeDef *pTestType) {
 			return 1;
 		}
 		MetaData_Fill_TypeDef(pTestType, NULL, NULL);
+		if (pTestType->pTypeDef != NULL && pTestType->pTypeDef == pBaseType->pTypeDef) {
+			return 1;
+		}
 		pTestType = pTestType->pParent;
 	}
 	return 0;

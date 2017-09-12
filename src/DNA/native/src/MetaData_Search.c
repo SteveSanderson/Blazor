@@ -47,9 +47,6 @@ U32 MetaData_CompareNameAndSig(STRING name, BLOB_ sigBlob, tMetaData *pSigMetaDa
 		// If method has generic arguments, check the generic type argument count
 		isGeneric = e & SIG_CALLCONV_GENERIC;
 		if (isGeneric) {
-			if (isSame) {
-				return 1; // just compare signatures (seems to help in some corner cases)
-			}
 			e = MetaData_DecodeSigEntry(&sig);
 			thisE = MetaData_DecodeSigEntry(&thisSig);
 			// Generic argument count
@@ -70,12 +67,10 @@ U32 MetaData_CompareNameAndSig(STRING name, BLOB_ sigBlob, tMetaData *pSigMetaDa
 		for (i=0; i<paramCount; i++) {
 			tMD_TypeDef *pParamType, *pThisParamType;
 
-			pParamType = Type_GetTypeFromSig(pSigMetaData, &sig, ppSigClassTypeArgs, ppSigMethodTypeArgs);
-			pThisParamType = Type_GetTypeFromSig(pMethod->pMetaData, &thisSig, ppMethodClassTypeArgs, ppMethodMethodTypeArgs);
+			pParamType = Type_GetTypeFromSig(pSigMetaData, &sig, ppSigClassTypeArgs, NULL); // ppSigMethodTypeArgs);
+			pThisParamType = Type_GetTypeFromSig(pMethod->pMetaData, &thisSig, ppMethodClassTypeArgs, NULL); // ppMethodMethodTypeArgs);
 			if (pParamType != pThisParamType) {
-				if (!isGeneric || ppMethodMethodTypeArgs != NULL) {
-					return 0;
-				}
+				return 0;
 			}
 		}
 		// All parameters the same, so found the right method

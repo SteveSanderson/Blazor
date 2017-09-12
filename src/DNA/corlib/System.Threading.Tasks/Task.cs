@@ -62,6 +62,11 @@ namespace System.Threading.Tasks {
             return ContinueWith((object)continuation);
         }
 
+        public Task ContinueWith<TResult>(Func<Task, TResult> continuation) {
+            Action<Task> cont = task => { continuation(task); }; // see disclaimer above
+            return ContinueWith((object)cont);
+        }
+
         private void InvokeContinuations() {
             IsCompleted = true;
             foreach (var continuation in _continuations) {

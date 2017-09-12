@@ -4,6 +4,6 @@ namespace System.Reflection
 {
     public abstract class FieldInfo : MemberInfo
     {
-        public override string Name { get; }
+        public abstract object GetValue(object obj);
     }
 }

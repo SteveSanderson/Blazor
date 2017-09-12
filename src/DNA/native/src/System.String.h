@@ -43,6 +43,11 @@ HEAP_PTR SystemString_FromCharPtrUTF16(U16 *pStr);
 STRING2 SystemString_GetString(HEAP_PTR pThis_, U32 *pLength);
 U32 SystemString_GetNumBytes(HEAP_PTR pThis_);
 
-tAsyncCall* System_String_ToDouble(PTR pThis_, PTR pParams, PTR pReturnValue);
+tAsyncCall* System_String_InternalToInt32(PTR pThis_, PTR pParams, PTR pReturnValue);
+tAsyncCall* System_String_InternalToInt64(PTR pThis_, PTR pParams, PTR pReturnValue);
+tAsyncCall* System_String_InternalToUInt32(PTR pThis_, PTR pParams, PTR pReturnValue);
+tAsyncCall* System_String_InternalToUInt64(PTR pThis_, PTR pParams, PTR pReturnValue);
+tAsyncCall* System_String_InternalToSingle(PTR pThis_, PTR pParams, PTR pReturnValue);
+tAsyncCall* System_String_InternalToDouble(PTR pThis_, PTR pParams, PTR pReturnValue);
 
 #endif

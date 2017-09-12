@@ -92,7 +92,7 @@ doneArgs:;
 	memset(opcodeTimes, 0, sizeof(opcodeTimes));
 #endif
 
-#ifdef DIAG_OPCODE_USE
+#ifdef DIAG_OPCODE_USES
 	memset(opcodeNumUses, 0, sizeof(opcodeNumUses));
 #endif
 
@@ -112,38 +112,39 @@ doneArgs:;
 	}
 
 #ifdef DIAG_TOTAL_TIME
-	printf("Total execution time = %d ms\n", (int)((microTime() - startTime) / 1000));
+	printf("Total execution time = %llu ms\n", (microTime() - startTime) / 1000);
 #endif
 
 #ifdef DIAG_GC
-	printf("Total GC time = %d ms\n", (int)(gcTotalTime / 1000));
+	printf("Total GC time = %llu ms\n", gcTotalTime / 1000);
 #endif
 
 #ifdef DIAG_METHOD_CALLS
-	{
-		U32 numMethods, i;
-		I32 howMany = 25;
-		tMetaData *pCorLib;
-		// Report on most-used methods
-		pCorLib = CLIFile_GetMetaDataForAssembly("mscorlib");
-		numMethods = pCorLib->tables.numRows[MD_TABLE_METHODDEF];
-		printf("\nCorLib method usage:\n");
-		for (; howMany > 0; howMany--) {
-			tMD_MethodDef *pMethod;
-			U32 maxCount = 0, maxIndex = 0;
-			for (i=1; i<=numMethods; i++) {
-				pMethod = (tMD_MethodDef*)MetaData_GetTableRow(pCorLib, MAKE_TABLE_INDEX(MD_TABLE_METHODDEF, i));
-				if (pMethod->callCount > maxCount) {
-					maxCount = pMethod->callCount;
-					maxIndex = i;
-				}
-			}
-			pMethod = (tMD_MethodDef*)MetaData_GetTableRow(pCorLib, MAKE_TABLE_INDEX(MD_TABLE_METHODDEF, maxIndex));
-			printf("%d: %s (%d)\n", (int)pMethod->callCount, Sys_GetMethodDesc(pMethod), (int)(pMethod->totalTime/1000));
-			pMethod->callCount = 0;
-		}
-		printf("\n");
-	}
+	//{
+	//	U32 numMethods, i;
+	//	I32 howMany = 25;
+	//	tMetaData *pCorLib;
+	//	// Report on most-used methods
+	//	pCorLib = CLIFile_GetMetaDataForAssembly("mscorlib");
+	//	numMethods = pCorLib->tables.numRows[MD_TABLE_METHODDEF];
+	//	printf("\nCorLib method usage:\n");
+	//	for (; howMany > 0; howMany--) {
+	//		tMD_MethodDef *pMethod;
+	//		U32 maxCount = 0, maxIndex = 0;
+	//		for (i=1; i<=numMethods; i++) {
+	//			pMethod = (tMD_MethodDef*)MetaData_GetTableRow(pCorLib, MAKE_TABLE_INDEX(MD_TABLE_METHODDEF, i));
+	//			if (pMethod->callCount > maxCount) {
+	//				maxCount = pMethod->callCount;
+	//				maxIndex = i;
+	//			}
+	//		}
+	//		pMethod = (tMD_MethodDef*)MetaData_GetTableRow(pCorLib, MAKE_TABLE_INDEX(MD_TABLE_METHODDEF, maxIndex));
+	//		char* methodName = pMethod->isFilled ? Sys_GetMethodDesc(pMethod) : pMethod->name;
+	//		printf("%u: %s (%llu ms)\n", pMethod->callCount, methodName, pMethod->totalTime/1000);
+	//		pMethod->callCount = 0;
+	//	}
+	//	printf("\n");
+	//}
 	{
 		U32 numMethods, i;
 		I32 howMany = 25;
@@ -164,7 +165,9 @@ doneArgs:;
 				}
 			}
 			pMethod = (tMD_MethodDef*)MetaData_GetTableRow(pCorLib, MAKE_TABLE_INDEX(MD_TABLE_METHODDEF, maxIndex));
-			printf("%d: %s (%d)\n", (int)pMethod->callCount, Sys_GetMethodDesc(pMethod), (int)(pMethod->totalTime/1000));
+			char* methodName = pMethod->isFilled ? Sys_GetMethodDesc(pMethod) : pMethod->name;
+			printf("%s: called: %u, total: %llu ms, avg: %llu us\n", methodName,
+				pMethod->callCount, pMethod->totalTime / 1000, pMethod->totalTime / pMethod->callCount);
 			pMethod->totalTime = 0;
 		}
 		printf("\n");
@@ -174,7 +177,7 @@ doneArgs:;
 	{
 		I32 howMany = 25;
 		U32 i;
-		printf("\nOpCodes execution time:\n");
+		printf("\nJIT OpCodes execution time:\n");
 		for (; howMany > 0; howMany--) {
 			U64 maxTime = 0;
 			U32 maxIndex = 0;
@@ -184,13 +187,16 @@ doneArgs:;
 					maxIndex = i;
 				}
 			}
-			printf("0x%03x: %dms (used %d times) (ave = %d)\n",
-				maxIndex, (int)(maxTime / 1000), (int)opcodeNumUses[maxIndex], (int)(maxTime / opcodeNumUses[maxIndex]));
+			printf("0x%03x: %llu ms", maxIndex, maxTime / 1000);
+#ifdef DIAG_OPCODE_USES
+			printf(" (used %u times) (avg time = %llu)\n", opcodeNumUses[maxIndex], maxTime / opcodeNumUses[maxIndex]);
+#endif
+			printf("\n");
 			opcodeTimes[maxIndex] = 0;
 		}
 	}
 #endif
-#ifdef DIAG_OPCODE_USE
+#ifdef DIAG_OPCODE_USES
 	{
 		I32 howMany = 25;
 		U32 i, j;

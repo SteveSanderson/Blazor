@@ -199,6 +199,8 @@
 #define CIL_CONV_U2		0xd1
 #define CIL_CONV_U1		0xd2
 #define CIL_CONV_I		0xd3
+#define CIL_CONV_OVF_I	0xd4
+#define CIL_CONV_OVF_U	0xd5
 
 #define CIL_ADD_OVF		0xd6
 #define CIL_ADD_OVF_UN	0xd7

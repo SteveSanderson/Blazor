@@ -39,6 +39,50 @@ namespace System {
 			return (int)this.m_value;
 		}
 
+		#region Parse methods
+
+		public static uint Parse(string s) {
+			return Parse(s, NumberStyles.Integer, null);
+		}
+
+		public static uint Parse(string s, NumberStyles style) {
+			return Parse(s, style, null);
+		}
+
+		public static uint Parse(string s, IFormatProvider formatProvider) {
+			return Parse(s, NumberStyles.Integer, formatProvider);
+		}
+
+		public static uint Parse(string s, NumberStyles style, IFormatProvider formatProvider) {
+			if (s == null) {
+				throw new ArgumentNullException();
+			}
+			//TODO: use style and provider
+			int error = 0;
+			uint result = s.InternalToUInt32(out error);
+			if (error != 0) {
+				throw String.GetFormatException(error);
+			}
+			return result;
+		}
+
+		public static bool TryParse(string s, out uint result) {
+			return TryParse(s, NumberStyles.Integer, null, out result);
+		}
+
+		private static bool TryParse(string s, NumberStyles style, IFormatProvider provider, out uint result) {
+			if (s == null) {
+				result = 0;
+				return false;
+			}
+			//TODO: use style and provider
+			int error = 0;
+			result = s.InternalToUInt32(out error);
+			return error == 0;
+		}
+
+		#endregion
+
 		#region ToString methods
 
 		public override string ToString() {

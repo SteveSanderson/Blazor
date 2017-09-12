@@ -4,6 +4,5 @@ namespace System.Reflection
 {
     public abstract class EventInfo : MemberInfo
     {
-        public override string Name { get; }
     }
 }
