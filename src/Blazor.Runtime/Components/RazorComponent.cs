@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Linq;
 using Blazor.Routing;
 using Blazor.Runtime.Components;
+using System.Reflection;
 using Blazor.Runtime.Interop;
 
 namespace Blazor.Components
@@ -56,9 +57,58 @@ namespace Blazor.Components
             // don't have to be marked abstract.
         }
 
+        private static Dictionary<Type, IEnumerable<MemberInfo>> ParameterMembersCache = new Dictionary<Type, IEnumerable<MemberInfo>>();
+        private IEnumerable<MemberInfo> GetComponentParameterMembers()
+        {
+            if (ParameterMembersCache.ContainsKey(this.GetType()))
+            {
+                return ParameterMembersCache[this.GetType()];
+            }
+
+            var decoratedMembers = new List<MemberInfo>();
+
+            //TODO: Add field support -> needs corlib FieldInfo implementation
+            //     Also, the following Linq will not work for some reason (missing GetEnumerator)
+
+            //decoratedMembers.AddRange(this.GetType().GetTypeInfo().DeclaredFields.Where(x => x.GetCustomAttribute(typeof(FromAttributeAttribute)) != null));
+            //decoratedMembers.AddRange(this.GetType().GetTypeInfo().DeclaredProperties.Where(x => x.GetCustomAttributes(typeof(FromAttributeAttribute),false).Count() > 0));
+
+
+            //foreach works normally
+            foreach (var property in this.GetType().GetTypeInfo().DeclaredProperties)
+            {
+                if (property.GetCustomAttributes(typeof(FromAttributeAttribute), true).Count() > 0)
+                {
+                    decoratedMembers.Add(property);
+                }
+            }
+
+            ParameterMembersCache.Add(this.GetType(), decoratedMembers);
+            return decoratedMembers;
+        }
+
         protected override void ReceiveParameters(IDictionary<string, object> parameters)
         {
-            // Subclasses may optionally override this
+            var decoratedMembers = GetComponentParameterMembers();
+
+            foreach (var member in decoratedMembers)
+            {
+
+                var attribute = (FromAttributeAttribute)member.GetCustomAttributes().First(x => x.GetType() == typeof(FromAttributeAttribute));
+                if (!parameters.ContainsKey(attribute.AttributeName) && !attribute.IsOptional)
+                {
+                    throw new Exception($"Parameter '{attribute.AttributeName}' is required");
+                }
+
+                var parameterValue = parameters[attribute.AttributeName];
+
+                //TODO add field support -> needs corlib FieldInfo implementation
+
+                //if(member is FieldInfo)
+                //    ((FieldInfo)member).SetValue(this, parameterValue);
+                //else
+                ((PropertyInfo)member).SetValue(this, parameterValue);
+            }
         }
 
         private static Type GetTypeForCompiledRazorFile(string cshtmlFilename)
@@ -102,7 +152,7 @@ namespace Blazor.Components
             };
         }
 
-        protected VDomAttribute onclick(Action<EventInfo> callback)
+        protected VDomAttribute onclick(Action<VirtualDom.EventInfo> callback)
         {
             return new VDomAttribute
             {
@@ -120,7 +170,7 @@ namespace Blazor.Components
             };
         }
 
-        protected VDomAttribute onclickAsync(Func<EventInfo, Task> callback)
+        protected VDomAttribute onclickAsync(Func<VirtualDom.EventInfo, Task> callback)
         {
             return new VDomAttribute
             {
@@ -129,7 +179,7 @@ namespace Blazor.Components
             };
         }
 
-        protected VDomAttribute onchange(Action<EventInfo> callback)
+        protected VDomAttribute onchange(Action<VirtualDom.EventInfo> callback)
         {
             return new VDomAttribute
             {

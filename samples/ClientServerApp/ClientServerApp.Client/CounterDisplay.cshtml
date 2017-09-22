@@ -6,14 +6,10 @@
 </div>
 
 @functions {
-    // It would be cleaner if we could mark properties with [FromAttribute] or similar,
-    // instead of having to extract them from a dictionary manually.
-    private int currentCount;
-    private Action resetCounterCallback;
 
-    protected override void ReceiveParameters(IDictionary<string, object> parameters)
-    {
-        currentCount = (int)parameters["current-count"];
-        resetCounterCallback = (Action)parameters["on-reset"];
-    }
+    [FromAttribute("current-count")]
+    private int currentCount { get; set; }
+
+    [FromAttribute("on-reset")]
+    private Action resetCounterCallback { get; set; }
 }
