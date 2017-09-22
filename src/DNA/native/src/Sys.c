@@ -43,6 +43,10 @@ void Crash(char *pMsg, ...) {
 
 	printf("\n\n");
 
+#ifdef DIAG_METHOD_CALLS
+	abort();
+#endif
+	
 #ifdef _WIN32
 	{
 		// Cause a delibrate exception, to get into debugger
@@ -123,27 +127,6 @@ void* mallocTrace(int s, char *pFile, int line) {
 #endif
 */
 
-U64 msTime() {
-#ifdef _WIN32
-	static LARGE_INTEGER freq = {0,0};
-	LARGE_INTEGER time;
-	if (freq.QuadPart == 0) {
-		QueryPerformanceFrequency(&freq);
-	}
-	QueryPerformanceCounter(&time);
-	return (time.QuadPart * 1000) / freq.QuadPart;
-#else
-	struct timeval tp;
-	U64 ms;
-	gettimeofday(&tp,NULL);
-	ms = tp.tv_sec;
-	ms *= 1000;
-	ms += ((U64)tp.tv_usec)/((U64)1000);
-	return ms;
-#endif
-}
-
-#if defined(DIAG_METHOD_CALLS) || defined(DIAG_OPCODE_TIMES) || defined(DIAG_GC) || defined(DIAG_TOTAL_TIME)
 U64 microTime() {
 #ifdef _WIN32
 	static LARGE_INTEGER freq = {0,0};
@@ -163,7 +146,10 @@ U64 microTime() {
 	return ms;
 #endif
 }
-#endif
+
+U64 msTime() {
+	return microTime() / 1000;
+}
 
 void SleepMS(U32 ms) {
 #ifdef _WIN32

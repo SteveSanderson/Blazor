@@ -25,6 +25,7 @@
 #include "MetaData.h"
 
 tAsyncCall* System_Type_EnsureAssemblyLoaded(PTR pThis_, PTR pParams, PTR pReturnValue);
+tAsyncCall* System_Type_get_Attributes(PTR pThis_, PTR pParams, PTR pReturnValue);
 tAsyncCall* System_Type_get_IsValueType(PTR pThis_, PTR pParams, PTR pReturnValue);
 tAsyncCall* System_Type_GetTypeFromHandle(PTR pThis_, PTR pParams, PTR pReturnValue);
 tAsyncCall* System_Type_GetTypeFromName(PTR pThis_, PTR pParams, PTR pReturnValue);
@@ -37,5 +38,6 @@ tAsyncCall* System_Type_GetMethods(PTR pThis_, PTR pParams, PTR pReturnValue);
 tAsyncCall* System_Type_GetMethod(PTR pThis_, PTR pParams, PTR pReturnValue);
 tAsyncCall* System_Type_IsAssignableFrom(PTR pThis_, PTR pParams, PTR pReturnValue);
 tAsyncCall* System_Type_IsSubclassOf(PTR pThis_, PTR pParams, PTR pReturnValue);
+tAsyncCall* System_Type_MakeGenericType(PTR pThis_, PTR pParams, PTR pReturnValue);
 
 #endif

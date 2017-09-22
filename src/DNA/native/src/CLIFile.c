@@ -34,12 +34,6 @@
 // Is this exe/dll file for the .NET virtual machine?
 #define DOT_NET_MACHINE 0x14c
 
-typedef struct tFilesLoaded_ tFilesLoaded;
-struct tFilesLoaded_ {
-	tCLIFile *pCLIFile;
-	tFilesLoaded *pNext;
-};
-
 // In .NET Core, the core libraries are split over numerous assemblies. For simplicity,
 // the DNA corlib just puts them in one assembly
 static STRING assembliesMappedToDnaCorlib[] = {
@@ -51,6 +45,10 @@ static int numAssembliesMappedToDnaCorlib = sizeof(assembliesMappedToDnaCorlib)/
 
 // Keep track of all the files currently loaded
 static tFilesLoaded *pFilesLoaded = NULL;
+
+tFilesLoaded* CLIFile_GetLoadedAssemblies() {
+	return pFilesLoaded;
+}
 
 tMetaData* CLIFile_GetMetaDataForLoadedAssembly(unsigned char *pLoadedAssemblyName) {
 	tFilesLoaded *pFiles = pFilesLoaded;
@@ -87,7 +85,7 @@ tMetaData* CLIFile_GetMetaDataForAssembly(unsigned char *pAssemblyName) {
 	}
 
 	// Look in already-loaded files first
-	pFiles = pFilesLoaded;
+	pFiles = CLIFile_GetLoadedAssemblies();
 	while (pFiles != NULL) {
 		tCLIFile *pCLIFile;
 		tMD_Assembly *pThisAssembly;
@@ -116,7 +114,7 @@ tMetaData* CLIFile_GetMetaDataForAssembly(unsigned char *pAssemblyName) {
 }
 
 tMD_TypeDef* CLIFile_FindTypeInAllLoadedAssemblies(STRING nameSpace, STRING name) {
-	tFilesLoaded *pFiles = pFilesLoaded;
+	tFilesLoaded *pFiles = CLIFile_GetLoadedAssemblies();
 	while (pFiles != NULL) {
 		tCLIFile *pCLIFile = pFiles->pCLIFile;
 
@@ -435,11 +433,11 @@ I32 CLIFile_Execute(tCLIFile *pThis, int argc, char **argp) {
 }
 
 void CLIFile_GetHeapRoots(tHeapRoots *pHeapRoots) {
-	tFilesLoaded *pFile;
+	tFilesLoaded *pFiles;
 
-	pFile = pFilesLoaded;
-	while (pFile != NULL) {
-		MetaData_GetHeapRoots(pHeapRoots, pFile->pCLIFile->pMetaData);
-		pFile = pFile->pNext;
+	pFiles = CLIFile_GetLoadedAssemblies();
+	while (pFiles != NULL) {
+		MetaData_GetHeapRoots(pHeapRoots, pFiles->pCLIFile->pMetaData);
+		pFiles = pFiles->pNext;
 	}
 }

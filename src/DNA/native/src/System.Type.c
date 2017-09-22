@@ -55,6 +55,14 @@ tAsyncCall* System_Type_EnsureAssemblyLoaded(PTR pThis_, PTR pParams, PTR pRetur
 	return NULL;
 }
 
+tAsyncCall* System_Type_get_Attributes(PTR pThis_, PTR pParams, PTR pReturnValue) {
+	tMD_TypeDef *pThisType = RuntimeType_DeRef(pThis_);
+
+	*(U32*)pReturnValue = pThisType->flags;
+
+	return NULL;
+}
+
 tAsyncCall* System_Type_get_IsValueType(PTR pThis_, PTR pParams, PTR pReturnValue) {
 	tMD_TypeDef *pThisType = RuntimeType_DeRef(pThis_);
 
@@ -338,5 +346,28 @@ tAsyncCall* System_Type_IsSubclassOf(PTR pThis_, PTR pParams, PTR pReturnValue) 
 	tMD_TypeDef *pTestType = RuntimeType_DeRef((PTR)((tMD_TypeDef**)pParams)[0]);
 	
 	*(U32*)pReturnValue = Type_IsDerivedFromOrSame(pBaseType, pTestType);
+	return NULL;
+}
+
+tAsyncCall* System_Type_MakeGenericType(PTR pThis_, PTR pParams, PTR pReturnValue)
+{
+	// get type arguments
+	tMD_TypeDef *pThisType = RuntimeType_DeRef(pThis_);
+	HEAP_PTR pTypeArgs = ((HEAP_PTR*)pParams)[0];
+	U32 numTypeArgs = SystemArray_GetLength(pTypeArgs);
+	HEAP_PTR* pArray = (HEAP_PTR*)SystemArray_GetElements(pTypeArgs);
+
+	// get arg types
+	tMD_TypeDef **ppTypeArgs = TMALLOC(numTypeArgs, tMD_TypeDef*);
+	for (U32 i = 0; i < numTypeArgs; i++) {
+		ppTypeArgs[i] = RuntimeType_DeRef(pArray[i]);
+	}
+
+	// specialize generic type
+	tMD_TypeDef* pTypeDef = Generics_GetGenericTypeFromCoreType(pThisType, numTypeArgs, ppTypeArgs);
+	free(ppTypeArgs);
+
+	*(HEAP_PTR*)pReturnValue = Type_GetTypeObject(pTypeDef);
+
 	return NULL;
 }

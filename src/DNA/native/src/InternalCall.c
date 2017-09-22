@@ -119,9 +119,11 @@ static tInternalCall internalCalls[] = {
 	{NULL, NULL,   "GetType", System_Type_GetTypeFromName, TYPE_SYSTEM_TYPE, 3, {TYPE_SYSTEM_STRING, TYPE_SYSTEM_STRING, TYPE_SYSTEM_STRING}},
 	{NULL, NULL,   "GetNestedType", System_Type_GetNestedType, TYPE_SYSTEM_TYPE, 1, {TYPE_SYSTEM_STRING}},
 	{NULL, NULL,   "GetNestedTypes", System_Type_GetNestedTypes, TYPE_SYSTEM_ARRAY_NO_TYPE, 0 },
+	{NULL, NULL,   "get_Attributes", System_Type_get_Attributes, TYPE_SYSTEM_UINT32, 0},
 	{NULL, NULL,   "get_IsValueType", System_Type_get_IsValueType, TYPE_SYSTEM_BOOLEAN, 0},
 	{NULL, NULL,   "IsAssignableFrom", System_Type_IsAssignableFrom, TYPE_SYSTEM_BOOLEAN, 1, {TYPE_SYSTEM_TYPE}},
 	{NULL, NULL,   "IsSubclassOf", System_Type_IsSubclassOf, TYPE_SYSTEM_BOOLEAN, 1, {TYPE_SYSTEM_TYPE}},
+	{NULL, NULL,   "MakeGenericType", System_Type_MakeGenericType, TYPE_SYSTEM_TYPE, 1, {TYPE_SYSTEM_ARRAY_TYPE}},
 	
 	{NULL, "RuntimeType", "get_Name", System_RuntimeType_get_Name, TYPE_SYSTEM_STRING, 0},
 	{NULL, NULL,          "get_Namespace", System_RuntimeType_get_Namespace, TYPE_SYSTEM_STRING, 0},

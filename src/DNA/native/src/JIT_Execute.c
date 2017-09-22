@@ -293,6 +293,7 @@ U32 JIT_Execute(tThread *pThread, U32 numInst) {
 	PTR pTempPtr;
 
 	U32 op;
+	//I32 padding = 0;
 	// General purpose variables
 	//I32 i32Value;
 	U32 u32Value; //, u32Value2;
@@ -1120,6 +1121,7 @@ JIT_CALL_NATIVE_end:
 
 JIT_RETURN_start:
 	OPCODE_USE(JIT_RETURN);
+	//padding = max(padding - 1, 0);
 	// dprintfn("Returned from %s() to %s()", pCurrentMethodState->pMethod->name, (pCurrentMethodState->pCaller)?pCurrentMethodState->pCaller->pMethod->name:(STRING)"<none>");
 	if (pCurrentMethodState->pCaller == NULL) {
 		// End of thread!
@@ -1310,6 +1312,8 @@ allCallStart:
 		}
 
 		pCallMethod = (tMD_MethodDef*)GET_OP();
+		//for (I32 i = padding++; i >= 0; i--) { printf("|"); }
+		//printf(" %s.%s\n", pCallMethod->pParentType->name, pCallMethod->name);
 		//dprintfn("Calling method: %s", Sys_GetMethodDesc(pCallMethod));
 		heapPtr = NULL;
 
@@ -1327,7 +1331,9 @@ allCallStart:
 
 		// Get the actual object that is becoming 'this'
 		if (heapPtr == NULL) {
+			Assert(pCurEvalStack - pCallMethod->parameterStackSize >= pCurrentMethodState->pEvalStack);
 			heapPtr = *(HEAP_PTR*)(pCurEvalStack - pCallMethod->parameterStackSize);
+			Assert(METHOD_ISSTATIC(pCallMethod) || heapPtr != NULL);
 		}
 
 		// If it's a virtual call then find the real correct method to call
@@ -1349,7 +1355,7 @@ allCallStart:
 				}
 				//dprintfn("Calling virtual method: %s", pCallMethod->name);
 			}
-		} else if (op == JIT_CALL_INTERFACE) {
+		} else if (op == JIT_CALL_INTERFACE && heapPtr != NULL) {
 			tMD_TypeDef *pThisType = Heap_GetType(heapPtr);
 			tMD_TypeDef *pInterface = pCallMethod->pParentType;
 

@@ -29,6 +29,9 @@
 
 // Count how many times each .NET method is called
 #undef DIAG_METHOD_CALLS
+// default method sort is by total time (inclusive), unless changed below:
+//#define DIAG_METHOD_CALLS_SORT_BY_COUNT // sort by method count
+//#define DIAG_METHOD_CALLS_SORT_BY_START // sort by last start time (i.e. like a call stack)
 
 // Measure how much time is spent in each .NET opcode
 // This only works on Windows
@@ -73,5 +76,8 @@
 //#ifdef _WIN64
 #define SWITCH_ON_JIT_OP
 //#endif
+
+// disable GC completely (only usable for perf testing/tuning)
+//#define NO_GC_WHATSOEVER
 
 #endif

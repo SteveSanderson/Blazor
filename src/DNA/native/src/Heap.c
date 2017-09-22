@@ -436,7 +436,9 @@ void Heap_UnmarkFinalizer(HEAP_PTR heapPtr) {
 }
 
 void Heap_GarbageCollect() {
+#if !defined(NO_GC_WHATSOEVER)
 	GarbageCollect();
+#endif
 }
 
 U32 Heap_NumCollections() {
@@ -488,9 +490,12 @@ HEAP_PTR Heap_Alloc(tMD_TypeDef *pTypeDef, U32 size) {
 	pHeapEntry->pTypeDef = pTypeDef;
 	pHeapEntry->pSync = NULL;
 	pHeapEntry->needToFinalize = (pTypeDef->pFinalizer != NULL);
-	trackHeapSize += totalSize;
 
+#if !defined(NO_GC_WHATSOEVER)
+	trackHeapSize += totalSize;
 	pHeapTreeRoot = TreeInsert(pHeapTreeRoot, pHeapEntry);
+#endif
+
 	numNodes++;
 
 	return pHeapEntry->memory;

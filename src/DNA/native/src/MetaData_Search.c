@@ -208,7 +208,8 @@ tMetaData* MetaData_GetResolutionScopeMetaData(tMetaData *pMetaData, IDX_TABLE r
 
 tMD_TypeDef* MetaData_GetTypeDefFromName(tMetaData *pMetaData, STRING nameSpace, STRING name, tMD_TypeDef *pInNestedClass, U8 assertExists) {
 
-	for (U32 i=1; i<=pMetaData->tables.numRows[MD_TABLE_TYPEDEF]; i++) {
+	U32 rows = pMetaData->tables.numRows[MD_TABLE_TYPEDEF];
+	for (U32 i=1; i<=rows; i++) {
 		tMD_TypeDef *pTypeDef;
 
 		pTypeDef = (tMD_TypeDef*)MetaData_GetTableRow(pMetaData, MAKE_TABLE_INDEX(MD_TABLE_TYPEDEF, i));
@@ -286,9 +287,7 @@ tMD_TypeDef* MetaData_GetTypeDefFromDefRefOrSpec(tMetaData *pMetaData, IDX_TABLE
 }
 
 tMD_TypeDef* MetaData_GetTypeDefFromMethodDef(tMD_MethodDef *pMethodDef) {
-	tMetaData *pMetaData;
-
-	pMetaData = pMethodDef->pMetaData;
+	tMetaData *pMetaData = pMethodDef->pMetaData;
 	for (U32 i=pMetaData->tables.numRows[MD_TABLE_TYPEDEF]; i>0; i--) {
 		tMD_TypeDef *pTypeDef;
 
@@ -303,9 +302,7 @@ tMD_TypeDef* MetaData_GetTypeDefFromMethodDef(tMD_MethodDef *pMethodDef) {
 }
 
 tMD_TypeDef* MetaData_GetTypeDefFromFieldDef(tMD_FieldDef *pFieldDef) {
-	tMetaData *pMetaData;
-
-	pMetaData = pFieldDef->pMetaData;
+	tMetaData *pMetaData = pFieldDef->pMetaData;
 	for (U32 i=pMetaData->tables.numRows[MD_TABLE_TYPEDEF]; i>0; i--) {
 		tMD_TypeDef *pTypeDef;
 

@@ -158,7 +158,7 @@ static char* tableDefs[] = {
 	"x*x*x*x*x*x*"
 #endif
 #ifdef DIAG_METHOD_CALLS
-	"x*x*x*"
+	"x*x*x*x*x*x*x*x*"
 #endif
 	,
 	// 0x07

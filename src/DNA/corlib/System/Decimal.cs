@@ -51,6 +51,11 @@ namespace System {
 			}
 		}
 
+		public static Decimal op_UnaryNegation(Decimal d) {
+			d.flags ^= SIGN_FLAG;
+			return d;
+		}
+
 		public static int[] GetBits(Decimal d) {
 			return new int[] { (int)d.lo, (int)d.mid, (int)d.hi, (int)d.flags };
 		}

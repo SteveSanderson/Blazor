@@ -354,7 +354,7 @@ namespace System {
 		}
 
 		public static void Sort<T>(T[] array, IComparer<T> comparer) {
-			Sort(array, 0, array.Length, comparer ?? Comparer<T>.Default);
+			Sort(array, 0, array.Length, comparer);
 		}
 
 		public static void Sort<T>(T[] array, int index, int count, Comparison<T> comparison) {
@@ -363,6 +363,7 @@ namespace System {
 
 		public static void Sort<T>(T[] array, int index, int count, IComparer<T> comparer) {
 			void swap(T[] a, int i, int j) { T t = a[i]; a[i] = a[j]; a[j] = t; }
+			comparer = comparer ?? Comparer<T>.Default;
 			int gap = count;
 			bool swapped;
 			do {
@@ -379,11 +380,12 @@ namespace System {
 		}
 
 		public static void Sort<TKey, TValue>(TKey[] keys, TValue[] items, IComparer<TKey> comparer) {
-			Sort(keys, items, 0, keys.Length, comparer ?? Comparer<TKey>.Default);
+			Sort(keys, items, 0, keys.Length, comparer);
 		}
 
 		public static void Sort<TKey, TValue>(TKey[] keys, TValue[] items, int index, int count, IComparer<TKey> comparer) {
 			void swap<V>(V[] a, int i, int j) { V t = a[i]; a[i] = a[j]; a[j] = t; }
+			comparer = comparer ?? Comparer<TKey>.Default;
 			int gap = count;
 			bool swapped;
 			do {

@@ -66,10 +66,8 @@ void* mallocForever(U32 size);
 void* callocForever(U32 count, U32 size);
 void freeForever();
 
-U64 msTime();
-#if defined(DIAG_METHOD_CALLS) || defined(DIAG_OPCODE_TIMES) || defined(DIAG_GC) || defined(DIAG_TOTAL_TIME)
 U64 microTime();
-#endif
+U64 msTime();
 void SleepMS(U32 ms);
 
 #ifdef DEBUG_PRINT

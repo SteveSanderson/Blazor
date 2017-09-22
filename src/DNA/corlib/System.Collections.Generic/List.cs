@@ -175,6 +175,16 @@ namespace System.Collections.Generic {
 			}
 		}
 
+		public List<T> FindAll(Predicate<T> match) {
+			List<T> results = new List<T>();
+			for (int i = 0; i < this.size; i++) {
+				if (match(this.items[i])) {
+					results.Add(this.items[i]);
+				}
+			}
+			return results;
+		}
+
 		public Enumerator GetEnumerator() {
 			return new Enumerator(this);
 		}

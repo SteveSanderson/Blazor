@@ -259,10 +259,14 @@ struct tMD_MethodDef_ {
 #endif
 
 #ifdef DIAG_METHOD_CALLS
+	// Number of times this method has been called
+	U64 callCount;
 	// Total time (inclusive of children) in this function
 	U64 totalTime;
-	// Number of times this method has been called
-	U32 callCount;
+	// Max time (inclusive of children)
+	U64 maxTime;
+	// Last start time
+	U64 startTime;
 #endif
 };
 #define MD_TABLE_METHODDEF 0x06

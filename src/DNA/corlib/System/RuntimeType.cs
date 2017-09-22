@@ -55,6 +55,8 @@ namespace System {
 			get;
 		}
 
+		public override string AssemblyQualifiedName => FullName;
+
 		public override string FullName {
 			get {
 				StringBuilder ret = new StringBuilder(32);

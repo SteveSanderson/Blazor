@@ -17,23 +17,23 @@ tAsyncCall* Reflection_MemberInfo_GetCustomAttributes(PTR pThis_, PTR pParams, P
 	tRuntimeType *pMemberOwnerRuntimeType = (tRuntimeType*)pMemberInfo->ownerType;
 	tMD_TypeDef *pMemberOwnerTypeDef = pMemberOwnerRuntimeType->pTypeDef;
 
-	tMD_TypeDef* thisType = Heap_GetType((HEAP_PTR)pThis_);
+	tMD_TypeDef* pThisType = Heap_GetType((HEAP_PTR)pThis_);
 	tMetaData *pMetaData = pMemberOwnerTypeDef->pMetaData;
 	tTables tables = pMetaData->tables;
 	U32 numCustomAttributeRows = tables.numRows[MD_TABLE_CUSTOMATTRIBUTE];
 
 	// Figure out what metadata entry we're looking for custom attributes on
 	IDX_TABLE searchForAttributesOnMemberIndex;
-	if (strcmp(thisType->name, "TypeInfo") == 0) {
+	if (strcmp(pThisType->name, "TypeInfo") == 0) {
 		searchForAttributesOnMemberIndex = pMemberOwnerTypeDef->tableIndex;
-	} else if (strcmp(thisType->name, "PropertyInfo") == 0) {
+	} else if (strcmp(pThisType->name, "PropertyInfo") == 0) {
 		tPropertyInfo *pPropertyInfo = (tPropertyInfo *)pMemberInfo;
 		searchForAttributesOnMemberIndex = pPropertyInfo->index;
-	} else if (strcmp(thisType->name, "MethodInfo") == 0) {
+	} else if (strcmp(pThisType->name, "MethodInfo") == 0) {
 		tMethodInfo *pMethodInfo = (tMethodInfo *)pMemberInfo;
 		searchForAttributesOnMemberIndex = pMethodInfo->methodBase.methodDef->tableIndex;
 	} else {
-		Crash("Not implemented: Getting custom attributes for a %s\n", thisType->name);
+		Crash("Not implemented: Getting custom attributes for a %s\n", pThisType->name);
 		return NULL;
 	}
 
@@ -105,7 +105,8 @@ tAsyncCall* Reflection_MemberInfo_GetCustomAttributes(PTR pThis_, PTR pParams, P
 						HEAP_PTR boxed = Heap_Box(param.pTypeDef, blob);
 						blob += param.pTypeDef->instanceMemSize;
 						SystemArray_StoreElement(pConstructorArgsArray, argIndex - 1, (PTR)&boxed);
-					} else if (param.pTypeDef == types[TYPE_SYSTEM_STRING]) {
+					}
+					else if (param.pTypeDef == types[TYPE_SYSTEM_STRING]) {
 						HEAP_PTR dotNetString;
 						unsigned int numUtf8Bytes = MetaData_DecodeSigEntryExt(&blob, 0);
 						if (numUtf8Bytes == 0xffffffff) {
@@ -123,7 +124,43 @@ tAsyncCall* Reflection_MemberInfo_GetCustomAttributes(PTR pThis_, PTR pParams, P
 							free(buf);
 						}
 						SystemArray_StoreElement(pConstructorArgsArray, argIndex - 1, (PTR)&dotNetString);
-					} else {
+					}
+					else if (param.pTypeDef == types[TYPE_SYSTEM_TYPE]) {
+						unsigned int numUtf8Bytes = MetaData_DecodeSigEntryExt(&blob, 0);
+						// TODO: Handle non-ASCII UTF8 by converting the raw UTF8 data to UTF16
+						char* buf = malloc(numUtf8Bytes + 1);
+						for (U32 byteIndex = 0; byteIndex < numUtf8Bytes; byteIndex++) {
+							buf[byteIndex] = *((char*)blob);
+							blob += sizeof(char);
+						}
+						buf[numUtf8Bytes] = 0;
+
+						// separate the namespace
+						char *pLastDot = strrchr(buf, '.');
+						STRING nameSpace = pLastDot ? buf : "";
+						STRING className = pLastDot ? pLastDot + 1 : buf;
+						if (pLastDot) { *pLastDot = 0; }
+
+						// remove debug type proxy
+						char* pDebugTypeProxy = strstr(className, "@DebugTypeProxy");
+						if (pDebugTypeProxy) { *pDebugTypeProxy = 0; }
+
+						// handle nested types
+						tMD_TypeDef *pInNested = NULL;
+						char *pNextPlus = strchr(className, '+');
+						while (pNextPlus) {
+							*pNextPlus = 0;
+							pInNested = MetaData_GetTypeDefFromName(pMetaData, nameSpace, className, pInNested, /* assertExists */ 1);
+							className = pNextPlus + 1;
+							pNextPlus = strchr(className, '+');
+						}
+						tMD_TypeDef *pTypeDef = MetaData_GetTypeDefFromName(pMetaData, nameSpace, className, pInNested, /* assertExists */ 1);
+						HEAP_PTR typeObject = Type_GetTypeObject(pTypeDef);
+						SystemArray_StoreElement(pConstructorArgsArray, argIndex - 1, (PTR)&typeObject);
+						free(buf);
+					}
+					// else if (param.pTypeDef == types[TYPE_SYSTEM_OBJECT]) { //TODO: implement
+					else {
 						Crash("GetCustomAttributes: Unsupported attribute parameter of type %s\n", param.pTypeDef->name);
 						return NULL;
 					}
@@ -146,7 +183,7 @@ tAsyncCall* Reflection_MethodInfo_MakeGenericMethod(PTR pThis_, PTR pParams, PTR
 {
 	// get type arguments
 	HEAP_PTR pTypeArgs = ((HEAP_PTR*)pParams)[0];
-	U32 argCount = SystemArray_GetLength(pTypeArgs);
+	U32 numTypeArgs = SystemArray_GetLength(pTypeArgs);
 	HEAP_PTR* pArray = (HEAP_PTR*)SystemArray_GetElements(pTypeArgs);
 
 	// Get metadata for the 'this' type
@@ -154,13 +191,13 @@ tAsyncCall* Reflection_MethodInfo_MakeGenericMethod(PTR pThis_, PTR pParams, PTR
 	tMD_MethodDef *pCoreMethod = pMethodInfoThis->methodBase.methodDef;
 
 	// get arg types
-	tMD_TypeDef **ppTypeArgs = TMALLOC(argCount, tMD_TypeDef*);
-	for (U32 i = 0; i < argCount; i++) {
+	tMD_TypeDef **ppTypeArgs = TMALLOC(numTypeArgs, tMD_TypeDef*);
+	for (U32 i = 0; i < numTypeArgs; i++) {
 		ppTypeArgs[i] = RuntimeType_DeRef(pArray[i]);
 	}
 
 	// specialize generic method
-	tMD_MethodDef *pMethodDef = Generics_GetMethodDefFromCoreMethod(pCoreMethod, pCoreMethod->pParentType, argCount, ppTypeArgs);
+	tMD_MethodDef *pMethodDef = Generics_GetMethodDefFromCoreMethod(pCoreMethod, pCoreMethod->pParentType, numTypeArgs, ppTypeArgs);
 	free(ppTypeArgs);
 
 	// Instantiate a MethodInfo

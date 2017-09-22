@@ -35,6 +35,10 @@ namespace System {
         [MethodImpl(MethodImplOptions.InternalCall)]
         extern public static Type GetTypeFromHandle(RuntimeTypeHandle handle);
 
+        extern public TypeAttributes Attributes { [MethodImpl(MethodImplOptions.InternalCall)] get; }
+
+        public abstract string AssemblyQualifiedName { get; }
+
         public abstract Type BaseType { get; }
 
         public abstract bool IsEnum { get; }
@@ -57,10 +61,29 @@ namespace System {
 
         public virtual bool IsPointer => false;
 
-        extern public bool IsValueType {
-            [MethodImpl(MethodImplOptions.InternalCall)]
-            get;
-        }
+        extern public bool IsValueType { [MethodImpl(MethodImplOptions.InternalCall)] get; }
+
+        public bool IsAnsiClass => (Attributes & TypeAttributes.StringFormatMask) == TypeAttributes.AnsiClass;
+        public bool IsUnicodeClass => (Attributes & TypeAttributes.StringFormatMask) == TypeAttributes.UnicodeClass;
+        public bool IsAutoClass => (Attributes & TypeAttributes.StringFormatMask) == TypeAttributes.AutoClass;
+        public bool IsNotPublic => (Attributes & TypeAttributes.VisibilityMask) == TypeAttributes.NotPublic;
+        public bool IsPublic => (Attributes & TypeAttributes.VisibilityMask) == TypeAttributes.Public;
+        public bool IsNestedPublic => (Attributes & TypeAttributes.VisibilityMask) == TypeAttributes.NestedPublic;
+        public bool IsNestedPrivate => (Attributes & TypeAttributes.VisibilityMask) == TypeAttributes.NestedPrivate;
+        public bool IsNestedFamily => (Attributes & TypeAttributes.VisibilityMask) == TypeAttributes.NestedFamily;
+        public bool IsNestedAssembly => (Attributes & TypeAttributes.VisibilityMask) == TypeAttributes.NestedAssembly;
+        public bool IsNestedFamANDAssem => (Attributes & TypeAttributes.VisibilityMask) == TypeAttributes.NestedFamANDAssem;
+        public bool IsNestedFamORAssem => (Attributes & TypeAttributes.VisibilityMask) == TypeAttributes.NestedFamORAssem;
+        public bool IsAutoLayout => (Attributes & TypeAttributes.LayoutMask) == TypeAttributes.AutoLayout;
+        public bool IsLayoutSequential => (Attributes & TypeAttributes.LayoutMask) == TypeAttributes.SequentialLayout;
+        public bool IsExplicitLayout => (Attributes & TypeAttributes.LayoutMask) == TypeAttributes.ExplicitLayout;
+        public bool IsClass => (Attributes & TypeAttributes.ClassSemanticsMask) == TypeAttributes.Class && !IsValueType;
+        public bool IsInterface => (Attributes & TypeAttributes.ClassSemanticsMask) == TypeAttributes.Interface;
+        public bool IsAbstract => (Attributes & TypeAttributes.Abstract) != 0;
+        public bool IsSealed => (Attributes & TypeAttributes.Sealed) != 0;
+        public bool IsSpecialName => (Attributes & TypeAttributes.SpecialName) != 0;
+        public bool IsImport => (Attributes & TypeAttributes.Import) != 0;
+        public virtual bool IsSerializable => (Attributes & TypeAttributes.Serializable) != 0;
 
         public override string ToString() {
             return this.FullName;
@@ -85,10 +108,13 @@ namespace System {
         }
 
         [MethodImpl(MethodImplOptions.InternalCall)]
+        extern public virtual bool IsAssignableFrom(Type c);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
         extern public virtual bool IsSubclassOf(Type c);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
-        extern public virtual bool IsAssignableFrom(Type c);
+        extern public virtual Type MakeGenericType(params Type[] typeArguments);
 
         public static Type GetType(string typeName) {
             lock (typesByNameCache) {
