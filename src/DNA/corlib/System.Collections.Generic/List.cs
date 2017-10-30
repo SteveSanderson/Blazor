@@ -27,7 +27,7 @@ namespace System_.Collections.Generic {
 #else
 namespace System.Collections.Generic {
 #endif
-	public class List<T> : IList<T>, ICollection<T>, IEnumerable<T>, IList, ICollection, IEnumerable {
+	public class List<T> : IList<T>, ICollection<T>, IEnumerable<T>, IList, ICollection, IEnumerable, IReadOnlyCollection<T> {
 
 		public struct Enumerator : IEnumerator<T>, IDisposable {
 
@@ -95,6 +95,10 @@ namespace System.Collections.Generic {
 			}
 		}
 
+		public void TrimExcess() {
+			// does nothing
+		}
+
 		private void EnsureSpace(int space) {
 			if (this.size + space > this.items.Length) {
 				Array.Resize<T>(ref this.items, Math.Max(this.items.Length << 1, 4));
@@ -128,6 +132,19 @@ namespace System.Collections.Generic {
 			this.items[this.size++] = item;
 		}
 
+		public void AddRange(IEnumerable<T> collection) {
+			ICollection<T> iCol = collection as ICollection<T>;
+			if (iCol != null) {
+				this.EnsureSpace(iCol.Count);
+				iCol.CopyTo(this.items, this.size);
+				this.size += iCol.Count;
+			} else {
+				foreach (T t in collection) {
+					Add (t);
+				}
+			}
+		}
+
 		public int Count {
 			get {
 				return this.size;
@@ -158,6 +175,16 @@ namespace System.Collections.Generic {
 			}
 		}
 
+		public List<T> FindAll(Predicate<T> match) {
+			List<T> results = new List<T>();
+			for (int i = 0; i < this.size; i++) {
+				if (match(this.items[i])) {
+					results.Add(this.items[i]);
+				}
+			}
+			return results;
+		}
+
 		public Enumerator GetEnumerator() {
 			return new Enumerator(this);
 		}
@@ -182,6 +209,22 @@ namespace System.Collections.Generic {
 			for (int i = 0; i < toInsert.Count; i++) {
 				this.items[index + i] = toInsert[i];
 			}
+		}
+
+		// public void Sort() {
+		// 	Array.Sort(this.items, 0, this.size);
+		// }
+
+		public void Sort(Comparison<T> comparison) {
+			Array.Sort(this.items, 0, this.size, comparison);
+		}
+
+		public void Sort(IComparer<T> comparer) {
+			Array.Sort(this.items, 0, this.size, comparer);
+		}
+
+		public void Sort(int index, int count, IComparer<T> comparer) {
+			Array.Sort(this.items, index, count, comparer);
 		}
 
 		public T[] ToArray() {

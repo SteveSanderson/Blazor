@@ -1,8 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
-namespace System.Threading.Tasks
-{
+namespace System.Threading.Tasks {
     /// <summary>
     /// This is a highly incomplete approximation to System.Threading.Tasks.Task. It can only handle
     /// 'ContinueWith' continuations that themselves return void (not nested tasks). Various other Task
@@ -11,125 +10,120 @@ namespace System.Threading.Tasks
     /// For a proper implementation, consider pulling in the real Task sources that were backported to
     /// .NET 3.5 or later. The functionality provied here is only sufficient for experimentation.
     /// </summary>
-    public class Task
-    {
+    public class Task {
         private List<object> _continuations = new List<object>();
         private object _result;
         private Exception _exception;
 
         public bool IsCompleted { get; private set; }
+        public bool IsCanceled { get; private set; }
 
         public bool IsFaulted => _exception != null;
 
         public AggregateException Exception => _exception != null ? new AggregateException(_exception) : null;
 
-        public object Result
-        {
-            get
-            {
-                if (!IsCompleted)
-                {
-                    throw new InvalidOperationException("Not implemented: blocking until result is ready.");
+        public object Result {
+            get {
+                if (!IsCompleted) {
+                    Wait();
                 }
-                
-                if (_exception != null)
-                {
+                if (IsCanceled) {
+                    // throw new AggregateException (new TaskCanceledException (this));
+                    throw new NotImplementedException("Not implemented: Task cancellation.");
+                }
+                if (_exception != null) {
                     throw _exception;
                 }
-
                 return _result;
             }
         }
 
-        internal void MarkCompleted(object result)
-        {
+        internal void MarkCompleted(object result) {
             _result = result;
             InvokeContinuations();
         }
 
-        internal void MarkFailed(Exception ex)
-        {
+        internal void MarkFailed(Exception ex) {
             _exception = ex;
             InvokeContinuations();
         }
 
-        protected Task ContinueWith(object continuation)
-        {
-            if (IsCompleted)
-            {
+        protected Task ContinueWith(object continuation) {
+            if (IsCompleted) {
                 InvokeContinuation(continuation);
             }
-            else
-            {
+            else {
                 _continuations.Add(continuation);
             }
-
             return this; // TODO: Async continuations
         }
 
-        public Task ContinueWith(Action<Task> continuation)
-        {
+        public Task ContinueWith(Action<Task> continuation) {
             return ContinueWith((object)continuation);
         }
 
-        private void InvokeContinuations()
-        {
-            IsCompleted = true;
+        public Task ContinueWith<TResult>(Func<Task, TResult> continuation) {
+            Action<Task> cont = task => { continuation(task); }; // see disclaimer above
+            return ContinueWith((object)cont);
+        }
 
-            foreach (var continuation in _continuations)
-            {
+        private void InvokeContinuations() {
+            IsCompleted = true;
+            foreach (var continuation in _continuations) {
                 InvokeContinuation(continuation);
             }
-
             _continuations.Clear();
         }
 
-        protected virtual void InvokeContinuation(object continuation)
-        {
+        protected virtual void InvokeContinuation(object continuation) {
             ((Action<Task>)continuation)(this);
         }
 
-        public TaskAwaiter GetAwaiter()
-        {
+        public TaskAwaiter GetAwaiter() {
             return new TaskAwaiter(this);
         }
 
-        public static Task Delay(int millisecondsTimeout)
-        {
+        public void Wait() {
+            // throw new NotImplementedException("Not implemented: Task.Wait().");
+            //TODO: implement
+        }
+
+        public static Task Delay(int millisecondsTimeout) {
             var tcs = new TaskCompletionSource<object>();
-            new Thread(_ =>
-            {
+            new Thread(_ => {
                 Thread.Sleep(millisecondsTimeout);
                 tcs.TrySetResult(null);
             }).Start();
             return tcs.Task;
         }
+
+        public static Task<TResult> FromResult<TResult> (TResult result) {
+            var tcs = new TaskCompletionSource<TResult> ();
+            tcs.SetResult (result);
+            return tcs.Task;
+        }
     }
 
-    public class Task<T> : Task
-    {
-        public new T Result => (T)base.Result;
+    public class Task<T> : Task {
+        public new T Result {
+            get { return (T)base.Result; }
+        }
 
-        public Task ContinueWith(Action<Task<T>> continuation)
-        {
+        public Task ContinueWith(Action<Task<T>> continuation) {
             return ContinueWith((object)continuation);
         }
 
-        protected override void InvokeContinuation(object continuation)
-        {
+        protected override void InvokeContinuation(object continuation) {
             var typedContinuation = continuation as Action<Task<T>>;
-            if (typedContinuation != null)
-            {
+            if (typedContinuation != null) {
                 typedContinuation(this);
             }
-            else
-            {
+            else {
                 base.InvokeContinuation(continuation);
             }
         }
 
-        public new TaskAwaiter<T> GetAwaiter()
-        {
+        public new TaskAwaiter<T> GetAwaiter() {
             return new TaskAwaiter<T>(this);
         }
     }

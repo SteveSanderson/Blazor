@@ -22,6 +22,30 @@
 
 namespace System {
 	public delegate TOutput Converter<TInput, TOutput>(TInput input);
+
+    public class Convert {
+        public static int ToInt32(Byte b) => (int)b;
+        public static int ToInt32(Single f) => (int)f;
+        public static int ToInt32(Double d) => (int)d;
+
+        public static int ToInt32(string value) {
+            return ToInt32(value, 0); // 0 makes it accept hex prefix
+        }
+
+        public static int ToInt32(string value, int fromBase) {
+            if (value == null) { return 0; }
+            int error = 0;
+            int result = value.InternalToInt32(out error, fromBase);
+            if (error != 0) { throw String.GetFormatException(error); }
+            return result;
+        }
+
+        public static uint ToUInt32(UInt64 i) => (uint)i;
+
+        public static decimal ToDecimal(Int32 i) => throw new NotImplementedException();
+        public static decimal ToDecimal(string str) => throw new NotImplementedException();
+
+    }
 }
 
 #endif

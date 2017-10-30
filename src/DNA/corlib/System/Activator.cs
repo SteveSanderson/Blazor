@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2012 DotNetAnywhere
+// Copyright (c) 2012 DotNetAnywhere
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -26,8 +26,13 @@ using System.Text;
 namespace System {
 
 	public static class Activator {
-        [MethodImpl(MethodImplOptions.InternalCall)]
-        public extern static object CreateInstance(Type type);
-	}
 
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public extern static object CreateInstance (Type type);
+
+		public static T CreateInstance<T> () {
+			return (T) CreateInstance (typeof (T));
+		}
+
+	}
 }

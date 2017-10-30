@@ -61,7 +61,7 @@ static tLoadedLib* GetLib(STRING name) {
 	}
 	// Not loaded, so load it
 	sprintf(strchr(libName, 0), ".%s", LIB_SUFFIX);
-#if _WIN32
+#ifdef _WIN32
 	pNativeLib = LoadLibraryA(libName);
 #else
 	pNativeLib = dlopen(libName, RTLD_LAZY); //DL_LAZY);
@@ -80,7 +80,7 @@ static tLoadedLib* GetLib(STRING name) {
 #endif
 		return NULL;
 	}
-	pLib = TMALLOCFOREVER(tLoadedLib);
+	pLib = TMALLOCFOREVER(1, tLoadedLib);
 	pLib->pNext = pLoadedLibs;
 	pLoadedLibs = pLib;
 	pLib->name = name;
@@ -89,26 +89,27 @@ static tLoadedLib* GetLib(STRING name) {
 }
 
 fnPInvoke PInvoke_GetFunction(tMetaData *pMetaData, tMD_ImplMap *pImplMap) {
+#ifdef JS_INTEROP
+	return (fnPInvoke)invokeJsFunc;
+#else
 	tLoadedLib *pLib;
 	STRING libName;
 	void *pProc;
 
 	libName = MetaData_GetModuleRefName(pMetaData, pImplMap->importScope);
 
-#ifndef _WIN32
-	return (fnPInvoke)invokeJsFunc;
-#else 
-	
 	pLib = GetLib(libName);
 	if (pLib == NULL) {
 		// Library not found, so we can't find the function
 		return NULL;
 	}
-
+#ifdef _WIN32
 	pProc = GetProcAddress(pLib->pLib, pImplMap->importName);
+#else
+	pProc = dlsym(pLib, pImplMap->importName);
 #endif
 	return pProc;
-
+#endif
 }
 
 static void* ConvertStringToANSI(HEAP_PTR pHeapEntry) {
@@ -174,9 +175,9 @@ U32 PInvoke_Call(tJITCallPInvoke *pCall, PTR pParams, PTR pReturnValue, tThread 
 	U32 _tempMemOfs = 0;
 	U32 i;
 	U32 funcParams = DEFAULT;
-	U64 u64Ret;
-	float fRet;
-	double dRet;
+	U64 u64Ret = 0;
+	float fRet = 0;
+	double dRet = 0;
 
 	// [Steve edit] Before we issue the call into JS code, we need to set the calling .NET thread's state
 	// to 'suspended' so that, if the JS code makes other calls into .NET, the DNA runtime doesn't try to

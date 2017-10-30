@@ -109,6 +109,7 @@ extern tMD_TypeDef **types;
 #define TYPE_SYSTEM_REFLECTION_MEMBERINFO 51
 #define TYPE_SYSTEM_ATTRIBUTE 52
 #define TYPE_SYSTEM_REFLECTION_INTERNALCUSTOMATTRIBUTEINFO 53
+#define TYPE_SYSTEM_GLOBALIZATION_NUMBERSTYLES 54
 
 //U32 Type_IsMethod(tMD_MethodDef *pMethod, STRING name, tMD_TypeDef *pReturnType, U32 numParams, ...);
 U32 Type_IsMethod(tMD_MethodDef *pMethod, STRING name, tMD_TypeDef *pReturnType, U32 numParams, U8 *pParamTypeIndexs);

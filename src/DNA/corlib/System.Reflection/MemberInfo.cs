@@ -26,17 +26,32 @@ using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace System.Reflection {
-	public abstract class MemberInfo {
+
+    internal struct InternalCustomAttributeInfo {
+#pragma warning disable 0649
+        public Attribute UninitializedInstance;
+        public MethodBase ConstructorMethodBase;
+        public object[] ConstructorParams;
+#pragma warning restore 0649
+    }
+
+	public abstract class MemberInfo : ICustomAttributeProvider {
+
 #pragma warning disable 0169, 0649
-        protected readonly Type _ownerType;
-        protected readonly string _name;
+		protected readonly Type _ownerType;
+		protected readonly string _name;
 #pragma warning restore 0169, 0649
 
-        protected MemberInfo() {
+	    protected MemberInfo() {
 		}
 
-        protected MemberInfo(Type ownerType, string name)
-        {
+		public abstract bool IsDefined(Type attributeType, bool inherit);
+
+		public abstract Object[] GetCustomAttributes(bool inherit);
+
+		public abstract Object[] GetCustomAttributes(Type attributeType, bool inherit);
+
+        protected MemberInfo(Type ownerType, string name) {
             _ownerType = ownerType;
             _name = name;
         }

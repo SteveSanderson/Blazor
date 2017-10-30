@@ -41,23 +41,20 @@ void Generic_GetHeapRoots(tHeapRoots *pHeapRoots, tMD_TypeDef *pTypeDef) {
 
 tMD_TypeDef* Generics_GetGenericTypeFromSig
 	(tMetaData *pMetaData, SIG *pSig, tMD_TypeDef **ppCallingClassTypeArgs, tMD_TypeDef **ppCallingMethodTypeArgs) {
-	tMD_TypeDef *pCoreType, *pRet;
-	U32 numTypeArgs, i;
-	tMD_TypeDef **ppTypeArgs;
 
-	pCoreType = Type_GetTypeFromSig(pMetaData, pSig, ppCallingClassTypeArgs, ppCallingMethodTypeArgs);
-	MetaData_Fill_TypeDef(pCoreType, ppCallingClassTypeArgs, ppCallingMethodTypeArgs); //NULL, NULL);
+	tMD_TypeDef *pCoreType = Type_GetTypeFromSig(pMetaData, pSig, ppCallingClassTypeArgs, ppCallingMethodTypeArgs);
+	MetaData_Fill_TypeDef(pCoreType, NULL, NULL);
 
-	numTypeArgs = MetaData_DecodeSigEntry(pSig);
-	ppTypeArgs = (tMD_TypeDef**)malloc(numTypeArgs * sizeof(tMD_TypeDef*));
-	for (i=0; i<numTypeArgs; i++) {
+	U32 numTypeArgs = MetaData_DecodeSigEntry(pSig);
+	tMD_TypeDef **ppTypeArgs = TMALLOC(numTypeArgs, tMD_TypeDef*);
+	for (U32 i=0; i < numTypeArgs; i++) {
 		ppTypeArgs[i] = Type_GetTypeFromSig(pMetaData, pSig, ppCallingClassTypeArgs, ppCallingMethodTypeArgs);
 		if (ppTypeArgs[i] != NULL) {
 			MetaData_Fill_TypeDef(ppTypeArgs[i], NULL, NULL);
 		}
 	}
 
-	pRet = Generics_GetGenericTypeFromCoreType(pCoreType, numTypeArgs, ppTypeArgs);
+	tMD_TypeDef *pRet = Generics_GetGenericTypeFromCoreType(pCoreType, numTypeArgs, ppTypeArgs);
 	free(ppTypeArgs);
 	return pRet;
 }
@@ -66,23 +63,49 @@ tMD_TypeDef* Generics_GetGenericTypeFromSig
 // entries in the GenericParams table for all lookups. This can be improved.
 static tMD_GenericParam* FindGenericParam(tMD_TypeDef *pCoreType, U32 typeArgIndex) {
 	tMD_GenericParam *pGenericParam;
-	U32 i;
-
 	pGenericParam = (tMD_GenericParam*)MetaData_GetTableRow(pCoreType->pMetaData, MAKE_TABLE_INDEX(MD_TABLE_GENERICPARAM, 1));
-
-	for (i=0; i<pCoreType->pMetaData->tables.numRows[MD_TABLE_GENERICPARAM]; i++, pGenericParam++) {
-		if (pGenericParam->owner == pCoreType->tableIndex && pGenericParam->number == typeArgIndex) {
+	U32 rows = pCoreType->pMetaData->tables.numRows[MD_TABLE_GENERICPARAM];
+	IDX_TABLE ownerToken = pCoreType->tableIndex;
+	for (U32 i = 0; i < rows; i++, pGenericParam++) {
+		if (pGenericParam->owner == ownerToken && pGenericParam->number == typeArgIndex) {
 			return pGenericParam;
 		}
 	}
 	return NULL;
 }
 
+//static tMD_GenericParam* FindGenericParam(tMD_TypeDef *pCoreType, U32 typeArgIndex) {
+//	U32 rows = pCoreType->pMetaData->tables.numRows[MD_TABLE_GENERICPARAM];
+//	tMD_GenericParam *pGenericParam = (tMD_GenericParam*)MetaData_GetTableRow(pCoreType->pMetaData, MAKE_TABLE_INDEX(MD_TABLE_GENERICPARAM, 1));
+//	IDX_TABLE ownerToken = pCoreType->tableIndex;
+//
+//	// binary search in GenericParams table
+//	int lo = 0;
+//	int hi = rows - 1;
+//	while (lo <= hi) {
+//		int i = lo + ((hi - lo) >> 1);
+//		if (pGenericParam[i].owner < ownerToken) { lo = i + 1; }
+//		else {
+//			if (pGenericParam[i].owner > ownerToken) { hi = i - 1; }
+//			else {
+//				while (pGenericParam[i].owner == ownerToken) {
+//					if (pGenericParam[i].number < typeArgIndex) { ++i; }
+//					else {
+//						if (pGenericParam[i].number > typeArgIndex) { --i; }
+//						else { return (pGenericParam + i); }
+//					}
+//				}
+//			}
+//		}
+//	}
+//	return NULL;
+//}
+
 tMD_TypeDef* Generics_GetGenericTypeFromCoreType(tMD_TypeDef *pCoreType, U32 numTypeArgs, tMD_TypeDef **ppTypeArgs) {
 	tGenericInstance *pInst;
 	tMD_TypeDef *pTypeDef;
 	U32 i;
-	unsigned char name[2048];
+	unsigned char name[8192]; // must be big enough to handle the biggest types
 	tMetaData *pMetaData;
 
 	pMetaData = pCoreType->pMetaData;
@@ -108,11 +131,11 @@ tMD_TypeDef* Generics_GetGenericTypeFromCoreType(tMD_TypeDef *pCoreType, U32 num
 	memcpy(pInst->pTypeArgs, ppTypeArgs, numTypeArgs * sizeof(tMD_TypeDef*));
 
 	// Create the new instantiated type
-	pInst->pInstanceTypeDef = pTypeDef = TMALLOCFOREVER(tMD_TypeDef);
-	memset(pTypeDef, 0, sizeof(tMD_TypeDef));
+	pInst->pInstanceTypeDef = pTypeDef = TCALLOCFOREVER(1, tMD_TypeDef);
+	//memset(pTypeDef, 0, sizeof(tMD_TypeDef));
 	// Make the name of the instantiation.
 	strcpy(name, pCoreType->name);
-	strcat(name, "[");
+	strcat(name, "<");
 	for (i=0; i<numTypeArgs; i++) {
 		if (i > 0) {
 			strcat(name, ",");
@@ -122,13 +145,13 @@ tMD_TypeDef* Generics_GetGenericTypeFromCoreType(tMD_TypeDef *pCoreType, U32 num
 		} else {
 			tMD_GenericParam *pGenericParam = FindGenericParam(pCoreType, i);
 			if (pGenericParam != NULL) {
-				sprintf(strchr(name, 0), pGenericParam->name);
+				sprintf(strchr(name, 0), "%s", pGenericParam->name);
 			} else {
 				sprintf(strchr(name, 0), "???");
 			}
 		}
 	}
-	strcat(name, "]");
+	strcat(name, ">");
 	// Fill in the basic bits of the new type def.
 	pTypeDef->pTypeDef = pTypeDef;
 	pTypeDef->pMetaData = pMetaData;
@@ -143,6 +166,7 @@ tMD_TypeDef* Generics_GetGenericTypeFromCoreType(tMD_TypeDef *pCoreType, U32 num
 	pTypeDef->nameSpace = pCoreType->nameSpace;
 	pTypeDef->name = (STRING)mallocForever((U32)strlen(name)+1);
 	strcpy(pTypeDef->name, name);
+	// dprintfn("Instantiated type %s.%s", pTypeDef->nameSpace, pTypeDef->name);
 	pTypeDef->ppClassTypeArgs = pInst->pTypeArgs;
 	pTypeDef->extends = pCoreType->extends;
 	pTypeDef->tableIndex = pCoreType->tableIndex;
@@ -163,25 +187,22 @@ tMD_MethodDef* Generics_GetMethodDefFromSpec
 	(tMD_MethodSpec *pMethodSpec, tMD_TypeDef **ppCallingClassTypeArgs, tMD_TypeDef **ppCallingMethodTypeArgs) {
 
 	tMD_MethodDef *pCoreMethod, *pMethod;
-	SIG sig;
-	U32 argCount, i;
-	tMD_TypeDef **ppTypeArgs;
-
+	
 	pCoreMethod = MetaData_GetMethodDefFromDefRefOrSpec(pMethodSpec->pMetaData, pMethodSpec->method, ppCallingClassTypeArgs, ppCallingMethodTypeArgs);
+	if (pCoreMethod->pParentType == NULL) {
+		pCoreMethod->pParentType = MetaData_GetTypeDefFromMethodDef(pCoreMethod);
+	}
 
-	//ppClassTypeArgs = pCoreMethod->pParentType->ppClassTypeArgs;
-	sig = MetaData_GetBlob(pMethodSpec->instantiation, NULL);
+	SIG sig = MetaData_GetBlob(pMethodSpec->instantiation, NULL);
 	MetaData_DecodeSigEntry(&sig); // always 0x0a
-	argCount = MetaData_DecodeSigEntry(&sig);
-	ppTypeArgs = malloc(argCount * sizeof(tMD_TypeDef*));
-
-	for (i=0; i<argCount; i++) {
-		tMD_TypeDef *pArgType;
-
-		pArgType = Type_GetTypeFromSig(pMethodSpec->pMetaData, &sig, ppCallingClassTypeArgs, ppCallingMethodTypeArgs);
+	U32 argCount = MetaData_DecodeSigEntry(&sig);
+	tMD_TypeDef **ppTypeArgs = TMALLOC(argCount, tMD_TypeDef*);
+	for (U32 i = 0; i<argCount; i++) {
+		tMD_TypeDef *pArgType = Type_GetTypeFromSig(pMethodSpec->pMetaData, &sig, ppCallingClassTypeArgs, ppCallingMethodTypeArgs);
 		ppTypeArgs[i] = pArgType;
 	}
 
+	//ppClassTypeArgs = pCoreMethod->pParentType->ppClassTypeArgs;
 	pMethod = Generics_GetMethodDefFromCoreMethod(pCoreMethod, pCoreMethod->pParentType, argCount, ppTypeArgs);
 	free(ppTypeArgs);
 
@@ -211,8 +232,8 @@ tMD_MethodDef* Generics_GetMethodDefFromCoreMethod
 	pInst->numTypeArgs = numTypeArgs;
 	memcpy(pInst->pTypeArgs, ppTypeArgs, numTypeArgs * sizeof(tMD_TypeDef*));
 
-	pInst->pInstanceMethodDef = pMethod = TMALLOCFOREVER(tMD_MethodDef);
-	memset(pMethod, 0, sizeof(tMD_MethodDef));
+	pInst->pInstanceMethodDef = pMethod = TCALLOCFOREVER(1, tMD_MethodDef);
+	//memset(pMethod, 0, sizeof(tMD_MethodDef));
 	pMethod->pMethodDef = pMethod;
 	pMethod->pMetaData = pCoreMethod->pMetaData;
 	pMethod->pCIL = pCoreMethod->pCIL;
@@ -221,6 +242,9 @@ tMD_MethodDef* Generics_GetMethodDefFromCoreMethod
 	pMethod->name = pCoreMethod->name;
 	pMethod->signature = pCoreMethod->signature;
 	pMethod->vTableOfs = pCoreMethod->vTableOfs;
+
+	// TODO: refactor to store pInst itself, to speedup the lookup at runtime
+	pMethod->numMethodTypeArgs = pInst->numTypeArgs;
 	pMethod->ppMethodTypeArgs = pInst->pTypeArgs;
 
 	MetaData_Fill_MethodDef(pParentType, pMethod, pParentType->ppClassTypeArgs, pInst->pTypeArgs);

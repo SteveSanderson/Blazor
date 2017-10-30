@@ -54,11 +54,6 @@ struct tMethodState_ {
 	// When a leave instruction has to run a 'finally' bit of code, store the leave jump address here
 	U32 *pOpEndFinally;
 
-#ifdef DIAG_METHOD_CALLS
-	// For tracking execution time.
-	U64 startTime;
-#endif
-
 	// Link to caller methodstate
 	tMethodState *pCaller;
 
@@ -69,7 +64,7 @@ struct tMethodState_ {
 };
 
 //void MethodState_Init();
-tMethodState* MethodState_Direct(tThread *pThread, tMD_MethodDef *pMethod, tMethodState *pCaller, U32 isInternalNewObjCall);
+tMethodState* MethodState_Direct(tThread *pThread, tMD_MethodDef *pMethod, tMethodState *pCaller, U32 isInternalNewObjCall, U32 isTailCall);
 tMethodState* MethodState(tThread *pThread, tMetaData *pMetaData, IDX_TABLE methodToken, tMethodState *pCaller);
 void MethodState_Delete(tThread *pThread, tMethodState **ppMethodState);
 

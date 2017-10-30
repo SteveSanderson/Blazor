@@ -5,6 +5,7 @@ namespace System.IO {
 
 		private IntPtr handle = IntPtr.Zero;
 		private string filename;
+		private long filesize;
 		private bool canRead, canWrite, canSeek;
 
 		public FileStream(string filename, FileMode mode, FileAccess access, FileShare share) {
@@ -13,8 +14,14 @@ namespace System.IO {
 			if (error != 0) {
 				throw FileInternal.GetException(error, filename);
 			}
+			long filesize = FileInternal.Length(filename, out error);
+			if (error != 0) {
+				throw FileInternal.GetException(error, filename);
+			}
+
 			this.handle = handle;
 			this.filename = filename;
+			this.filesize = filesize;
 
 			this.canRead = true;
 			this.canWrite = true;
@@ -89,7 +96,9 @@ namespace System.IO {
 		}
 
 		public override long Length {
-			get { throw new Exception("The method or operation is not implemented."); }
+			get {
+				return this.filesize;
+			}
 		}
 
 		public override long Position {

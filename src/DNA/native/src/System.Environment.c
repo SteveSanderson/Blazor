@@ -62,7 +62,7 @@ tAsyncCall* System_Environment_get_Platform(PTR pThis_, PTR pParams, PTR pReturn
 	OSVERSIONINFO osVer;
 	osVer.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
 	GetVersionEx(&osVer);
-	*(U32*)pReturnValue = (osVer.dwPlatformId == VER_PLATFORM_WIN32_NT)?2:1; // _WIN32NT:_WIN32Windows
+	*(U32*)pReturnValue = (osVer.dwPlatformId == VER_PLATFORM_WIN32_NT)?2:1; // Win32NT:Win32Windows
 #else
 	*(U32*)pReturnValue = 4; // UNIX
 #endif

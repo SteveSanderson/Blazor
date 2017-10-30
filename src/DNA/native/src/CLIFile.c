@@ -34,22 +34,21 @@
 // Is this exe/dll file for the .NET virtual machine?
 #define DOT_NET_MACHINE 0x14c
 
-typedef struct tFilesLoaded_ tFilesLoaded;
-struct tFilesLoaded_ {
-	tCLIFile *pCLIFile;
-	tFilesLoaded *pNext;
-};
-
 // In .NET Core, the core libraries are split over numerous assemblies. For simplicity,
 // the DNA corlib just puts them in one assembly
 static STRING assembliesMappedToDnaCorlib[] = {
-	"mscorlib"
+	"mscorlib",
+	"netstandard"
 	// Also, "System.*" is implemented below
 };
 static int numAssembliesMappedToDnaCorlib = sizeof(assembliesMappedToDnaCorlib)/sizeof(STRING);
 
 // Keep track of all the files currently loaded
 static tFilesLoaded *pFilesLoaded = NULL;
+
+tFilesLoaded* CLIFile_GetLoadedAssemblies() {
+	return pFilesLoaded;
+}
 
 tMetaData* CLIFile_GetMetaDataForLoadedAssembly(unsigned char *pLoadedAssemblyName) {
 	tFilesLoaded *pFiles = pFilesLoaded;
@@ -86,7 +85,7 @@ tMetaData* CLIFile_GetMetaDataForAssembly(unsigned char *pAssemblyName) {
 	}
 
 	// Look in already-loaded files first
-	pFiles = pFilesLoaded;
+	pFiles = CLIFile_GetLoadedAssemblies();
 	while (pFiles != NULL) {
 		tCLIFile *pCLIFile;
 		tMD_Assembly *pThisAssembly;
@@ -115,7 +114,7 @@ tMetaData* CLIFile_GetMetaDataForAssembly(unsigned char *pAssemblyName) {
 }
 
 tMD_TypeDef* CLIFile_FindTypeInAllLoadedAssemblies(STRING nameSpace, STRING name) {
-	tFilesLoaded *pFiles = pFilesLoaded;
+	tFilesLoaded *pFiles = CLIFile_GetLoadedAssemblies();
 	while (pFiles != NULL) {
 		tCLIFile *pCLIFile = pFiles->pCLIFile;
 
@@ -157,7 +156,7 @@ static void* LoadFileFromDisk(char *pFileName) {
 
 char* GetNullTerminatedString(PTR pData, int* length)
 {
-    *length = strlen(pData) + 1;
+    *length = (int)strlen(pData) + 1;
     return pData;
 }
 
@@ -175,7 +174,7 @@ static unsigned int GetU32(unsigned char *pSource, int* length) {
 }
 
 static tDebugMetaData* LoadDebugFile(PTR pData) {
-    tDebugMetaData *pRet = TMALLOC(tDebugMetaData);
+    tDebugMetaData *pRet = TMALLOC(1, tDebugMetaData);
     tDebugMetaDataEntry* pPrevious = NULL;
     tDebugMetaDataEntry* pFirst = NULL;
     int moduleLength;
@@ -186,7 +185,7 @@ static tDebugMetaData* LoadDebugFile(PTR pData) {
     int IdLength;
 
     while (*pData) {
-        tDebugMetaDataEntry* pEntry = TMALLOC(tDebugMetaDataEntry);
+        tDebugMetaDataEntry* pEntry = TMALLOC(1, tDebugMetaDataEntry);
         IdLength = 0;
         pEntry->sequencePointsCount = 0;
         pEntry->pModuleName = GetNullTerminatedString(pData, &moduleLength);
@@ -238,7 +237,7 @@ static tDebugMetaData* LoadDebugFile(PTR pData) {
 }
 
 static tCLIFile* LoadPEFile(void *pData) {
-	tCLIFile *pRet = TMALLOC(tCLIFile);
+	tCLIFile *pRet = TMALLOCFOREVER(1, tCLIFile);
 
 	unsigned char *pMSDOSHeader = (unsigned char*)&(((unsigned char*)pData)[0]);
 	unsigned char *pPEHeader;
@@ -386,7 +385,7 @@ tCLIFile* CLIFile_Load(char *pFileName) {
 
     // Assume it ends in .dll
     char* pDebugFileName = (char*)mallocForever((U32)strlen(pFileName) + 1);
-    U32 fileLengthWithoutExt = strlen(pFileName) - 3;
+    U32 fileLengthWithoutExt = (int)strlen(pFileName) - 3;
     strncpy(pDebugFileName, pFileName, fileLengthWithoutExt);
     strncpy(pDebugFileName + fileLengthWithoutExt, "wdb", 3);
     *(pDebugFileName + fileLengthWithoutExt + 3) = '\0';
@@ -402,7 +401,7 @@ tCLIFile* CLIFile_Load(char *pFileName) {
     }
 
 	// Record that we've loaded this file
-	pNewFile = TMALLOCFOREVER(tFilesLoaded);
+	pNewFile = TMALLOCFOREVER(1, tFilesLoaded);
 	pNewFile->pCLIFile = pRet;
 	pNewFile->pNext = pFilesLoaded;
 	pFilesLoaded = pNewFile;
@@ -434,11 +433,11 @@ I32 CLIFile_Execute(tCLIFile *pThis, int argc, char **argp) {
 }
 
 void CLIFile_GetHeapRoots(tHeapRoots *pHeapRoots) {
-	tFilesLoaded *pFile;
+	tFilesLoaded *pFiles;
 
-	pFile = pFilesLoaded;
-	while (pFile != NULL) {
-		MetaData_GetHeapRoots(pHeapRoots, pFile->pCLIFile->pMetaData);
-		pFile = pFile->pNext;
+	pFiles = CLIFile_GetLoadedAssemblies();
+	while (pFiles != NULL) {
+		MetaData_GetHeapRoots(pHeapRoots, pFiles->pCLIFile->pMetaData);
+		pFiles = pFiles->pNext;
 	}
 }

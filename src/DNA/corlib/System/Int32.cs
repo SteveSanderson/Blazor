@@ -9,7 +9,9 @@ namespace System {
 		public const int MaxValue = 0x7fffffff;
 		public const int MinValue = -2147483648;
 
+#pragma warning disable 0169, 0649
 		internal int m_value;
+#pragma warning restore 0169, 0649
 
 		public override bool Equals(object obj) {
 			return (obj is int && ((int)obj).m_value == this.m_value);
@@ -34,29 +36,59 @@ namespace System {
 		}
 
 		public static int Parse(string s, NumberStyles style, IFormatProvider formatProvider) {
-			Exception e;
-			int res;
-			if (!ParseHelper.Parse(s, style, formatProvider, false, out res, out e)) {
-				throw e;
+			if (s == null) {
+				throw new ArgumentNullException();
 			}
-			return res;
+			//TODO: use style and provider
+			int error = 0;
+			int radix = (style & NumberStyles.AllowHexSpecifier) != 0 ? 16 : 10;
+			int result = s.InternalToInt32(out error, radix);
+			if (error != 0) {
+				throw String.GetFormatException(error);
+			}
+			return result;
 		}
 
 		public static bool TryParse(string s, out int result) {
 			return TryParse(s, NumberStyles.Integer, null, out result);
 		}
 
-		public static bool TryParse(string s, NumberStyles style,IFormatProvider format, out int result) {
-			Exception e;
-			return ParseHelper.Parse(s, style, format, true, out result, out e);
+		public static bool TryParse(string s, NumberStyles style, IFormatProvider provider, out int result) {
+			if (s == null) {
+				result = 0;
+				return false;
+			}
+			//TODO: use style and provider
+			int error = 0;
+			int radix = (style & NumberStyles.AllowHexSpecifier) != 0 ? 16 : 10;
+			result = s.InternalToInt32(out error, radix);
+			return error == 0;
 		}
+
+		// public static int Parse(string s, NumberStyles style, IFormatProvider formatProvider) {
+		// 	Exception e;
+		// 	long res;
+		// 	if (!ParseHelper.Parse(s, style, formatProvider, false, out res, out e)) {
+		// 		throw e;
+		// 	}
+		// 	return (int)res;
+		// }
+
+		// public static bool TryParse(string s, NumberStyles style, IFormatProvider format, out int result) {
+		// 	Exception e;
+		// 	long res;
+		// 	bool ret =  ParseHelper.Parse(s, style, format, true, out res, out e);
+		// 	result = (int)res;
+		// 	return ret;
+		// }
 
 		#endregion
 
 		#region ToString methods
 
 		public override string ToString() {
-			return NumberFormatter.FormatGeneral(new NumberFormatter.NumberStore(this.m_value));
+			// return NumberFormatter.FormatGeneral(new NumberFormatter.NumberStore(this.m_value));
+			return String.InternalFromInt32(this.m_value);
 		}
 
 		public string ToString(IFormatProvider formatProvider) {

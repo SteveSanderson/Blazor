@@ -36,6 +36,8 @@ static tThread *pCurrentThread;
 
 U32 Internal_Debugger_Resume_Check(PTR pThis_, PTR pParams, PTR pReturnValue, tAsyncCall *pAsync) {
     if (releaseBreakPoint) {
+        log_f(1, "Resetting breakpoint state.\n");
+
         releaseBreakPoint = 0;
         waitingOnBreakPoint = 0;
         return 1;
@@ -47,6 +49,7 @@ U32 Internal_Debugger_Resume_Check(PTR pThis_, PTR pParams, PTR pReturnValue, tA
 tThread* Thread() {
 	static U32 threadID = 0;
 	tThread *pThis;
+    tThread *pThread;
 
 	// Create thread and initial method state. This is allocated on the managed heap, and
 	// mark as undeletable. When the thread exits, it was marked as deletable.
@@ -64,44 +67,62 @@ tThread* Thread() {
 	pThis->state = THREADSTATE_UNSTARTED;
 
 	// Allocate the first chunk of thread-local stack
-	pThis->pThreadStack = TMALLOC(tThreadStack);
+	pThis->pThreadStack = TMALLOC(1, tThreadStack);
 	pThis->pThreadStack->ofs = 0;
 	pThis->pThreadStack->pNext = NULL;
 
+    pThread = pAllThreads;
+
+    log_f(1, "Creating thread %d.\n", (int)pThis->threadID);
+
+    // FIFO
+    /*if (pThread == NULL) {
+        pAllThreads = pThis;
+    }
+    else {
+        while (pThread->pNextThread != NULL) {
+            pThread = pThread->pNextThread;
+        }
+        pThread->pNextThread = pThis;
+    }*/
+
+    // LIFO
 	// Add to list of all thread
-	pThis->pNextThread = pAllThreads;
-	pAllThreads = pThis;
+	 pThis->pNextThread = pAllThreads;
+	 pAllThreads = pThis;
 
 	return pThis;
 }
 
-void* Thread_StackAlloc(tThread *pThread, U32 size) {
+PTR Thread_StackAlloc(tThread *pThread, U32 size) {
 	tThreadStack *pStack = pThread->pThreadStack;
-	void *pAddr = pStack->memory + pStack->ofs;
+	PTR pAddr = pStack->memory + pStack->ofs;
 #if _DEBUG
 	*(U32*)pAddr = 0xabababab;
 	((U32*)pAddr)++;
-	pStack->ofs += 4;
+	pStack->ofs += sizeof(U32);
 #endif
 	pStack->ofs += size;
 	if (pStack->ofs > THREADSTACK_CHUNK_SIZE) {
-		Crash("Thread-local stack is too large");
+		Crash("Thread-local stack is too large: size = %u", pStack->ofs);
 	}
 #if _DEBUG
 	memset(pAddr, 0xcd, size);
-	*(U32*)(((char*)pAddr) + size) = 0xfbfbfbfb;
-	pStack->ofs += 4;
+	*(U32*)(pAddr + size) = 0xfbfbfbfb;
+	pStack->ofs += sizeof(U32);
 #endif
 	return pAddr;
 }
 
-void Thread_StackFree(tThread *pThread, void *pAddr) {
+void Thread_StackFree(tThread *pThread, PTR pAddr) {
 	tThreadStack *pStack = pThread->pThreadStack;
 #if _DEBUG
 	((U32*)pAddr)--;
-	memset(pAddr, 0xfe, pStack->ofs - (U32)(((unsigned char*)pAddr) - pStack->memory));
+	Assert(pAddr >= pStack->memory);
+	Assert(pStack->ofs >= (U32)(pAddr - pStack->memory));
+	memset(pAddr, 0xfe, pStack->ofs - (U32)(pAddr - pStack->memory));
 #endif
-	pStack->ofs = (U32)(((unsigned char*)pAddr) - pStack->memory);
+	pStack->ofs = (U32)(pAddr - pStack->memory);
 }
 
 void Thread_SetEntryPoint(tThread *pThis, tMetaData *pMetaData, IDX_TABLE entryPointToken, PTR params, U32 paramBytes) {
@@ -137,12 +158,13 @@ I32 Thread_Execute() {
 		U32 minSleepTime = 0xffffffff;
 		I32 threadExitValue;
 
+        log_f(1, "Executing thread %d.\n", (int)pThread->threadID);
         status = JIT_Execute(pThread, 100);
 
 		switch (status) {
 		case THREAD_STATUS_EXIT:
 			threadExitValue = pThread->threadExitValue;
-			log_f(1, "Thread ID#%d exited. Return value: %d\n", (int)pThread->threadID, (int)threadExitValue);
+			log_f(1, "Thread ID#:%d exited. Return value: %d\n", (int)pThread->threadID, (int)threadExitValue);
 			// Remove the current thread from the running threads list.
 			// Note that this list may have changed since before the call to JIT_Execute().
 			{
@@ -175,6 +197,7 @@ I32 Thread_Execute() {
 					pThread = pThread->pNextThread;
 				}
 				if (canExit) {
+                    log_f(1, "No more threads to run. Quitting.\n");
 					return threadExitValue;
 				}
 			}
@@ -234,6 +257,8 @@ I32 Thread_Execute() {
                         break;
                     }
 
+                    log_f(1, "Thread ID#%d is blocked on the debugger. Exiting the loop.\n", (int)pThread->threadID);
+
                     return 0;
                 }
                 else {
@@ -267,8 +292,9 @@ I32 Thread_Execute() {
 				break;
 			}
 			if (pThread == pPrevThread) {
+                log_f(1, "All threads blocked exiting exec loop.\n");
 				// When it gets here, it means that all threads are currently blocked.
-				//printf("All blocked; sleep(%d)\n", minSleepTime);
+				// printf("All blocked; sleep(%d)\n", minSleepTime);
                 // Execution needs to unwind if everything is blocked in javascript or it will
                 // hang the browser's main thread, we need to schedule a call back into this method at a later time
                 return minSleepTime;

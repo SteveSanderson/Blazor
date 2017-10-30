@@ -38,11 +38,11 @@ namespace System {
 			(char) 0x2006, (char) 0x2007, (char) 0x2008, (char) 0x2009,
 			(char) 0x200A, (char) 0x200B, (char) 0x3000, (char) 0xFEFF };
 
-#pragma warning disable 0649
-        internal char m_value;
-#pragma warning restore 0649
+#pragma warning disable 0169, 0649
+		internal char m_value;
+#pragma warning restore 0169, 0649
 
-        public override string ToString() {
+		public override string ToString() {
 			return new string(m_value, 1);
 		}
 
@@ -54,37 +54,53 @@ namespace System {
 			return (int)this.m_value;
 		}
 
+		private static char GetChar(string str, int index) {
+			if (str == null) {
+				throw new ArgumentNullException("str");
+			}
+			if (index < 0 || index >= str.Length) {
+				throw new ArgumentOutOfRangeException("index");
+			}
+			return str[index];
+		}
+
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		extern static public UnicodeCategory GetUnicodeCategory(char c);
 
 		public static UnicodeCategory GetUnicodeCategory(string str, int index) {
-			if (str == null) {
-				throw new ArgumentNullException("str");
-			}
-			if (index < 0 || index >= str.Length) {
-				throw new ArgumentOutOfRangeException("index");
-			}
-			return GetUnicodeCategory(str[index]);
+			return GetUnicodeCategory(GetChar(str, index));
+		}
+
+		private static bool IsLatin1(char c) => c <= '\x00ff';
+		private static bool IsAscii(char c) => c <= '\x007f';
+
+		private static bool IsWhiteSpaceLatin1(char c) {
+			return (c == ' ') || (c >= '\x0009' && c <= '\x000d') || (c == '\x00a0') || (c == '\x0085');
 		}
 
 		public static bool IsWhiteSpace(char c) {
-			// TODO: Make this use Array.BinarySearch() when implemented
-			for (int i = 0; i < WhiteChars.Length; i++) {
-				if (WhiteChars[i] == c) {
-					return true;
-				}
+			// // TODO: Make this use Array.BinarySearch() when implemented
+			// for (int i = 0; i < WhiteChars.Length; i++) {
+			// 	if (WhiteChars[i] == c) {
+			// 		return true;
+			// 	}
+			// }
+
+			if (IsLatin1(c)) {
+				return (IsWhiteSpaceLatin1(c));
 			}
+			switch (GetUnicodeCategory(c)) {
+				case (UnicodeCategory.SpaceSeparator):
+				case (UnicodeCategory.LineSeparator):
+				case (UnicodeCategory.ParagraphSeparator):
+					return true;
+			}
+
 			return false;
 		}
 
 		public static bool IsWhiteSpace(string str, int index) {
-			if (str == null) {
-				throw new ArgumentNullException("str");
-			}
-			if (index < 0 || index >= str.Length) {
-				throw new ArgumentOutOfRangeException("index");
-			}
-			return IsWhiteSpace(str[index]);
+			return IsWhiteSpace(GetChar(str, index));
 		}
 
 		public static bool IsLetter(char c) {
@@ -92,13 +108,7 @@ namespace System {
 		}
 
 		public static bool IsLetter(string str, int index) {
-			if (str == null) {
-				throw new ArgumentNullException("str");
-			}
-			if (index < 0 || index >= str.Length) {
-				throw new ArgumentOutOfRangeException("index");
-			}
-			return IsLetter(str[index]);
+			return IsLetter(GetChar(str, index));
 		}
 
 		public static bool IsDigit(char c) {
@@ -106,13 +116,15 @@ namespace System {
 		}
 
 		public static bool IsDigit(string str, int index) {
-			if (str == null) {
-				throw new ArgumentNullException("str");
-			}
-			if (index < 0 || index >= str.Length) {
-				throw new ArgumentOutOfRangeException("index");
-			}
-			return IsDigit(str[index]);
+			return IsDigit(GetChar(str, index));
+		}
+
+		public static bool IsLetterOrDigit(char c) {
+			return IsLetter(c) || IsDigit(c);
+		}
+
+		public static bool IsLetterOrDigit(string str, int index) {
+			return IsLetter(str, index) || IsDigit(str, index);
 		}
 
 		public static bool IsLower(char c) {
@@ -120,13 +132,7 @@ namespace System {
 		}
 
 		public static bool IsLower(string str, int index) {
-			if (str == null) {
-				throw new ArgumentNullException("str");
-			}
-			if (index < 0 || index >= str.Length) {
-				throw new ArgumentOutOfRangeException("index");
-			}
-			return IsLower(str[index]);
+			return IsLower(GetChar(str, index));
 		}
 
 		public static bool IsUpper(char c) {
@@ -134,20 +140,15 @@ namespace System {
 		}
 
 		public static bool IsUpper(string str, int index) {
-			if (str == null) {
-				throw new ArgumentNullException("str");
-			}
-			if (index < 0 || index >= str.Length) {
-				throw new ArgumentOutOfRangeException("index");
-			}
-			return IsUpper(str[index]);
+			return IsUpper(GetChar(str, index));
 		}
 
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		extern public static char ToLowerInvariant(char c);
 
 		public static char ToLower(char c) {
-			return ToLower(c, CultureInfo.CurrentCulture);
+			// return ToLower(c, CultureInfo.CurrentCulture);
+			return ToLowerInvariant(c); //TODO: current culture
 		}
 
 		public static char ToLower(char c, CultureInfo culture) {
@@ -166,7 +167,8 @@ namespace System {
 		extern public static char ToUpperInvariant(char c);
 
 		public static char ToUpper(char c) {
-			return ToUpper(c, CultureInfo.CurrentCulture);
+			// return ToUpper(c, CultureInfo.CurrentCulture);
+			return ToUpperInvariant(c); //TODO: current culture
 		}
 
 		public static char ToUpper(char c, CultureInfo culture) {

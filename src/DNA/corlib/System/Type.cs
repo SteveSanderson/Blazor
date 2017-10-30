@@ -30,55 +30,96 @@ namespace System {
 
         private static IDictionary<string, Type> typesByNameCache = new Dictionary<string, Type>();
 
-		public static readonly Type[] EmptyTypes = new Type[0];
+        public static readonly Type[] EmptyTypes = new Type[0];
 
-		[MethodImpl(MethodImplOptions.InternalCall)]
-		extern public static Type GetTypeFromHandle(RuntimeTypeHandle handle);
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        extern public static Type GetTypeFromHandle(RuntimeTypeHandle handle);
 
-		public abstract Type BaseType {
-			get;
-		}
+        extern public TypeAttributes Attributes { [MethodImpl(MethodImplOptions.InternalCall)] get; }
 
-		public abstract bool IsEnum {
-			get;
-		}
+        public abstract string AssemblyQualifiedName { get; }
 
-		public abstract string Namespace {
-			get;
-		}
+        public abstract Type BaseType { get; }
 
-		public abstract string FullName {
-			get;
-		}
+        public abstract bool IsEnum { get; }
 
-		public abstract bool IsGenericType {
-			get;
-		}
+        public abstract string Namespace { get; }
 
-		public abstract Type GetGenericTypeDefinition();
+        public abstract string FullName { get; }
 
-		public abstract Type[] GetGenericArguments();
+        public abstract bool IsGenericType { get; }
+
+        public abstract Type GetGenericTypeDefinition();
+
+        public abstract Type[] GetGenericArguments();
 
         public abstract Type GetElementType();
 
         public virtual bool IsArray => GetElementType() != null;
 
-        extern public bool IsValueType {
-			[MethodImpl(MethodImplOptions.InternalCall)]
-			get;
-		}
+        public virtual bool IsByRef => false;
 
-		public override string ToString() {
-			return this.FullName;
-		}
+        public virtual bool IsPointer => false;
 
-        public static Type GetType(string typeName)
-        {
-            lock (typesByNameCache)
-            {
+        extern public bool IsValueType { [MethodImpl(MethodImplOptions.InternalCall)] get; }
+
+        public bool IsAnsiClass => (Attributes & TypeAttributes.StringFormatMask) == TypeAttributes.AnsiClass;
+        public bool IsUnicodeClass => (Attributes & TypeAttributes.StringFormatMask) == TypeAttributes.UnicodeClass;
+        public bool IsAutoClass => (Attributes & TypeAttributes.StringFormatMask) == TypeAttributes.AutoClass;
+        public bool IsNotPublic => (Attributes & TypeAttributes.VisibilityMask) == TypeAttributes.NotPublic;
+        public bool IsPublic => (Attributes & TypeAttributes.VisibilityMask) == TypeAttributes.Public;
+        public bool IsNestedPublic => (Attributes & TypeAttributes.VisibilityMask) == TypeAttributes.NestedPublic;
+        public bool IsNestedPrivate => (Attributes & TypeAttributes.VisibilityMask) == TypeAttributes.NestedPrivate;
+        public bool IsNestedFamily => (Attributes & TypeAttributes.VisibilityMask) == TypeAttributes.NestedFamily;
+        public bool IsNestedAssembly => (Attributes & TypeAttributes.VisibilityMask) == TypeAttributes.NestedAssembly;
+        public bool IsNestedFamANDAssem => (Attributes & TypeAttributes.VisibilityMask) == TypeAttributes.NestedFamANDAssem;
+        public bool IsNestedFamORAssem => (Attributes & TypeAttributes.VisibilityMask) == TypeAttributes.NestedFamORAssem;
+        public bool IsAutoLayout => (Attributes & TypeAttributes.LayoutMask) == TypeAttributes.AutoLayout;
+        public bool IsLayoutSequential => (Attributes & TypeAttributes.LayoutMask) == TypeAttributes.SequentialLayout;
+        public bool IsExplicitLayout => (Attributes & TypeAttributes.LayoutMask) == TypeAttributes.ExplicitLayout;
+        public bool IsClass => (Attributes & TypeAttributes.ClassSemanticsMask) == TypeAttributes.Class && !IsValueType;
+        public bool IsInterface => (Attributes & TypeAttributes.ClassSemanticsMask) == TypeAttributes.Interface;
+        public bool IsAbstract => (Attributes & TypeAttributes.Abstract) != 0;
+        public bool IsSealed => (Attributes & TypeAttributes.Sealed) != 0;
+        public bool IsSpecialName => (Attributes & TypeAttributes.SpecialName) != 0;
+        public bool IsImport => (Attributes & TypeAttributes.Import) != 0;
+        public virtual bool IsSerializable => (Attributes & TypeAttributes.Serializable) != 0;
+
+        public override string ToString() {
+            return this.FullName;
+        }
+
+        public virtual bool Equals (Type o) {
+            return Object.Equals(this, o);
+        }
+
+        public virtual Type[] GenericTypeArguments {
+            get {
+                if (IsGenericType && !IsGenericTypeDefinition) {
+                    return GetGenericArguments();
+                } else {
+                    return Type.EmptyTypes;
+                }
+            }
+        }
+
+        public virtual bool IsGenericTypeDefinition {
+            get { return false; }
+        }
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        extern public virtual bool IsAssignableFrom(Type c);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        extern public virtual bool IsSubclassOf(Type c);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        extern public virtual Type MakeGenericType(params Type[] typeArguments);
+
+        public static Type GetType(string typeName) {
+            lock (typesByNameCache) {
                 Type cachedResult;
-                if (typesByNameCache.TryGetValue(typeName, out cachedResult))
-                {
+                if (typesByNameCache.TryGetValue(typeName, out cachedResult)) {
                     return cachedResult;
                 }
             }
@@ -86,15 +127,12 @@ namespace System {
             string assemblyName;
             string namespaceQualifiedTypeName;
 
-            if (typeName.IndexOf(',') > 0)
-            {
+            if (typeName.IndexOf(',') > 0) {
                 // Assembly is specified
                 var parts = typeName.Split(',');
                 assemblyName = parts[1].Trim();
                 namespaceQualifiedTypeName = parts[0];
-            }
-            else
-            {
+            } else {
                 // No assembly specified
                 assemblyName = null;
                 namespaceQualifiedTypeName = typeName;
@@ -105,10 +143,8 @@ namespace System {
             var className = namespaceQualifiedTypeName.Substring(namespaceSplitPoint + 1).Trim();
             var result = GetType(assemblyName, namespaceName, className);
 
-            if (result != null)
-            {
-                lock (typesByNameCache)
-                {
+            if (result != null) {
+                lock (typesByNameCache) {
                     typesByNameCache[typeName] = result;
                 }
             }
@@ -117,12 +153,25 @@ namespace System {
         }
 
         [MethodImpl(MethodImplOptions.InternalCall)]
+        extern public Type[] GetNestedTypes();
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        extern public Type GetNestedType(string name);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        extern public Type[] GetInterfaces();
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        extern public MethodInfo[] GetMethods();
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        extern public MethodInfo GetMethod(string name);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
         extern public PropertyInfo[] GetProperties();
 
-        public MethodInfo GetMethod(string name)
-        {
-            return (MethodInfo)GetMethodInternal(name);
-        }
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        extern public PropertyInfo GetProperty(string name);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
         extern public static void EnsureAssemblyLoaded(string assemblyName);
@@ -130,16 +179,11 @@ namespace System {
         [MethodImpl(MethodImplOptions.InternalCall)]
         extern private static Type GetType(string assemblyName, string namespaceName, string className);
 
-        [MethodImpl(MethodImplOptions.InternalCall)]
-        extern private object GetMethodInternal(string name);
-
-        public static bool operator ==(Type t1, Type t2)
-        {
+        public static bool operator ==(Type t1, Type t2) {
             return t1?.FullName.Equals(t2?.FullName) == true;
         }
 
-        public static bool operator !=(Type t1, Type t2)
-        {
+        public static bool operator !=(Type t1, Type t2) {
             return t1?.FullName.Equals(t2?.FullName) == false;
         }
     }

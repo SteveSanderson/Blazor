@@ -14,6 +14,9 @@ namespace System.IO {
 		extern public static void Close(IntPtr handle, out int error);
 
 		[MethodImpl(MethodImplOptions.InternalCall)]
+		extern public static long Length(string fileName, out int error);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
 		extern public static string GetCurrentDirectory(out int error);
 
 		[MethodImpl(MethodImplOptions.InternalCall)]

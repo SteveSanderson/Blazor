@@ -28,10 +28,10 @@ namespace System {
 		public const ulong MaxValue = 0xffffffffffffffffL;
 
 #pragma warning disable 0169, 0649
-        internal ulong m_value;
+		internal ulong m_value;
 #pragma warning restore 0169, 0649
 
-        public override bool Equals(object obj) {
+		public override bool Equals(object obj) {
 			return (obj is ulong) && ((ulong)obj).m_value == this.m_value;
 		}
 
@@ -39,10 +39,57 @@ namespace System {
 			return (int)(this.m_value & 0xffffffff) ^ (int)(this.m_value >> 32);
 		}
 
+		#region Parse methods
+
+		public static ulong Parse(string s) {
+			return Parse(s, NumberStyles.Integer, null);
+		}
+
+		public static ulong Parse(string s, NumberStyles style) {
+			return Parse(s, style, null);
+		}
+
+		public static ulong Parse(string s, IFormatProvider formatProvider) {
+			return Parse(s, NumberStyles.Integer, formatProvider);
+		}
+
+		public static ulong Parse(string s, NumberStyles style, IFormatProvider formatProvider) {
+			if (s == null) {
+				throw new ArgumentNullException();
+			}
+			//TODO: use style and provider
+			int error = 0;
+			int radix = (style & NumberStyles.AllowHexSpecifier) != 0 ? 16 : 10;
+			ulong result = s.InternalToUInt64(out error, radix);
+			if (error != 0) {
+				throw String.GetFormatException(error);
+			}
+			return result;
+		}
+
+		public static bool TryParse(string s, out ulong result) {
+			return TryParse(s, NumberStyles.Integer, null, out result);
+		}
+
+		private static bool TryParse(string s, NumberStyles style, IFormatProvider provider, out ulong result) {
+			if (s == null) {
+				result = 0;
+				return false;
+			}
+			//TODO: use style and provider
+			int error = 0;
+			int radix = (style & NumberStyles.AllowHexSpecifier) != 0 ? 16 : 10;
+			result = s.InternalToUInt64(out error, radix);
+			return error == 0;
+		}
+
+		#endregion
+
 		#region ToString methods
 
 		public override string ToString() {
-			return NumberFormatter.FormatGeneral(new NumberFormatter.NumberStore(this.m_value));
+			// return NumberFormatter.FormatGeneral(new NumberFormatter.NumberStore(this.m_value));
+			return String.InternalFromUInt64(this.m_value);
 		}
 
 		public string ToString(IFormatProvider formatProvider) {

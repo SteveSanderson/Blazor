@@ -20,19 +20,83 @@
 
 #if !LOCALTEST
 
+using System.Globalization;
 namespace System {
 	public struct Decimal {
+		// some constants
+		private const uint MAX_SCALE = 28;
+		private const uint SIGN_FLAG = 0x80000000;
+		private const int SCALE_SHIFT = 16;
+		private const uint RESERVED_SS32_BITS = 0x7F00FFFF;
 
 		// internal representation of decimal
 #pragma warning disable 0169, 0649
-        private uint flags;
+		private uint flags;
 		private uint hi;
 		private uint lo;
 		private uint mid;
 #pragma warning restore 0169, 0649
 
-        public static int[] GetBits(Decimal d) {
-			return new int[] { 0, 0, 0, 0 };
+		public Decimal(int[] bits) {
+			if (bits == null || bits.Length != 4) {
+				throw new ArgumentException("bits");
+			}
+			lo = (uint) bits[0];
+			mid = (uint) bits[1];
+			hi = (uint) bits[2];
+			flags = (uint) bits[3];
+			byte scale = (byte)(flags >> SCALE_SHIFT);
+			if (scale > MAX_SCALE || (flags & RESERVED_SS32_BITS) != 0) {
+				throw new ArgumentException ("Invalid bits[3]");
+			}
+		}
+
+		public static bool operator ==(Decimal d1, Decimal d2) {
+			return Equals(d1, d2);
+		}
+
+		public static bool operator !=(Decimal d1, Decimal d2) {
+			return !Equals(d1, d2);
+		}
+
+		public static Decimal operator -(Decimal d) {
+			d.flags ^= SIGN_FLAG;
+			return d;
+		}
+
+		public static int[] GetBits(Decimal d) {
+			return new int[] { (int)d.lo, (int)d.mid, (int)d.hi, (int)d.flags };
+		}
+
+		public static bool Equals (Decimal d1, Decimal d2) {
+			return d1.lo == d2.lo && d1.mid == d2.mid && d1.hi == d2.hi && d1.flags == d2.flags;
+		}
+
+		public override bool Equals (object value) {
+			if (!(value is Decimal))
+				return false;
+			return Equals((Decimal) value, this);
+		}
+
+		public override int GetHashCode () {
+			return (int) (flags ^ hi ^ lo ^ mid);
+		}
+
+		public override string ToString() {
+			return ToString(null, null);
+		}
+
+		public string ToString(IFormatProvider fp) {
+			return ToString(null, fp);
+		}
+
+		public string ToString(string format) {
+			return ToString(format, null);
+		}
+
+		public string ToString(string format, IFormatProvider fp) {
+			NumberFormatInfo nfi = NumberFormatInfo.GetInstance(fp);
+			return NumberFormatter.NumberToString(format, this, nfi);
 		}
 
 	}

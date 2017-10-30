@@ -27,11 +27,11 @@ namespace System {
 		public const long MaxValue = 0x7fffffffffffffff;
 		public const long MinValue = unchecked((long)0x8000000000000000);
 
-#pragma warning disable 0649
-        private long m_value;
-#pragma warning restore 0649
+#pragma warning disable 0169, 0649
+		private long m_value;
+#pragma warning restore 0169, 0649
 
-        public override bool Equals(object o) {
+		public override bool Equals(object o) {
 			return (o is long) && ((long)o).m_value == this.m_value;
 		}
 
@@ -39,8 +39,57 @@ namespace System {
 			return (int)(m_value & 0xffffffff) ^ (int)(m_value >> 32);
 		}
 
+		#region Parse methods
+
+		public static long Parse(string s) {
+			return Parse(s, NumberStyles.Integer, null);
+		}
+
+		public static long Parse(string s, NumberStyles style) {
+			return Parse(s, style, null);
+		}
+
+		public static long Parse(string s, IFormatProvider formatProvider) {
+			return Parse(s, NumberStyles.Integer, formatProvider);
+		}
+
+		public static long Parse(string s, NumberStyles style, IFormatProvider formatProvider) {
+			if (s == null) {
+				throw new ArgumentNullException();
+			}
+			//TODO: use style and provider
+			int error = 0;
+			int radix = (style & NumberStyles.AllowHexSpecifier) != 0 ? 16 : 10;
+			long result = s.InternalToInt64(out error, radix);
+			if (error != 0) {
+				throw String.GetFormatException(error);
+			}
+			return result;
+		}
+
+		public static bool TryParse(string s, out long result) {
+			return TryParse(s, NumberStyles.Integer, null, out result);
+		}
+
+		private static bool TryParse(string s, NumberStyles style, IFormatProvider provider, out long result) {
+			if (s == null) {
+				result = 0;
+				return false;
+			}
+			//TODO: use style and provider
+			int error = 0;
+			int radix = (style & NumberStyles.AllowHexSpecifier) != 0 ? 16 : 10;
+			result = s.InternalToInt64(out error, radix);
+			return error == 0;
+		}
+
+		#endregion
+
+		#region ToString methods
+
 		public override string ToString() {
-			return NumberFormatter.FormatGeneral(new NumberFormatter.NumberStore(this.m_value));
+			// return NumberFormatter.FormatGeneral(new NumberFormatter.NumberStore(this.m_value));
+			return String.InternalFromInt64(this.m_value);
 		}
 
 		public string ToString(IFormatProvider formatProvider) {
@@ -48,13 +97,15 @@ namespace System {
 		}
 
 		public string ToString(string format) {
-			return ToString(format, null);
+			return this.ToString(format, null);
 		}
 
 		public string ToString(string format, IFormatProvider formatProvider) {
 			NumberFormatInfo nfi = NumberFormatInfo.GetInstance(formatProvider);
-			return NumberFormatter.NumberToString(format, m_value, nfi);
+			return NumberFormatter.NumberToString(format, this.m_value, nfi);
 		}
+
+		#endregion
 
 		#region IComparable Members
 

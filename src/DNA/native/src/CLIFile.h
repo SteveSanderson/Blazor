@@ -41,7 +41,14 @@ struct tCLIFile_ {
 	tMetaData *pMetaData;
 };
 
+typedef struct tFilesLoaded_ tFilesLoaded;
+struct tFilesLoaded_ {
+	tCLIFile *pCLIFile;
+	tFilesLoaded *pNext;
+};
+
 // static methods
+tFilesLoaded* CLIFile_GetLoadedAssemblies();
 tMetaData* CLIFile_GetMetaDataForAssembly(unsigned char *pAssemblyName);
 tMetaData* CLIFile_GetMetaDataForLoadedAssembly(unsigned char *pLoadedAssemblyName);
 tMD_TypeDef* CLIFile_FindTypeInAllLoadedAssemblies(STRING nameSpace, STRING name);

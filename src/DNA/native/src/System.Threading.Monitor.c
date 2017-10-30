@@ -67,7 +67,7 @@ tAsyncCall* System_Threading_Monitor_Internal_TryEnter(PTR pThis_, PTR pParams, 
 		// Got lock already, so don't block thread
 		return NULL;
 	}
-	pAsync = TMALLOC(tAsyncCall);
+	pAsync = TMALLOC(1, tAsyncCall);
 	pAsync->sleepTime = -1;
 	pAsync->checkFn = Internal_TryEntry_Check;
 	pAsync->state = NULL;

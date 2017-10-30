@@ -27,10 +27,10 @@ namespace System {
 		public const short MinValue = -32768;
 
 #pragma warning disable 0169, 0649
-        internal short m_value;
+		internal short m_value;
 #pragma warning restore 0169, 0649
 
-        public override bool Equals(object obj) {
+		public override bool Equals(object obj) {
 			return (obj is short) && ((short)obj).m_value == this.m_value;
 		}
 
@@ -38,8 +38,11 @@ namespace System {
 			return (int)this.m_value;
 		}
 
+		#region ToString methods
+
 		public override string ToString() {
-			return NumberFormatter.FormatGeneral(new NumberFormatter.NumberStore(this.m_value));
+			// return NumberFormatter.FormatGeneral(new NumberFormatter.NumberStore(this.m_value));
+			return String.InternalFromInt32(this.m_value);
 		}
 
 		public string ToString(IFormatProvider formatProvider) {
@@ -47,13 +50,15 @@ namespace System {
 		}
 
 		public string ToString(string format) {
-			return ToString(format, null);
+			return this.ToString(format, null);
 		}
 
 		public string ToString(string format, IFormatProvider formatProvider) {
 			NumberFormatInfo nfi = NumberFormatInfo.GetInstance(formatProvider);
-			return NumberFormatter.NumberToString(format, m_value, nfi);
+			return NumberFormatter.NumberToString(format, this.m_value, nfi);
 		}
+
+		#endregion
 
 		#region IComparable Members
 

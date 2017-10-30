@@ -27,10 +27,10 @@ namespace System {
 		public const sbyte MaxValue = 127;
 
 #pragma warning disable 0169, 0649
-        internal sbyte m_value;
+		internal sbyte m_value;
 #pragma warning restore 0169, 0649
 
-        public override bool Equals(object obj) {
+		public override bool Equals(object obj) {
 			return (obj is sbyte) && ((sbyte)obj).m_value == this.m_value;
 		}
 
@@ -41,7 +41,8 @@ namespace System {
 		#region ToString methods
 
 		public override string ToString() {
-			return NumberFormatter.FormatGeneral(new NumberFormatter.NumberStore(this.m_value));
+			// return NumberFormatter.FormatGeneral(new NumberFormatter.NumberStore(this.m_value));
+			return String.InternalFromInt32(this.m_value);
 		}
 
 		public string ToString(IFormatProvider formatProvider) {

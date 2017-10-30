@@ -157,7 +157,7 @@ tAsyncCall* System_Net_Sockets_Internal_Accept(PTR pThis_, PTR pParams, PTR pRet
 	if (ret) {
 		return NULL;
 	} else {
-		tAsyncCall *pAsync = TMALLOC(tAsyncCall);
+		tAsyncCall *pAsync = TMALLOC(1, tAsyncCall);
 		pAsync->sleepTime = -1;
 		pAsync->checkFn = Accept_Check;
 		pAsync->state = NULL;
@@ -218,7 +218,7 @@ tAsyncCall* System_Net_Sockets_Internal_Connect(PTR pThis_, PTR pParams, PTR pRe
 	if (ret) {
 		return NULL;
 	} else {
-		tAsyncCall *pAsync = TMALLOC(tAsyncCall);
+		tAsyncCall *pAsync = TMALLOC(1, tAsyncCall);
 		pAsync->sleepTime = -1;
 		pAsync->checkFn = Connect_Check;
 		pAsync->state = NULL;
@@ -284,8 +284,8 @@ static U32 Receive_Check(PTR pThis_, PTR pParams, PTR pReturnValue, tAsyncCall *
 
 tAsyncCall* System_Net_Sockets_Internal_Receive(PTR pThis_, PTR pParams, PTR pReturnValue) {
 	U32 ok;
-	tAsyncCall *pAsync = TMALLOC(tAsyncCall);
-	tSendRecvState *pState = TMALLOC(tSendRecvState);
+	tAsyncCall *pAsync = TMALLOC(1, tAsyncCall);
+	tSendRecvState *pState = TMALLOC(1, tSendRecvState);
 	pAsync->sleepTime = -1;
 	pAsync->checkFn = Receive_Check;
 	pAsync->state = (PTR)pState;
@@ -347,8 +347,8 @@ printf("Send_Check: errno=%d\n", err);
 
 tAsyncCall* System_Net_Sockets_Internal_Send(PTR pThis_, PTR pParams, PTR pReturnValue) {
 	U32 ok;
-	tAsyncCall *pAsync = TMALLOC(tAsyncCall);
-	tSendRecvState *pState = TMALLOC(tSendRecvState);
+	tAsyncCall *pAsync = TMALLOC(1, tAsyncCall);
+	tSendRecvState *pState = TMALLOC(1, tSendRecvState);
 	pAsync->sleepTime = -1;
 	pAsync->checkFn = Receive_Check;
 	pAsync->state = (PTR)pState;

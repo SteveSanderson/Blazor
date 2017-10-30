@@ -166,11 +166,13 @@ namespace System.Text {
 		#region Append Methods
 
 		public StringBuilder Append(string value) {
+			if (value == null) {
+				return this;
+			}
 			int len = value.Length;
 			this.EnsureSpace(len);
-			for (int i = 0; i < len; i++) {
-				this.data[this.length++] = value[i];
-			}
+			value.CopyTo(0, this.data, this.length, len);
+			this.length += len;
 			return this;
 		}
 
@@ -178,13 +180,12 @@ namespace System.Text {
 			if (value == null) {
 				return this;
 			}
-			if (startIndex < 0 || count < 0 || value.Length < startIndex + count) {
+			if (startIndex < 0 || count < 0 || startIndex + count > value.Length) {
 				throw new ArgumentOutOfRangeException();
 			}
 			this.EnsureSpace(count);
-			for (int i = 0; i < count; i++) {
-				this.data[this.length++] = value[startIndex + i];
-			}
+			value.CopyTo(startIndex, this.data, this.length, count);
+			this.length += count;
 			return this;
 		}
 
@@ -331,7 +332,7 @@ namespace System.Text {
 
 		public StringBuilder Insert(int index, string value) {
 			if (index < 0 || index > this.length) {
-				throw new ArgumentOutOfRangeException();
+				throw new ArgumentOutOfRangeException("index");
 			}
 			if (string.IsNullOrEmpty(value)) {
 				return this;
@@ -339,9 +340,7 @@ namespace System.Text {
 			int len = value.Length;
 			EnsureSpace(len);
 			Array.Copy(this.data, index, this.data, index + len, this.length - index);
-			for (int i = 0; i < len; i++) {
-				this.data[index + i] = value[i];
-			}
+			value.CopyTo(0, this.data, index, len);
 			this.length += len;
 			return this;
 		}
@@ -359,6 +358,9 @@ namespace System.Text {
 		}
 
 		public StringBuilder Insert(int index, char[] value) {
+			if (value == null) {
+				return this;
+			}
 			return this.Insert(index, new string(value));
 		}
 
@@ -383,6 +385,9 @@ namespace System.Text {
 		}
 
 		public StringBuilder Insert(int index, object value) {
+			if (value == null) {
+				return this;
+			}
 			return this.Insert(index, value.ToString());
 		}
 

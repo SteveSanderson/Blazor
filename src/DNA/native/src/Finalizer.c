@@ -28,8 +28,18 @@ static int toFinalizeOfs, toFinalizeCapacity;
 
 void Finalizer_Init() {
 	toFinalizeCapacity = 4;
-	ppToFinalize = (HEAP_PTR*)malloc(toFinalizeCapacity * sizeof(void*));
+	ppToFinalize = (HEAP_PTR*)TMALLOC(toFinalizeCapacity, void*);
 	toFinalizeOfs = 0;
+}
+
+void Finalizer_Free() {
+	toFinalizeCapacity = 0;
+	toFinalizeOfs = 0;
+	free(ppToFinalize);
+}
+
+int Finalizer_Count() {
+	return toFinalizeOfs;
 }
 
 void AddFinalizer(HEAP_PTR ptr) {

@@ -95,7 +95,7 @@ void MetaData_Fill_MethodDef(tMD_TypeDef *pParentType, tMD_MethodDef *pMethodDef
 
 	sig = MetaData_GetBlob(pMethodDef->signature, NULL);
 	entry = MetaData_DecodeSigEntry(&sig);
-	if (entry & SIG_METHODDEF_GENERIC) {
+	if (entry & SIG_CALLCONV_GENERIC) {
 		// Has generic parameters. Read how many, but don't care about the answer
 		MetaData_DecodeSigEntry(&sig);
 	}
@@ -104,7 +104,7 @@ void MetaData_Fill_MethodDef(tMD_TypeDef *pParentType, tMD_MethodDef *pMethodDef
 	if (pMethodDef->pReturnType != NULL) {
 		MetaData_Fill_TypeDef(pMethodDef->pReturnType, NULL, NULL);
 	}
-	pMethodDef->pParams = (tParameter*)malloc(pMethodDef->numberOfParameters * sizeof(tParameter));
+	pMethodDef->pParams = TMALLOCFOREVER(pMethodDef->numberOfParameters, tParameter);
 	totalSize = 0;
 	if (!METHOD_ISSTATIC(pMethodDef)) {
 		// Fill in parameter info for the 'this' pointer
@@ -119,7 +119,7 @@ void MetaData_Fill_MethodDef(tMD_TypeDef *pParentType, tMD_MethodDef *pMethodDef
 		}
 		totalSize = 4;
 	}
-	for (i=totalSize>>2; i<pMethodDef->numberOfParameters; i++) {
+	for (i=METHOD_ISSTATIC(pMethodDef)?0:1; i<pMethodDef->numberOfParameters; i++) {
 		tMD_TypeDef *pTypeDef;
 		U32 size;
 
@@ -127,6 +127,7 @@ void MetaData_Fill_MethodDef(tMD_TypeDef *pParentType, tMD_MethodDef *pMethodDef
 		//if (pTypeDef != NULL) {
 			MetaData_Fill_TypeDef(pTypeDef, NULL, NULL);
 			size = pTypeDef->stackSize;
+			Assert(pTypeDef->isGenericDefinition || size != 0); // if this fails, there is a circular dependency on pTypeDef, so add it to Type.c
 		//} else {
 		//	// If this method has generic-type-argument arguments, then we can't do anything very sensible yet
 		//	size = 0;
@@ -137,47 +138,6 @@ void MetaData_Fill_MethodDef(tMD_TypeDef *pParentType, tMD_MethodDef *pMethodDef
 		totalSize += size;
 	}
 	pMethodDef->parameterStackSize = totalSize;
-}
-
-// Find the method that has been overridden by pMethodDef.
-// This is to get the correct vTable offset for the method.
-// This must search the MethodImpl table to see if the default inheritence rules are being overridden.
-// Return NULL if this method does not override anything.
-static tMD_MethodDef* FindVirtualOverriddenMethod(tMD_TypeDef *pTypeDef, tMD_MethodDef *pMethodDef) {
-	U32 i;
-
-	do {
-		// Search MethodImpl table
-		for (i=pTypeDef->pMetaData->tables.numRows[MD_TABLE_METHODIMPL]; i>0; i--) {
-			tMD_MethodImpl *pMethodImpl;
-
-			pMethodImpl = (tMD_MethodImpl*)MetaData_GetTableRow(pTypeDef->pMetaData, MAKE_TABLE_INDEX(MD_TABLE_METHODIMPL, i));
-			if (pMethodImpl->class_ == pTypeDef->tableIndex) {
-				tMD_MethodDef *pMethodDeclDef;
-
-				pMethodDeclDef = MetaData_GetMethodDefFromDefRefOrSpec(pTypeDef->pMetaData, pMethodImpl->methodDeclaration, pTypeDef->ppClassTypeArgs, pMethodDef->ppMethodTypeArgs);
-				if (pMethodDeclDef->tableIndex == pMethodDef->tableIndex) {
-					IDX_TABLE methodToken;
-					tMD_MethodDef *pMethod;
-
-					methodToken = pMethodImpl->methodBody;
-					pMethod = (tMD_MethodDef*)MetaData_GetTableRow(pTypeDef->pMetaData, methodToken);
-					return pMethod;
-				}
-			}
-		}
-
-		// Use normal inheritence rules
-		// It must be a virtual method that's being overridden.
-		for (i=pTypeDef->numVirtualMethods - 1; i != 0xffffffff; i--) {
-			if (MetaData_CompareNameAndSig(pMethodDef->name, pMethodDef->signature, pMethodDef->pMetaData, pMethodDef->pParentType->ppClassTypeArgs, pMethodDef->ppMethodTypeArgs, pTypeDef->pVTable[i], pTypeDef->ppClassTypeArgs, NULL)) {
-				return pTypeDef->pVTable[i];
-			}
-		}
-		pTypeDef = pTypeDef->pParent;
-	} while (pTypeDef != NULL);
-
-	return NULL;
 }
 
 void MetaData_Fill_TypeDef_(tMD_TypeDef *pTypeDef, tMD_TypeDef **ppClassTypeArgs, tMD_TypeDef **ppMethodTypeArgs) {
@@ -241,8 +201,14 @@ void MetaData_Fill_TypeDef_(tMD_TypeDef *pTypeDef, tMD_TypeDef **ppClassTypeArgs
 					tMD_MethodDef *pVirtualOveriddenMethod;
 
 					pVirtualOveriddenMethod = FindVirtualOverriddenMethod(pTypeDef->pParent, pMethodDef);
-					Assert(pVirtualOveriddenMethod != NULL);
-					pMethodDef->vTableOfs = pVirtualOveriddenMethod->vTableOfs;
+					if (pVirtualOveriddenMethod != NULL) {
+						//Assert(pVirtualOveriddenMethod != NULL);
+						pMethodDef->vTableOfs = pVirtualOveriddenMethod->vTableOfs;
+					}
+					else {
+						// perhaps virtual methods in abstract classes?
+						pMethodDef->vTableOfs = virtualOfs++;
+					}
 				}
 			} else {
 				// Dummy value - make it obvious it's not valid!
@@ -268,7 +234,7 @@ void MetaData_Fill_TypeDef_(tMD_TypeDef *pTypeDef, tMD_TypeDef **ppClassTypeArgs
 		lastIdx = firstIdx + pTypeDef->numFields - 1;
 		staticMemSize = 0;
 		if (pTypeDef->numFields > 0) {
-			pTypeDef->ppFields = mallocForever(pTypeDef->numFields * sizeof(tMD_FieldDef*));
+			pTypeDef->ppFields = TMALLOCFOREVER(pTypeDef->numFields, tMD_FieldDef*);
 		}
 		instanceMemSize = (pTypeDef->pParent == NULL)?0:pTypeDef->pParent->instanceMemSize;
 		for (token = firstIdx, i=0; token <= lastIdx; token++, i++) {
@@ -280,7 +246,7 @@ void MetaData_Fill_TypeDef_(tMD_TypeDef *pTypeDef, tMD_TypeDef **ppClassTypeArgs
 				if (pTypeDef->pGenericDefinition != NULL) {
 					// If this is a generic instantiation type, then all field defs need to be copied,
 					// as there will be lots of different instantiations.
-					tMD_FieldDef *pFieldCopy = TMALLOCFOREVER(tMD_FieldDef);
+					tMD_FieldDef *pFieldCopy = TMALLOCFOREVER(1, tMD_FieldDef);
 					memcpy(pFieldCopy, pFieldDef, sizeof(tMD_FieldDef));
 					pFieldDef = pFieldCopy;
 				}
@@ -303,6 +269,7 @@ void MetaData_Fill_TypeDef_(tMD_TypeDef *pTypeDef, tMD_TypeDef **ppClassTypeArgs
 		// Note that this may already be set, as some basic types have this preset;
 		// or if it's not a value-type it'll already be set
 		if (pTypeDef->stackSize == 0) {
+			Assert(pTypeDef->isValueType);
 			// if it gets here then it must be a value type
 			pTypeDef->stackType = EVALSTACK_VALUETYPE;
 			pTypeDef->stackSize = pTypeDef->instanceMemSize;
@@ -322,7 +289,7 @@ void MetaData_Fill_TypeDef_(tMD_TypeDef *pTypeDef, tMD_TypeDef **ppClassTypeArgs
 				if (pTypeDef->pGenericDefinition != NULL) {
 					// If this is a generic instantiation type, then all field defs need to be copied,
 					// as there will be lots of different instantiations.
-					tMD_FieldDef *pFieldCopy = TMALLOCFOREVER(tMD_FieldDef);
+					tMD_FieldDef *pFieldCopy = TMALLOCFOREVER(1, tMD_FieldDef);
 					memcpy(pFieldCopy, pFieldDef, sizeof(tMD_FieldDef));
 					pFieldDef = pFieldCopy;
 				}
@@ -338,8 +305,8 @@ void MetaData_Fill_TypeDef_(tMD_TypeDef *pTypeDef, tMD_TypeDef **ppClassTypeArgs
 			}
 		}
 		if (staticMemSize > 0) {
-			pTypeDef->pStaticFields = mallocForever(staticMemSize);
-			memset(pTypeDef->pStaticFields, 0, staticMemSize);
+			pTypeDef->pStaticFields = callocForever(1, staticMemSize);
+			//memset(pTypeDef->pStaticFields, 0, staticMemSize);
 			// Set the field addresses (->pMemory) of all static fields
 			for (i = 0; i<pTypeDef->numFields; i++) {
 				tMD_FieldDef *pFieldDef;
@@ -356,8 +323,8 @@ void MetaData_Fill_TypeDef_(tMD_TypeDef *pTypeDef, tMD_TypeDef **ppClassTypeArgs
 		// Resolve all members
 		firstIdx = pTypeDef->methodList;
 		lastIdx = firstIdx + pTypeDef->numMethods - 1;
-		pTypeDef->ppMethods = mallocForever(pTypeDef->numMethods * sizeof(tMD_MethodDef*));
-		pTypeDef->pVTable = mallocForever(pTypeDef->numVirtualMethods * sizeof(tMD_MethodDef*));
+		pTypeDef->ppMethods = TMALLOCFOREVER(pTypeDef->numMethods, tMD_MethodDef*);
+		pTypeDef->pVTable = TMALLOCFOREVER(pTypeDef->numVirtualMethods, tMD_MethodDef*);
 		// Copy initial vTable from parent
 		if (pTypeDef->pParent != NULL) {
 			memcpy(pTypeDef->pVTable, pTypeDef->pParent->pVTable, pTypeDef->pParent->numVirtualMethods * sizeof(tMD_MethodDef*));
@@ -369,7 +336,7 @@ void MetaData_Fill_TypeDef_(tMD_TypeDef *pTypeDef, tMD_TypeDef **ppClassTypeArgs
 			if (pTypeDef->pGenericDefinition != NULL) {
 				// If this is a generic instantiation type, then all method defs need to be copied,
 				// as there will be lots of different instantiations.
-				tMD_MethodDef *pMethodCopy = TMALLOCFOREVER(tMD_MethodDef);
+				tMD_MethodDef *pMethodCopy = TMALLOCFOREVER(1, tMD_MethodDef);
 				memcpy(pMethodCopy, pMethodDef, sizeof(tMD_MethodDef));
 				pMethodDef = pMethodCopy;
 			}
@@ -432,7 +399,7 @@ void MetaData_Fill_TypeDef_(tMD_TypeDef *pTypeDef, tMD_TypeDef **ppClassTypeArgs
 			if (pTypeDef->numInterfaces > 0 && !pTypeDef->isGenericDefinition) {
 				U32 mapNum;
 
-				pTypeDef->pInterfaceMaps = (tInterfaceMap*)mallocForever(pTypeDef->numInterfaces * sizeof(tInterfaceMap));
+				pTypeDef->pInterfaceMaps = TMALLOCFOREVER(pTypeDef->numInterfaces, tInterfaceMap);
 				// Copy interface maps from parent type
 				if (j > 0) {
 					memcpy(pTypeDef->pInterfaceMaps, pTypeDef->pParent->pInterfaceMaps, j * sizeof(tInterfaceMap));
@@ -452,7 +419,7 @@ void MetaData_Fill_TypeDef_(tMD_TypeDef *pTypeDef, tMD_TypeDef **ppClassTypeArgs
 							MetaData_Fill_TypeDef(pInterface, NULL, NULL);
 							pMap = &pTypeDef->pInterfaceMaps[mapNum];
 							pMap->pInterface = pInterface;
-							pMap->pVTableLookup = (U32*)mallocForever(pInterface->numVirtualMethods * sizeof(U32));
+							pMap->pVTableLookup = TMALLOCFOREVER(pInterface->numVirtualMethods, U32);
 							pMap->ppMethodVLookup = NULL;
 							// Discover interface mapping for each interface method
 							for (i=0; i<pInterface->numVirtualMethods; i++) {
@@ -473,7 +440,7 @@ void MetaData_Fill_TypeDef_(tMD_TypeDef *pTypeDef, tMD_TypeDef **ppClassTypeArgs
 
 		// If this is an enum type, then pretend its stack type is its underlying type
 		if (pTypeDef->pParent == types[TYPE_SYSTEM_ENUM]) {
-			pTypeDef->stackType = EVALSTACK_INT32;
+			pTypeDef->stackType = EVALSTACK_INT32; // TODO: other integral types?
 		}
 	}
 

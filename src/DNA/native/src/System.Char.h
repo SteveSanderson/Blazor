@@ -23,6 +23,9 @@
 
 #include "Types.h"
 
+U16 Char_ToLowerInvariant(U16 paramCodePoint);
+U16 Char_ToUpperInvariant(U16 paramCodePoint);
+
 tAsyncCall* System_Char_GetUnicodeCategory(PTR pThis_, PTR pParams, PTR pReturnValue);
 tAsyncCall* System_Char_ToLowerInvariant(PTR pThis_, PTR pParams, PTR pReturnValue);
 tAsyncCall* System_Char_ToUpperInvariant(PTR pThis_, PTR pParams, PTR pReturnValue);

@@ -67,11 +67,11 @@ tAsyncCall* System_Char_GetUnicodeCategory(PTR pThis_, PTR pParams, PTR pReturnV
 }
 
 // Return -1 if not found
-static I32 SearchCaseArray(unsigned short *pCaseArray, unsigned short find) {
+static I32 SearchCaseArray(U16 *pCaseArray, U16 find) {
 	U32 lower = 0;
 	U32 upper = sizeof(UC_CaseUpper) / 2;
 	U32 curOfs = sizeof(UC_CaseUpper) / 4;
-	unsigned short val;
+	U16 val;
 
 	if (find == 0xffff) {
 		// Hande 0xffff specially, as the search below cannot handle it.
@@ -99,22 +99,24 @@ static I32 SearchCaseArray(unsigned short *pCaseArray, unsigned short find) {
 	}
 }
 
+U16 Char_ToLowerInvariant(U16 paramCodePoint) {
+	I32 pos = SearchCaseArray(UC_CaseUpper, paramCodePoint);
+	return (pos < 0) ? paramCodePoint : UC_CaseLower[pos];
+}
+
+U16 Char_ToUpperInvariant(U16 paramCodePoint) {
+	I32 pos = SearchCaseArray(UC_CaseLower, paramCodePoint);
+	return (pos < 0) ? paramCodePoint : UC_CaseUpper[pos];
+}
+
 tAsyncCall* System_Char_ToLowerInvariant(PTR pThis_, PTR pParams, PTR pReturnValue) {
 	U32 paramCodePoint = ((U32*)pParams)[0];
-	I32 pos;
-
-	pos = SearchCaseArray(UC_CaseUpper, (unsigned short)paramCodePoint);
-	*(U32*)pReturnValue = (pos < 0)?paramCodePoint:UC_CaseLower[pos];
-
+	*(U32*)pReturnValue = Char_ToLowerInvariant((U16)paramCodePoint);
 	return NULL;
 }
 
 tAsyncCall* System_Char_ToUpperInvariant(PTR pThis_, PTR pParams, PTR pReturnValue) {
 	U32 paramCodePoint = ((U32*)pParams)[0];
-	I32 pos;
-
-	pos = SearchCaseArray(UC_CaseLower, (unsigned short)paramCodePoint);
-	*(U32*)pReturnValue = (pos < 0)?paramCodePoint:UC_CaseUpper[pos];
-
+	*(U32*)pReturnValue = Char_ToUpperInvariant((U16)paramCodePoint);
 	return NULL;
 }

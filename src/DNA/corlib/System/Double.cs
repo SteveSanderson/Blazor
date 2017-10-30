@@ -31,7 +31,9 @@ namespace System {
 		public const double NegativeInfinity = -1.0d / 0.0d;
 		public const double PositiveInfinity = 1.0d / 0.0d;
 
+#pragma warning disable 0169, 0649
 		internal double m_value;
+#pragma warning restore 0169, 0649
 
 		public static bool IsNaN(double d) {
 #pragma warning disable 1718
@@ -61,27 +63,76 @@ namespace System {
 			return ((double)o) == this.m_value;
 		}
 
-		public override unsafe int GetHashCode() {
+		public override int GetHashCode() {
 			double d = m_value;
-			return (*((long*)&d)).GetHashCode();
+			return BitConverter.DoubleToInt64Bits(d).GetHashCode();
 		}
+
+		#region Parsing
+
+		public static double Parse(string s) {
+			return Parse(s, NumberStyles.Float, null);
+		}
+
+		public static double Parse(string s, NumberStyles style) {
+			return Parse(s, style, null);
+		}
+
+		public static double Parse(string s, IFormatProvider formatProvider) {
+			return Parse(s, NumberStyles.Float, formatProvider);
+		}
+
+		public static double Parse(string s, NumberStyles style, IFormatProvider formatProvider) {
+			if (s == null) {
+				throw new ArgumentNullException();
+			}
+			//TODO: use style and provider
+			int error = 0;
+			double result = s.InternalToDouble(out error);
+			if (error != 0) {
+				throw String.GetFormatException(error);
+			}
+			return result;
+		}
+
+		public static bool TryParse(string s, out double result) {
+			return TryParse(s, NumberStyles.Float, null, out result);
+		}
+
+		public static bool TryParse(string s, NumberStyles style, IFormatProvider provider, out double result) {
+			if (s == null) {
+				result = 0;
+				return false;
+			}
+			//TODO: use style and provider
+			int error;
+			result = s.InternalToDouble(out error);
+			return error == 0;
+		}
+
+		#endregion
+
+		#region ToString methods
 
 		public override string ToString() {
-			return ToString(null, null);
+			// return ToString(null, null);
+			return String.InternalFromDouble(this.m_value);
 		}
 
-		public string ToString(IFormatProvider fp) {
-			return ToString(null, fp);
+		public string ToString(IFormatProvider formatProvider) {
+			return ToString(null, formatProvider);
 		}
 
 		public string ToString(string format) {
 			return ToString(format, null);
 		}
 
-		public string ToString(string format, IFormatProvider fp) {
-			NumberFormatInfo nfi = NumberFormatInfo.GetInstance(fp);
+		public string ToString(string format, IFormatProvider formatProvider) {
+			NumberFormatInfo nfi = NumberFormatInfo.GetInstance(formatProvider);
 			return NumberFormatter.NumberToString(format, this.m_value, nfi);
 		}
+
+		#endregion
 
 		#region IComparable Members
 

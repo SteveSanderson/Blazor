@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 
 namespace System.Reflection
@@ -21,14 +22,12 @@ namespace System.Reflection
             }
             return result;
         }
-    }
 
-    internal struct InternalCustomAttributeInfo
-    {
-#pragma warning disable 0649
-        public Attribute UninitializedInstance;
-        public MethodBase ConstructorMethodBase;
-        public object[] ConstructorParams;
-#pragma warning restore 0649
+        public static IEnumerable<Attribute> GetCustomAttributes(this MemberInfo element, Type attributeType, bool inherit)
+        {
+            var attributes = GetCustomAttributes(element);
+            return attributes.Where(attr => attributeType.IsAssignableFrom(attr.GetType()));
+        }
+
     }
 }

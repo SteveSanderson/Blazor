@@ -28,25 +28,30 @@
 // instruction on x86 - so the results are in ticks, not seconds)
 
 // Count how many times each .NET method is called
-#undef DIAG_METHOD_CALLS
+//#define DIAG_METHOD_CALLS
+
+// Maintain and print a callstack buffer
+//#define DIAG_CALL_STACK
 
 // Measure how much time is spent in each .NET opcode
 // This only works on Windows
 // This is not currently implemented, after the change to threaded code
-#undef DIAG_OPCODE_TIMES
+//#define DIAG_OPCODE_TIMES
 
 // Count how many times each .NET opcode is used
 #ifdef _DEBUG
-#undef DIAG_OPCODE_USE
+//#define DIAG_OPCODE_USES
 #endif
 
 // Measure how much time is spent in the garbage collector
-#undef DIAG_GC
+//#define DIAG_GC
 
 // Measure how long the entire .NET programme execution takes
 #define DIAG_TOTAL_TIME
 
-
+#ifdef _DEBUG
+//#define DIAG_MEMORY_LEAKS
+#endif
 
 // Non-diagnostic stuff
 
@@ -57,5 +62,22 @@
 //#define GEN_COMBINED_OPCODES
 #define GEN_COMBINED_OPCODES_MAX_MEMORY 0x4000
 #define GEN_COMBINED_OPCODES_CALL_TRIGGER 20
+
+// Performance improvements
+
+// minor perf improvement: space vs speed trade-off
+// (disabled by default)
+#ifdef _DEBUG
+//#define STORE_HEAPENTRY_SIZE
+#endif
+
+// perf improvement: switch on JIT ops instead of labels
+// (enabled in WIN64 by default, but works well in 32-bit too)
+//#ifdef _WIN64
+#define SWITCH_ON_JIT_OP
+//#endif
+
+// disable GC completely (for perf testing/tuning)
+//#define NO_GC_WHATSOEVER
 
 #endif

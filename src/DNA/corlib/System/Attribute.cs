@@ -18,10 +18,24 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+using System.Collections.Generic;
+using System.Reflection;
+
 #if !LOCALTEST
 
 namespace System {
 	public abstract class Attribute {
+
+		public virtual object TypeId {
+			get {
+				return this.GetType();
+			}
+		}
+
+		public static IEnumerable<Attribute> GetCustomAttributes(MemberInfo element, bool inherit)
+		{
+			return null;
+		}
 	}
 }
 

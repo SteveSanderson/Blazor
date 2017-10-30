@@ -29,10 +29,13 @@
 U32 MetaData_CompareNameAndSig(STRING name, BLOB_ sigBlob, tMetaData *pSigMetaData, tMD_TypeDef **ppSigClassTypeArgs, tMD_TypeDef **ppSigMethodTypeArgs, tMD_MethodDef *pMethod, tMD_TypeDef **ppMethodClassTypeArgs, tMD_TypeDef **ppMethodMethodTypeArgs) {
 	if (strcmp(name, pMethod->name) == 0) {
 		SIG sig, thisSig;
-		U32 e, thisE, paramCount, i;
+		U32 e, thisE, paramCount, i, isGeneric, isSame;
 
 		sig = MetaData_GetBlob(sigBlob, NULL);
 		thisSig = MetaData_GetBlob(pMethod->signature, NULL);
+
+		// if signatures match
+		isSame = strcmp(sig, thisSig) == 0;
 
 		e = MetaData_DecodeSigEntry(&sig);
 		thisE = MetaData_DecodeSigEntry(&thisSig);
@@ -42,7 +45,8 @@ U32 MetaData_CompareNameAndSig(STRING name, BLOB_ sigBlob, tMetaData *pSigMetaDa
 		}
 
 		// If method has generic arguments, check the generic type argument count
-		if (e & SIG_METHODDEF_GENERIC) {
+		isGeneric = e & SIG_CALLCONV_GENERIC;
+		if (isGeneric) {
 			e = MetaData_DecodeSigEntry(&sig);
 			thisE = MetaData_DecodeSigEntry(&thisSig);
 			// Generic argument count
@@ -63,8 +67,8 @@ U32 MetaData_CompareNameAndSig(STRING name, BLOB_ sigBlob, tMetaData *pSigMetaDa
 		for (i=0; i<paramCount; i++) {
 			tMD_TypeDef *pParamType, *pThisParamType;
 
-			pParamType = Type_GetTypeFromSig(pSigMetaData, &sig, ppSigClassTypeArgs, ppSigMethodTypeArgs);
-			pThisParamType = Type_GetTypeFromSig(pMethod->pMetaData, &thisSig, ppMethodClassTypeArgs, ppMethodMethodTypeArgs);
+			pParamType = Type_GetTypeFromSig(pSigMetaData, &sig, ppSigClassTypeArgs, NULL); // ppSigMethodTypeArgs);
+			pThisParamType = Type_GetTypeFromSig(pMethod->pMetaData, &thisSig, ppMethodClassTypeArgs, NULL); // ppMethodMethodTypeArgs);
 			if (pParamType != pThisParamType) {
 				return 0;
 			}
@@ -75,18 +79,20 @@ U32 MetaData_CompareNameAndSig(STRING name, BLOB_ sigBlob, tMetaData *pSigMetaDa
 	return 0;
 }
 
-static tMD_MethodDef* FindMethodInType(tMD_TypeDef *pTypeDef, STRING name, tMetaData *pSigMetaData, BLOB_ sigBlob, tMD_TypeDef **ppClassTypeArgs, tMD_TypeDef **ppMethodTypeArgs) {
-	U32 i;
-	tMD_TypeDef *pLookInType = pTypeDef;
+tMD_MethodDef* FindMethodInType(tMD_TypeDef *pTypeDef, STRING name, tMetaData *pSigMetaData, BLOB_ sigBlob, tMD_TypeDef **ppClassTypeArgs, tMD_TypeDef **ppMethodTypeArgs) {
 
-	do {
-		for (i=0; i<pLookInType->numMethods; i++) {
-			if (MetaData_CompareNameAndSig(name, sigBlob, pSigMetaData, ppClassTypeArgs, ppMethodTypeArgs, pLookInType->ppMethods[i], pLookInType->ppClassTypeArgs, ppMethodTypeArgs)) {
-				return pLookInType->ppMethods[i];
+	//dprintfn("Find method %s in type %s.%s", name, pTypeDef->nameSpace, pTypeDef->name);
+
+	tMD_TypeDef *pLookInType = pTypeDef;
+	while (pLookInType != NULL) {
+		for (U32 i=0; i<pLookInType->numMethods; i++) {
+			tMD_MethodDef *pMethodDef = pLookInType->ppMethods[i];
+			if (MetaData_CompareNameAndSig(name, sigBlob, pSigMetaData, ppClassTypeArgs, ppMethodTypeArgs, pMethodDef, pMethodDef->pParentType->ppClassTypeArgs, pMethodDef->ppMethodTypeArgs)) {
+				return pMethodDef;
 			}
 		}
 		pLookInType = pLookInType->pParent;
-	} while (pLookInType != NULL);
+	}
 
 	{
 		// Error reporting!!
@@ -99,10 +105,10 @@ static tMD_MethodDef* FindMethodInType(tMD_TypeDef *pTypeDef, STRING name, tMeta
 		*pMsg = 0;
 		sig = MetaData_GetBlob(sigBlob, &i);
 		entry = MetaData_DecodeSigEntry(&sig);
-		if ((entry & SIG_METHODDEF_HASTHIS) == 0) {
+		if ((entry & SIG_CALLCONV_HASTHIS) == 0) {
 			sprintf(strchr(pMsg, 0), "static ");
 		}
-		if (entry & SIG_METHODDEF_GENERIC) {
+		if (entry & SIG_CALLCONV_GENERIC) {
 			// read number of generic type args - don't care what it is
 			MetaData_DecodeSigEntry(&sig);
 		}
@@ -118,7 +124,7 @@ static tMD_MethodDef* FindMethodInType(tMD_TypeDef *pTypeDef, STRING name, tMeta
 				sprintf(strchr(pMsg, 0), ",");
 			}
 			if (pParamTypeDef != NULL) {
-				sprintf(strchr(pMsg, 0), pParamTypeDef->name);
+				sprintf(strchr(pMsg, 0), "%s", pParamTypeDef->name);
 			} else {
 				sprintf(strchr(pMsg, 0), "???");
 			}
@@ -128,12 +134,45 @@ static tMD_MethodDef* FindMethodInType(tMD_TypeDef *pTypeDef, STRING name, tMeta
 	FAKE_RETURN;
 }
 
+// Find the method that has been overridden by pMethodDef.
+// This is to get the correct vTable offset for the method.
+// This must search the MethodImpl table to see if the default inheritence rules are being overridden.
+// Return NULL if this method does not override anything.
+tMD_MethodDef* FindVirtualOverriddenMethod(tMD_TypeDef *pTypeDef, tMD_MethodDef *pMethodDef) {
+	do {
+		// Search MethodImpl table
+		U32 top = pTypeDef->pMetaData->tables.numRows[MD_TABLE_METHODIMPL];
+		for (U32 i = top; i > 0; i--) {
+			tMD_MethodImpl *pMethodImpl = (tMD_MethodImpl*)MetaData_GetTableRow(pTypeDef->pMetaData, MAKE_TABLE_INDEX(MD_TABLE_METHODIMPL, i));
+			if (pMethodImpl->class_ == pTypeDef->tableIndex) {
+				tMD_MethodDef *pMethodDeclDef = MetaData_GetMethodDefFromDefRefOrSpec(pTypeDef->pMetaData, pMethodImpl->methodDeclaration, pTypeDef->ppClassTypeArgs, pMethodDef->ppMethodTypeArgs);
+				if (pMethodDeclDef->tableIndex == pMethodDef->tableIndex) {
+					IDX_TABLE methodToken = pMethodImpl->methodBody;
+					tMD_MethodDef *pMethod = (tMD_MethodDef*)MetaData_GetTableRow(pTypeDef->pMetaData, methodToken);
+					return pMethod;
+				}
+			}
+		}
+
+		// Use normal inheritence rules
+		// It must be a virtual method that's being overridden.
+		for (U32 i = pTypeDef->numVirtualMethods - 1; i != 0xffffffff; i--) {
+			tMD_MethodDef *pVirtualMethodDef = pTypeDef->pVTable[i];
+			if (MetaData_CompareNameAndSig(pMethodDef->name, pMethodDef->signature, pMethodDef->pMetaData, pMethodDef->pParentType->ppClassTypeArgs, pMethodDef->ppMethodTypeArgs, pVirtualMethodDef, pTypeDef->ppClassTypeArgs, pVirtualMethodDef->ppMethodTypeArgs)) {
+				return pTypeDef->pVTable[i];
+			}
+		}
+		pTypeDef = pTypeDef->pParent;
+	} while (pTypeDef != NULL);
+
+	return NULL;
+}
+
 static tMD_FieldDef* FindFieldInType(tMD_TypeDef *pTypeDef, STRING name) {
-	U32 i;
 
 	MetaData_Fill_TypeDef(pTypeDef, NULL, NULL);
 
-	for (i=0; i<pTypeDef->numFields; i++) {
+	for (U32 i=0; i<pTypeDef->numFields; i++) {
 		if (strcmp(pTypeDef->ppFields[i]->name, name) == 0) {
 			return pTypeDef->ppFields[i];
 		}
@@ -168,9 +207,9 @@ tMetaData* MetaData_GetResolutionScopeMetaData(tMetaData *pMetaData, IDX_TABLE r
 }
 
 tMD_TypeDef* MetaData_GetTypeDefFromName(tMetaData *pMetaData, STRING nameSpace, STRING name, tMD_TypeDef *pInNestedClass, U8 assertExists) {
-	U32 i;
 
-	for (i=1; i<=pMetaData->tables.numRows[MD_TABLE_TYPEDEF]; i++) {
+	U32 rows = pMetaData->tables.numRows[MD_TABLE_TYPEDEF];
+	for (U32 i=1; i<=rows; i++) {
 		tMD_TypeDef *pTypeDef;
 
 		pTypeDef = (tMD_TypeDef*)MetaData_GetTableRow(pMetaData, MAKE_TABLE_INDEX(MD_TABLE_TYPEDEF, i));
@@ -236,7 +275,7 @@ tMD_TypeDef* MetaData_GetTypeDefFromDefRefOrSpec(tMetaData *pMetaData, IDX_TABLE
 				sig = MetaData_GetBlob(pTypeSpec->signature, NULL);
 				pTypeDef = Type_GetTypeFromSig(pTypeSpec->pMetaData, &sig, ppClassTypeArgs, ppMethodTypeArgs);
 				// Note: Cannot cache the TypeDef for this TypeSpec because it
-				// can change depending on class arguemnts given.
+				// can change depending on class arguments given.
 
 				return pTypeDef;
 			}
@@ -248,11 +287,8 @@ tMD_TypeDef* MetaData_GetTypeDefFromDefRefOrSpec(tMetaData *pMetaData, IDX_TABLE
 }
 
 tMD_TypeDef* MetaData_GetTypeDefFromMethodDef(tMD_MethodDef *pMethodDef) {
-	tMetaData *pMetaData;
-	U32 i;
-
-	pMetaData = pMethodDef->pMetaData;
-	for (i=pMetaData->tables.numRows[MD_TABLE_TYPEDEF]; i>0; i--) {
+	tMetaData *pMetaData = pMethodDef->pMetaData;
+	for (U32 i=pMetaData->tables.numRows[MD_TABLE_TYPEDEF]; i>0; i--) {
 		tMD_TypeDef *pTypeDef;
 
 		pTypeDef = (tMD_TypeDef*)MetaData_GetTableRow(pMetaData, MAKE_TABLE_INDEX(MD_TABLE_TYPEDEF, i));
@@ -266,11 +302,8 @@ tMD_TypeDef* MetaData_GetTypeDefFromMethodDef(tMD_MethodDef *pMethodDef) {
 }
 
 tMD_TypeDef* MetaData_GetTypeDefFromFieldDef(tMD_FieldDef *pFieldDef) {
-	tMetaData *pMetaData;
-	U32 i;
-
-	pMetaData = pFieldDef->pMetaData;
-	for (i=pMetaData->tables.numRows[MD_TABLE_TYPEDEF]; i>0; i--) {
+	tMetaData *pMetaData = pFieldDef->pMetaData;
+	for (U32 i=pMetaData->tables.numRows[MD_TABLE_TYPEDEF]; i>0; i--) {
 		tMD_TypeDef *pTypeDef;
 
 		pTypeDef = (tMD_TypeDef*)MetaData_GetTableRow(pMetaData, MAKE_TABLE_INDEX(MD_TABLE_TYPEDEF, i));
@@ -339,10 +372,11 @@ tMD_MethodDef* MetaData_GetMethodDefFromDefRefOrSpec(tMetaData *pMetaData, IDX_T
 
 tMD_FieldDef* MetaData_GetFieldDefFromDefOrRef(tMetaData *pMetaData, IDX_TABLE token, tMD_TypeDef **ppClassTypeArgs, tMD_TypeDef **ppMethodTypeArgs) {
 	void *pTableEntry;
-
 	pTableEntry = MetaData_GetTableRow(pMetaData, token);
-	if (((tMDC_ToFieldDef*)pTableEntry)->pFieldDef != NULL) {
-		return ((tMDC_ToFieldDef*)pTableEntry)->pFieldDef;
+
+	tMD_FieldDef *pFieldDef = ((tMDC_ToFieldDef*)pTableEntry)->pFieldDef;
+	if (pFieldDef != NULL) {
+		return pFieldDef;
 	}
 
 	switch (TABLE_ID(token)) {
@@ -452,9 +486,8 @@ field:
 }
 
 tMD_ImplMap* MetaData_GetImplMap(tMetaData *pMetaData, IDX_TABLE memberForwardedToken) {
-	U32 i;
 
-	for (i=pMetaData->tables.numRows[MD_TABLE_IMPLMAP]; i >= 1; i--) {
+	for (U32 i=pMetaData->tables.numRows[MD_TABLE_IMPLMAP]; i >= 1; i--) {
 		tMD_ImplMap *pImplMap = (tMD_ImplMap*)MetaData_GetTableRow(pMetaData, MAKE_TABLE_INDEX(MD_TABLE_IMPLMAP, i));
 		if (pImplMap->memberForwarded == memberForwardedToken) {
 			return pImplMap;

@@ -54,3 +54,21 @@ tAsyncCall* System_Math_Sqrt(PTR pThis_, PTR pParams, PTR pReturnValue) {
 
 	return NULL;
 }
+
+tAsyncCall* System_Math_Ceiling(PTR pThis_, PTR pParams, PTR pReturnValue) {
+	*(double*)pReturnValue = ceil(INTERNALCALL_PARAM(0, double));
+
+	return NULL;
+}
+
+tAsyncCall* System_Math_Floor(PTR pThis_, PTR pParams, PTR pReturnValue) {
+	*(double*)pReturnValue = floor(INTERNALCALL_PARAM(0, double));
+
+	return NULL;
+}
+
+tAsyncCall* System_Math_Round(PTR pThis_, PTR pParams, PTR pReturnValue) {
+	*(double*)pReturnValue = round(INTERNALCALL_PARAM(0, double));
+
+	return NULL;
+}
