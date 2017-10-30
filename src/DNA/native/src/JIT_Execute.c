@@ -39,7 +39,7 @@
 #include "System.Diagnostics.Debugger.h"
 
 #ifdef SWITCH_ON_JIT_OP
-// Disable warning about unreferenced label
+// Disable warning about unreferenced labels
 #pragma warning(disable:4102)
 #else
 // Global array which stores the absolute addresses of the start and end of all JIT code
@@ -125,9 +125,23 @@ tJITCodeInfo jitCodeGoNext;
 	pOpSequencePoints = pJIT->pOpSequencePoints; \
 	pCurOp = pOps + pCurrentMethodState->ipOffset
 
+#ifdef DIAG_CALL_STACK
+I32 nested = 0;
+char callBuffer[8192] = ""; //increase if needed
+char *pNextChar = callBuffer;
+
+#define INCREMENT_NESTED_LEVEL() nested = nested + 1
+#define DECREMENT_NESTED_LEVEL() nested = nested - 1
+#else
+#define INCREMENT_NESTED_LEVEL()
+#define DECREMENT_NESTED_LEVEL()
+#endif
+
 #define CHANGE_METHOD_STATE(pNewMethodState) \
-	SAVE_METHOD_STATE(); \
-	pThread->pCurrentMethodState = pNewMethodState; \
+	if (pThread->pCurrentMethodState != pNewMethodState) { \
+		SAVE_METHOD_STATE(); \
+		pThread->pCurrentMethodState = pNewMethodState; \
+	} \
 	LOAD_METHOD_STATE()
 
 // Easy access to method parameters and local variables
@@ -146,20 +160,15 @@ static void CheckIfCurrentInstructionHasBreakpoint(tMethodState* pMethodState, U
 	}
 }
 
-// Note: newObj is only set if a constructor is being called
-static void CreateParameters(PTR pParamsLocals, tMD_MethodDef *pCallMethod, PTR *ppCurEvalStack, HEAP_PTR newObj) {
-	U32 ofs;
-
-	if (newObj != NULL) {
-		// If this is being called from JIT_NEW_OBJECT then need to specially push the new object
-		// onto parameter stack position 0
-		*(HEAP_PTR*)pParamsLocals = newObj;
-		ofs = 4;
-	} else {
-		ofs = 0;
+static void CopyParameters(PTR pParamsLocals, tMD_MethodDef *pCallMethod, PTR pParamsOrigin, HEAP_PTR obj) {
+	if (pParamsLocals != pParamsOrigin) {
+		memmove(pParamsLocals, pParamsOrigin, pCallMethod->parameterStackSize);
 	}
-	*ppCurEvalStack -= pCallMethod->parameterStackSize - ofs;
-	memcpy(pParamsLocals + ofs, *ppCurEvalStack, pCallMethod->parameterStackSize - ofs);
+	// Note: obj is only set if a constructor or delegate is being called
+	if (obj != NULL) {
+		// push the object onto parameter stack position 0
+		*(HEAP_PTR*)pParamsLocals = obj;
+	}
 }
 
 static tMethodState* RunFinalizer(tThread *pThread) {
@@ -169,7 +178,7 @@ static tMethodState* RunFinalizer(tThread *pThread) {
 		tMethodState *pFinalizerMethodState;
 		tMD_TypeDef *pFinalizerType = Heap_GetType(heapPtr);
 
-		pFinalizerMethodState = MethodState_Direct(pThread, pFinalizerType->pFinalizer, pThread->pCurrentMethodState, 0);
+		pFinalizerMethodState = MethodState_Direct(pThread, pFinalizerType->pFinalizer, pThread->pCurrentMethodState, 0, 0);
 		// Mark this methodState as a Finalizer
 		pFinalizerMethodState->finalizerThis = heapPtr;
 		// Put the object on the stack (the object that is being Finalized)
@@ -290,21 +299,12 @@ U32 JIT_Execute(tThread *pThread, U32 numInst) {
 	register U32 *pCurOp;
 	// Pointer to eval-stack position
 	register PTR pCurEvalStack;
-	PTR pTempPtr;
 
 	U32 op;
-	//I32 padding = 0;
 	// General purpose variables
-	//I32 i32Value;
-	U32 u32Value; //, u32Value2;
-	//U64 u64Value;
-	//double dValue;
-	//float fValue;
-	//uConvDouble convDouble;
-	U32 ofs;
+	U32 u32Value;
 	HEAP_PTR heapPtr;
-	PTR pMem;
-
+	
 	if (pThread == NULL) {
 
 #ifdef SWITCH_ON_JIT_OP
@@ -318,6 +318,7 @@ U32 JIT_Execute(tThread *pThread, U32 numInst) {
 goNext:
 	CHECK_FOR_BREAKPOINT();
 	op = GET_OP();
+
 	switch (op) {
 
 #else
@@ -344,6 +345,7 @@ goNext:
 		GET_LABELS_DYNAMIC(JIT_LOAD_I32, 4);
 		GET_LABELS(JIT_BRANCH);
 		GET_LABELS(JIT_LOAD_STRING);
+		GET_LABELS(JIT_TAILCALL_PREFIX);
 		GET_LABELS(JIT_CALLVIRT_O);
 		GET_LABELS(JIT_CALL_NATIVE);
 		GET_LABELS(JIT_CALL_O);
@@ -705,6 +707,11 @@ JIT_CONV_U64_I64_end:
 JIT_GoNext_start:
 	GO_NEXT();
 JIT_GoNext_end:
+
+JIT_TAILCALL_PREFIX_start:
+	OPCODE_USE(JIT_TAILCALL_PREFIX);
+JIT_TAILCALL_PREFIX_end:
+	GO_NEXT();
 
 JIT_LOAD_NULL_start:
 	OPCODE_USE(JIT_LOAD_NULL);
@@ -1102,6 +1109,13 @@ JIT_CALL_NATIVE_start:
 		// Internal constructors MUST leave the newly created object in the return value
 		// (ie on top of the evaluation stack)
 		pAsync = pCallNative->fn(pThis, pCurrentMethodState->pParamsLocals + thisOfs, pCurrentMethodState->pEvalStack);
+		// push return value
+		if (pCallNative->pMethodDef->pReturnType != NULL) {
+			PUSH(pCallNative->pMethodDef->pReturnType->stackSize);
+		} else if (pCurrentMethodState->isInternalNewObjCall) {
+			PUSH(sizeof(void*));
+		}
+
 		if (pAsync != NULL) {
 			// Save the method state
 			SAVE_METHOD_STATE();
@@ -1121,8 +1135,9 @@ JIT_CALL_NATIVE_end:
 
 JIT_RETURN_start:
 	OPCODE_USE(JIT_RETURN);
-	//padding = max(padding - 1, 0);
 	// dprintfn("Returned from %s() to %s()", pCurrentMethodState->pMethod->name, (pCurrentMethodState->pCaller)?pCurrentMethodState->pCaller->pMethod->name:(STRING)"<none>");
+	DECREMENT_NESTED_LEVEL();
+
 	if (pCurrentMethodState->pCaller == NULL) {
 		// End of thread!
 		if (pCurrentMethodState->pMethod->pReturnType == types[TYPE_SYSTEM_INT32]) {
@@ -1139,8 +1154,9 @@ JIT_RETURN_start:
 	} else {
 		u32Value = 0;
 	}
-	pMem = pCurrentMethodState->pEvalStack;
 	{
+		Assert(pCurEvalStack - u32Value >= pCurrentMethodState->pEvalStack);
+		PTR pMem = pCurEvalStack - u32Value;
 		tMethodState *pOldMethodState = pCurrentMethodState;
 		pThread->pCurrentMethodState = pCurrentMethodState->pCaller;
 		LOAD_METHOD_STATE();
@@ -1162,10 +1178,9 @@ JIT_INVOKE_DELEGATE_start:
 	OPCODE_USE(JIT_INVOKE_DELEGATE);
 	{
 		tMD_MethodDef *pDelegateMethod, *pCallMethod;
+		tMethodState *pCallMethodState;
 		void *pDelegate;
 		HEAP_PTR pDelegateThis;
-		tMethodState *pCallMethodState;
-		U32 ofs;
 
 		if (pCurrentMethodState->pNextDelegate == NULL) {
 			// First delegate, so get the Invoke() method defined within the delegate class
@@ -1174,12 +1189,12 @@ JIT_INVOKE_DELEGATE_start:
 			//pCurrentMethodState->stackOfs -= pDelegateMethod->parameterStackSize;
 			POP(pDelegateMethod->parameterStackSize);
 			// Allocate memory for delegate params
-			pCurrentMethodState->pDelegateParams = malloc(pDelegateMethod->parameterStackSize - sizeof(void*));
+			pCurrentMethodState->pDelegateParams = malloc(pDelegateMethod->parameterStackSize);
 			memcpy(
 				pCurrentMethodState->pDelegateParams,
 				//pCurrentMethodState->pEvalStack + pCurrentMethodState->stackOfs + sizeof(void*),
-				pCurEvalStack + sizeof(void*),
-				pDelegateMethod->parameterStackSize - sizeof(void*));
+				pCurEvalStack,
+				pDelegateMethod->parameterStackSize);
 			// Get the actual delegate heap pointer
 			pDelegate = *(void**)pCurEvalStack;
 		} else {
@@ -1195,17 +1210,14 @@ JIT_INVOKE_DELEGATE_start:
 		}
 		// Get the real method to call; the target of the delegate.
 		pCallMethod = Delegate_GetMethodAndStore(pDelegate, &pDelegateThis, &pCurrentMethodState->pNextDelegate);
+
 		// Set up the call method state for the call.
-		pCallMethodState = MethodState_Direct(pThread, pCallMethod, pCurrentMethodState, 0);
-		if (pDelegateThis != NULL) {
-			*(HEAP_PTR*)pCallMethodState->pParamsLocals = pDelegateThis;
-			ofs = sizeof(void*);
-		} else {
-			ofs = 0;
-		}
-		memcpy(pCallMethodState->pParamsLocals + ofs,
-			pCurrentMethodState->pDelegateParams,
-			pCallMethod->parameterStackSize - ofs);
+		INCREMENT_NESTED_LEVEL();
+		pCallMethodState = MethodState_Direct(pThread, pCallMethod, pCurrentMethodState, 0, 0);
+		// Fill in the parameters
+		CopyParameters(pCallMethodState->pParamsLocals, pCallMethod, pCurrentMethodState->pDelegateParams, pDelegateThis);
+
+		// Set up the local variables for the new method state
 		CHANGE_METHOD_STATE(pCallMethodState);
 	}
 JIT_INVOKE_DELEGATE_end:
@@ -1214,6 +1226,9 @@ JIT_INVOKE_DELEGATE_end:
 JIT_INVOKE_SYSTEM_REFLECTION_METHODBASE_start:
 	OPCODE_USE(JIT_INVOKE_SYSTEM_REFLECTION_METHODBASE);
 	{
+		// check if it's a tail call
+		U32 isTailCall = *(pCurOp - 2) == JIT_TAILCALL_PREFIX;
+
 		// Get the reference to MethodBase.Invoke
 		tMD_MethodDef *pInvokeMethod = (tMD_MethodDef*)GET_OP();
 
@@ -1233,8 +1248,15 @@ JIT_INVOKE_SYSTEM_REFLECTION_METHODBASE_start:
 		PTR invocationThis = *(PTR*)(pCurEvalStack + sizeof(HEAP_PTR));
 		HEAP_PTR invocationParamsArray = *(HEAP_PTR*)(pCurEvalStack + sizeof(HEAP_PTR) + sizeof(PTR));
 
+		// Change interpreter state so we continue execution inside the method being invoked
+		tMethodState *pCallMethodState = MethodState_Direct(pThread, pCallMethod, pCurrentMethodState, 0, isTailCall);
+
+		// store current eval stack ptr for later
+		PTR pLastEvalStack = pCurEvalStack;
+		// use eval stack ptr to copy parameters to paramslocals
+		pCurEvalStack = pCallMethodState->pParamsLocals;
+
 		// Put the new 'this' on the stack
-		PTR pPrevEvalStack = pCurEvalStack;
 		if (invocationThis != NULL) {
 			PUSH_PTR(invocationThis);
 		}
@@ -1253,11 +1275,11 @@ JIT_INVOKE_SYSTEM_REFLECTION_METHODBASE_start:
 				}
 			}
 		}
-		pCurEvalStack = pPrevEvalStack;
 
-		// Change interpreter state so we continue execution inside the method being invoked
-		tMethodState *pCallMethodState = MethodState_Direct(pThread, pCallMethod, pCurrentMethodState, 0);
-		memcpy(pCallMethodState->pParamsLocals, pCurEvalStack, pCallMethod->parameterStackSize);
+		// restore current eval stack ptr
+		pCurEvalStack = pLastEvalStack;
+
+		// Set up the local variables for the new method state
 		CHANGE_METHOD_STATE(pCallMethodState);
 	}
 JIT_INVOKE_SYSTEM_REFLECTION_METHODBASE_end:
@@ -1300,6 +1322,7 @@ JIT_CALL_O_start:
 	goto allCallStart;
 JIT_CALL_INTERFACE_start:
 	op = JIT_CALL_INTERFACE;
+	goto allCallStart;
 allCallStart:
 	OPCODE_USE(op);
 	{
@@ -1307,33 +1330,39 @@ allCallStart:
 		tMethodState *pCallMethodState;
 		tMD_TypeDef *pBoxCallType;
 
+		// check if it's a tail call
+		U32 isTailCall = *(pCurOp - 2) == JIT_TAILCALL_PREFIX;
+
 		if (op == JIT_BOX_CALLVIRT) {
 			pBoxCallType = (tMD_TypeDef*)GET_OP();
 		}
 
 		pCallMethod = (tMD_MethodDef*)GET_OP();
-		//for (I32 i = padding++; i >= 0; i--) { printf("|"); }
-		//printf(" %s.%s\n", pCallMethod->pParentType->name, pCallMethod->name);
 		//dprintfn("Calling method: %s", Sys_GetMethodDesc(pCallMethod));
+
+#ifdef DIAG_CALL_STACK
+		for (I32 i = nested/10; i > 0; i--) { *pNextChar++ = '*'; } // (optional) print call nested level, each '*' is 10 levels
+		for (I32 i = nested%10; i > 0; i--) { *pNextChar++ = '|'; } // (optional) print call nested level, each '|' is 1 level
+		I32 n = sizeof(callBuffer) - (pNextChar - callBuffer); // space left in buffer
+		I32 c = snprintf(pNextChar, n, "%d %s.%s\n", nested, pCallMethod->pParentType->name, pCallMethod->name);
+		pNextChar = (c >= 0 && c < n && (n-c) > 200) ? pNextChar + c : callBuffer; // circular buffer
+#endif
+
 		heapPtr = NULL;
+		PTR pMem = pCurEvalStack - pCallMethod->parameterStackSize;
+		Assert(pMem >= pCurrentMethodState->pEvalStack);
 
 		if (op == JIT_BOX_CALLVIRT) {
 			// Need to de-ref and box the value-type before calling the function
 			// TODO: Will this work on value-types that are not 4 bytes long?
-			pMem = pCurEvalStack - pCallMethod->parameterStackSize;
 			heapPtr = Heap_Box(pBoxCallType, *(PTR*)pMem);
 			*(HEAP_PTR*)pMem = heapPtr;
 		} else if (op == JIT_DEREF_CALLVIRT) {
-			pMem = pCurEvalStack - pCallMethod->parameterStackSize;
 			heapPtr = **(HEAP_PTR**)pMem;
 			*(HEAP_PTR*)pMem = heapPtr;
-		}
-
-		// Get the actual object that is becoming 'this'
-		if (heapPtr == NULL) {
-			Assert(pCurEvalStack - pCallMethod->parameterStackSize >= pCurrentMethodState->pEvalStack);
-			heapPtr = *(HEAP_PTR*)(pCurEvalStack - pCallMethod->parameterStackSize);
-			Assert(METHOD_ISSTATIC(pCallMethod) || heapPtr != NULL);
+		} else if (!METHOD_ISSTATIC(pCallMethod)) {
+			// Get the actual object that is becoming 'this'
+			heapPtr = *(HEAP_PTR*)pMem;
 		}
 
 		// If it's a virtual call then find the real correct method to call
@@ -1355,7 +1384,7 @@ allCallStart:
 				}
 				//dprintfn("Calling virtual method: %s", pCallMethod->name);
 			}
-		} else if (op == JIT_CALL_INTERFACE && heapPtr != NULL) {
+		} else if (op == JIT_CALL_INTERFACE) {
 			tMD_TypeDef *pThisType = Heap_GetType(heapPtr);
 			tMD_TypeDef *pInterface = pCallMethod->pParentType;
 
@@ -1380,11 +1409,11 @@ allCallStart:
 		}
 callMethodSet:
 		// Set up the new method state for the called method
-		pCallMethodState = MethodState_Direct(pThread, pCallMethod, pCurrentMethodState, 0);
+		INCREMENT_NESTED_LEVEL();
+		pCallMethodState = MethodState_Direct(pThread, pCallMethod, pCurrentMethodState, 0, isTailCall);
 		// Set up the parameter stack for the method being called
-		pTempPtr = pCurEvalStack;
-		CreateParameters(pCallMethodState->pParamsLocals, pCallMethod, &/*pCurEvalStack*/pTempPtr, NULL);
-		pCurEvalStack = pTempPtr;
+		POP(pCallMethod->parameterStackSize);
+		CopyParameters(pCallMethodState->pParamsLocals, pCallMethod, pCurEvalStack, NULL);
 		// Set up the local variables for the new method state
 		CHANGE_METHOD_STATE(pCallMethodState);
 	}
@@ -2586,7 +2615,7 @@ JIT_CONV_R64_U32_end:
 JIT_CONV_R64_I64_start:
 	OPCODE_USE(JIT_CONV_R64_I64);
 	{
-		float value = POP_FLOAT();
+		double value = POP_DOUBLE();
 		PUSH_U64((I64)value);
 	}
 JIT_CONV_R64_I64_end:
@@ -2653,34 +2682,36 @@ JIT_NEWOBJECT_start:
 	OPCODE_USE(JIT_NEWOBJECT);
 	{
 		tMD_MethodDef *pConstructorDef;
-		HEAP_PTR obj;
 		tMethodState *pCallMethodState;
-		U32 isInternalConstructor;
-		PTR pTempPtr;
+		HEAP_PTR obj = NULL;
 
 		pConstructorDef = (tMD_MethodDef*)GET_OP();
-		isInternalConstructor = (pConstructorDef->implFlags & METHODIMPLATTRIBUTES_INTERNALCALL) != 0;
+		U32 isInternalConstructor = (pConstructorDef->implFlags & METHODIMPLATTRIBUTES_INTERNALCALL) != 0;
 
+		// All internal constructors MUST allocate their own 'this' objects
 		if (!isInternalConstructor) {
-			// All internal constructors MUST allocate their own 'this' objects
 			obj = Heap_AllocType(pConstructorDef->pParentType);
-		} else {
-			// Need to set this to something non-NULL so that CreateParameters() works properly
-			obj = (HEAP_PTR)-1;
 		}
+
+#ifdef DIAG_METHOD_CALLS
+		pCurrentMethodState->pMethod->heapAlloc++;
+#endif
 
 		// Set up the new method state for the called method
-		pCallMethodState = MethodState_Direct(pThread, pConstructorDef, pCurrentMethodState, isInternalConstructor);
+		INCREMENT_NESTED_LEVEL();
+		pCallMethodState = MethodState_Direct(pThread, pConstructorDef, pCurrentMethodState, isInternalConstructor, 0);
 		// Fill in the parameters
-		pTempPtr = pCurEvalStack;
-		CreateParameters(pCallMethodState->pParamsLocals, pConstructorDef, &pTempPtr, obj);
-		pCurEvalStack = pTempPtr;
+		POP(pConstructorDef->parameterStackSize);
+		CopyParameters(pCallMethodState->pParamsLocals, pConstructorDef, pCurEvalStack, obj);
+		PUSH(sizeof(HEAP_PTR));
+
+		// Push the object here, so it's on the stack when the constructor returns
 		if (!isInternalConstructor) {
-			// Push the object here, so it's on the stack when the constructor returns
 			PUSH_O(obj);
 		}
-		// Set up the local variables for the new method state (for the obj constructor)
+		// Set up the local variables for the new method state
 		CHANGE_METHOD_STATE(pCallMethodState);
+
 		// Run any pending Finalizers
 		RUN_FINALIZER();
 	}
@@ -2693,22 +2724,26 @@ JIT_NEWOBJECT_VALUETYPE_start:
 		tMD_MethodDef *pConstructorDef;
 		tMethodState *pCallMethodState;
 		U32 isInternalConstructor;
-		PTR pTempPtr, pMem;
 
 		pConstructorDef = (tMD_MethodDef*)GET_OP();
 		isInternalConstructor = (pConstructorDef->implFlags & METHODIMPLATTRIBUTES_INTERNALCALL) != 0;
 
 		// Allocate space on the eval-stack for the new value-type here
-		pMem = pCurEvalStack - (pConstructorDef->parameterStackSize - sizeof(PTR));
+		PTR pMem = pCurEvalStack - (pConstructorDef->parameterStackSize - sizeof(PTR));
+		Assert(pMem >= pCurrentMethodState->pEvalStack);
 
 		// Set up the new method state for the called method
-		pCallMethodState = MethodState_Direct(pThread, pConstructorDef, pCurrentMethodState, isInternalConstructor);
+		INCREMENT_NESTED_LEVEL();
+		pCallMethodState = MethodState_Direct(pThread, pConstructorDef, pCurrentMethodState, isInternalConstructor, 0);
 		// Fill in the parameters
-		pTempPtr = pCurEvalStack;
-		CreateParameters(pCallMethodState->pParamsLocals, pConstructorDef, &pTempPtr, pMem);
-		pCurEvalStack = pTempPtr;
+		POP(pConstructorDef->parameterStackSize);
+		CopyParameters(pCallMethodState->pParamsLocals, pConstructorDef, pCurEvalStack, pMem);
+		PUSH(sizeof(PTR));
+
 		// Set the stack state so it's correct for the constructor return
-		PUSH(pConstructorDef->pParentType->stackSize);
+		if (!isInternalConstructor) {
+			PUSH(pConstructorDef->pParentType->stackSize);
+		}
 		// Set up the local variables for the new method state
 		CHANGE_METHOD_STATE(pCallMethodState);
 		// Run any pending Finalizers
@@ -2794,7 +2829,7 @@ JIT_LOAD_ELEMENT_I8_start:
 	OPCODE_USE(JIT_LOAD_ELEMENT_I8);
 	{
 		U32 value, idx = POP_U32(); // Array index
-		HEAP_PTR heapPtr = POP_O();
+		HEAP_PTR heapPtr = POP_O(); // Array object
 		SystemArray_LoadElement(heapPtr, idx, (PTR)&value);
 		PUSH_U32((I8)value);
 	}
@@ -2805,7 +2840,7 @@ JIT_LOAD_ELEMENT_U8_start:
 	OPCODE_USE(JIT_LOAD_ELEMENT_U8);
 	{
 		U32 value, idx = POP_U32(); // Array index
-		HEAP_PTR heapPtr = POP_O();
+		HEAP_PTR heapPtr = POP_O(); // Array object
 		SystemArray_LoadElement(heapPtr, idx, (PTR)&value);
 		PUSH_U32((U8)value);
 	}
@@ -2816,7 +2851,7 @@ JIT_LOAD_ELEMENT_I16_start:
 	OPCODE_USE(JIT_LOAD_ELEMENT_I16);
 	{
 		U32 value, idx = POP_U32(); // Array index
-		HEAP_PTR heapPtr = POP_O();
+		HEAP_PTR heapPtr = POP_O(); // Array object
 		SystemArray_LoadElement(heapPtr, idx, (PTR)&value);
 		PUSH_U32((I16)value);
 	}
@@ -2827,7 +2862,7 @@ JIT_LOAD_ELEMENT_U16_start:
 	OPCODE_USE(JIT_LOAD_ELEMENT_U16);
 	{
 		U32 value, idx = POP_U32(); // Array index
-		HEAP_PTR heapPtr = POP_O();
+		HEAP_PTR heapPtr = POP_O(); // Array object
 		SystemArray_LoadElement(heapPtr, idx, (PTR)&value);
 		PUSH_U32((U16)value);
 	}
@@ -2840,7 +2875,7 @@ JIT_LOAD_ELEMENT_R32_start:
 	OPCODE_USE(JIT_LOAD_ELEMENT_I32);
 	{
 		U32 value, idx = POP_U32(); // Array index
-		HEAP_PTR heapPtr = POP_O();
+		HEAP_PTR heapPtr = POP_O(); // Array object
 		SystemArray_LoadElement(heapPtr, idx, (PTR)&value);
 		PUSH_U32(value);
 	}
@@ -2853,8 +2888,8 @@ JIT_LOAD_ELEMENT_I64_start:
 JIT_LOAD_ELEMENT_R64_start:
 	OPCODE_USE(JIT_LOAD_ELEMENT_I64);
 	{
-		U32 idx = POP_U32(); // array index
-		HEAP_PTR heapPtr = POP_O();
+		U32 idx = POP_U32();        // Array index
+		HEAP_PTR heapPtr = POP_O(); // Array object
 		U64 value;
 		SystemArray_LoadElement(heapPtr, idx, (PTR)&value);
 		PUSH_U64(value);
@@ -2866,8 +2901,8 @@ JIT_LOAD_ELEMENT_R64_end:
 JIT_LOAD_ELEMENT_start:
 	OPCODE_USE(JIT_LOAD_ELEMENT);
 	{
-		U32 idx = POP_U32(); // Array index
-		HEAP_PTR heapPtr = POP_O(); // array object
+		U32 idx = POP_U32();        // Array index
+		HEAP_PTR heapPtr = POP_O(); // Array object
 		U32 size = GET_OP(); // size of type on stack
 		*(U32*)pCurEvalStack = 0; // This is required to zero out the stack for types that are stored in <4 bytes in arrays
 		SystemArray_LoadElement(heapPtr, idx, pCurEvalStack);
@@ -2879,8 +2914,8 @@ JIT_LOAD_ELEMENT_end:
 JIT_LOAD_ELEMENT_ADDR_start:
 	OPCODE_USE(JIT_LOAD_ELEMENT_ADDR);
 	{
-		U32 idx = POP_U32(); // Array index
-		PTR heapPtr = POP_O();
+		U32 idx = POP_U32();   // Array index
+		PTR heapPtr = POP_O(); // Array object
 		PTR pMem = SystemArray_LoadElementAddress(heapPtr, idx);
 		PUSH_PTR(pMem);
 	}
@@ -2891,8 +2926,8 @@ JIT_STORE_ELEMENT_32_start:
 	OPCODE_USE(JIT_STORE_ELEMENT_32);
 	{
 		U32 value = POP_U32(); // Value
-		U32 idx = POP_U32(); // Array index
-		PTR heapPtr = POP_O();
+		U32 idx = POP_U32();   // Array index
+		PTR heapPtr = POP_O(); // Array object
 		SystemArray_StoreElement(heapPtr, idx, (PTR)&value);
 	}
 JIT_STORE_ELEMENT_32_end:
@@ -2902,8 +2937,8 @@ JIT_STORE_ELEMENT_64_start:
 	OPCODE_USE(JIT_STORE_ELEMENT_64);
 	{
 		U64 value = POP_U64(); // Value
-		U32 idx = POP_U32(); // Array index
-		PTR heapPtr = POP_O();
+		U32 idx = POP_U32();   // Array index
+		PTR heapPtr = POP_O(); // Array object
 		SystemArray_StoreElement(heapPtr, idx, (PTR)&value);
 	}
 JIT_STORE_ELEMENT_64_end:
@@ -2917,8 +2952,8 @@ JIT_STORE_ELEMENT_start:
 		U32 idx, size = GET_OP(); // Size in bytes of value on stack
 		POP(size);
 		pMem = pCurEvalStack;
-		idx = POP_U32(); // Array index
-		heapPtr = POP_O(); // Array on heap
+		idx = POP_U32();   // Array index
+		heapPtr = POP_O(); // Array object
 		SystemArray_StoreElement(heapPtr, idx, pMem);
 	}
 JIT_STORE_ELEMENT_end:
@@ -2991,7 +3026,7 @@ JIT_LOADFIELD_start:
 
 		pFieldDef = (tMD_FieldDef*)GET_OP();
 		heapPtr = POP_O();
-		pMem = heapPtr + pFieldDef->memOffset;
+		PTR pMem = heapPtr + pFieldDef->memOffset;
 		// It may not be a value-type, but this'll work anyway
 		PUSH_VALUETYPE(pMem, pFieldDef->memSize, pFieldDef->memSize);
 	}
@@ -3035,7 +3070,7 @@ JIT_LOADFIELD_VALUETYPE_start:
 		POP(u32Value);
 		
 		//pMem = pEvalStack + pCurrentMethodState->stackOfs + pFieldDef->memOffset;
-		pMem = pCurEvalStack + pFieldDef->memOffset;
+		PTR pMem = pCurEvalStack + pFieldDef->memOffset;
 		// It may not be a value-type, but this'll work anyway
 		PUSH_VALUETYPE(pMem, pFieldDef->memSize, pFieldDef->memSize);
 	}
@@ -3143,7 +3178,8 @@ loadStaticFieldStart:
 				// Need to re-run this instruction when we return from static constructor call
 				//pCurrentMethodState->ipOffset -= 2;
 				pCurOp -= 2;
-				pCallMethodState = MethodState_Direct(pThread, pParentType->pStaticConstructor, pCurrentMethodState, 0);
+				INCREMENT_NESTED_LEVEL();
+				pCallMethodState = MethodState_Direct(pThread, pParentType->pStaticConstructor, pCurrentMethodState, 0, 0);
 				// There can be no parameters, so don't need to set them up
 				CHANGE_METHOD_STATE(pCallMethodState);
 				GO_NEXT_CHECK();
@@ -3182,7 +3218,7 @@ JIT_INIT_VALUETYPE_start:
 		tMD_TypeDef *pTypeDef;
 
 		pTypeDef = (tMD_TypeDef*)GET_OP();
-		pMem = POP_PTR();
+		PTR pMem = POP_PTR();
 		memset(pMem, 0, pTypeDef->instanceMemSize);
 	}
 JIT_INIT_VALUETYPE_end:
@@ -3420,7 +3456,7 @@ finallyUnwindStack:
 		// Set the current method state
 		pThread->pCurrentMethodState = pCurrentMethodState;
 		LOAD_METHOD_STATE();
-		// Push onto this stack-frame's evaluation stack the opject thrown
+		// Push onto this stack-frame's evaluation stack the object thrown
 		POP_ALL();
 		PUSH_O(pThread->pCurrentExceptionObject);
 	}
@@ -3447,7 +3483,7 @@ JIT_LEAVE_start:
 			}
 		}
 		POP_ALL();
-		ofs = GET_OP();
+		U32 ofs = GET_OP();
 		if (pFinally != NULL) {
 			// Jump to 'finally' section
 			pCurOp = pOps + pFinally->handlerStart;
@@ -3485,3 +3521,10 @@ void JIT_Execute_Init() {
 	// Initialise the JIT code addresses
 	JIT_Execute(NULL, 0);
 }
+
+#ifdef DIAG_CALL_STACK
+void PrintCallStackBuffer() {
+	printf(pNextChar + 1);
+	printf(callBuffer);
+}
+#endif

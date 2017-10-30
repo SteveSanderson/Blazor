@@ -85,6 +85,14 @@
 #define LIB_SUFFIX "so"
 #define STDCALL
 
+#ifndef max
+#define max(a,b) (((a) > (b)) ? (a) : (b))
+#endif
+
+#ifndef min
+#define min(a,b) (((a) < (b)) ? (a) : (b))
+#endif
+
 #endif // _WIN32
 
 #define TMALLOC(c, t) (t*)malloc(c * sizeof(t))

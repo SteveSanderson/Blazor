@@ -1606,9 +1606,9 @@ cilLeave:
 					break;
 
 				case CILX_TAIL:
-					// Do nothing. TODO: implement
+					PushOp(JIT_TAILCALL_PREFIX);
 					break;
-
+					
 				default:
 					Crash("JITit(): JITter cannot handle extended op-code: 0x%02x", op);
 

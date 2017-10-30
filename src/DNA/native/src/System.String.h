@@ -30,18 +30,28 @@ tAsyncCall* System_String_ctor_CharAIntInt(PTR pThis_, PTR pParams, PTR pReturnV
 tAsyncCall* System_String_ctor_StringIntInt(PTR pThis_, PTR pParams, PTR pReturnValue);
 tAsyncCall* System_String_get_Chars(PTR pThis_, PTR pParams, PTR pReturnValue);
 tAsyncCall* System_String_InternalConcat(PTR pThis_, PTR pParams, PTR pReturnValue);
+tAsyncCall* System_String_InternalCopyTo(PTR pThis_, PTR pParams, PTR pReturnValue);
 tAsyncCall* System_String_InternalTrim(PTR pThis_, PTR pParams, PTR pReturnValue);
+tAsyncCall* System_String_CompareOrdinal(PTR pThis_, PTR pParams, PTR pReturnValue);
 tAsyncCall* System_String_Equals(PTR pThis_, PTR pParams, PTR pReturnValue);
 tAsyncCall* System_String_GetHashCode(PTR pThis_, PTR pParams, PTR pReturnValue);
 tAsyncCall* System_String_InternalReplace(PTR pThis_, PTR pParams, PTR pReturnValue);
 tAsyncCall* System_String_InternalIndexOf(PTR pThis_, PTR pParams, PTR pReturnValue);
 tAsyncCall* System_String_InternalIndexOfAny(PTR pThis_, PTR pParams, PTR pReturnValue);
+tAsyncCall* System_String_InternalIndexOfStr(PTR pThis_, PTR pParams, PTR pReturnValue);
 
 HEAP_PTR SystemString_FromUserStrings(tMetaData *pMetaData, IDX_USERSTRINGS index);
 HEAP_PTR SystemString_FromCharPtrASCII(U8 *pStr);
-HEAP_PTR SystemString_FromCharPtrUTF16(U16 *pStr);
+HEAP_PTR SystemString_FromCharPtrUTF16(CHAR2 *pStr);
 STRING2 SystemString_GetString(HEAP_PTR pThis_, U32 *pLength);
 U32 SystemString_GetNumBytes(HEAP_PTR pThis_);
+
+tAsyncCall* System_String_InternalFromInt32(PTR pThis_, PTR pParams, PTR pReturnValue);
+tAsyncCall* System_String_InternalFromInt64(PTR pThis_, PTR pParams, PTR pReturnValue);
+tAsyncCall* System_String_InternalFromUInt32(PTR pThis_, PTR pParams, PTR pReturnValue);
+tAsyncCall* System_String_InternalFromUInt64(PTR pThis_, PTR pParams, PTR pReturnValue);
+tAsyncCall* System_String_InternalFromSingle(PTR pThis_, PTR pParams, PTR pReturnValue);
+tAsyncCall* System_String_InternalFromDouble(PTR pThis_, PTR pParams, PTR pReturnValue);
 
 tAsyncCall* System_String_InternalToInt32(PTR pThis_, PTR pParams, PTR pReturnValue);
 tAsyncCall* System_String_InternalToInt64(PTR pThis_, PTR pParams, PTR pReturnValue);
@@ -49,5 +59,8 @@ tAsyncCall* System_String_InternalToUInt32(PTR pThis_, PTR pParams, PTR pReturnV
 tAsyncCall* System_String_InternalToUInt64(PTR pThis_, PTR pParams, PTR pReturnValue);
 tAsyncCall* System_String_InternalToSingle(PTR pThis_, PTR pParams, PTR pReturnValue);
 tAsyncCall* System_String_InternalToDouble(PTR pThis_, PTR pParams, PTR pReturnValue);
+
+tAsyncCall* System_String_ToLowerInvariant(PTR pThis_, PTR pParams, PTR pReturnValue);
+tAsyncCall* System_String_ToUpperInvariant(PTR pThis_, PTR pParams, PTR pReturnValue);
 
 #endif

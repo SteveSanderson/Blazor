@@ -59,6 +59,12 @@ void Diag_Init() {
 
 void Diag_Print() {
 
+#ifdef DIAG_CALL_STACK
+	printf("\nCall stack buffer:\n\n");
+	PrintCallStackBuffer();
+	printf("\n");
+#endif
+
 #ifdef DIAG_TOTAL_TIME
 	printf("Total execution time = %.3f sec\n", (microTime() - startTime) / 1000000.0);
 #endif
@@ -68,14 +74,22 @@ void Diag_Print() {
 #endif
 
 #ifdef DIAG_METHOD_CALLS
+// The default sort is by method call counts, unless redefined below:
+//#define SORT_BY_TOTAL_TIME   // sort by method total time (inclusive)
+//#define SORT_BY_START_TIME   // sort by method start time (call order)
+//#define SORT_BY_HEAP_ALLOC   // sort by method heap alloc count
+//#define SORT_BY_PARAMS_STACK // sort by method params stack size
+//#define SORT_BY_LOCALS_STACK // sort by method locals stack size
+//#define SORT_BY_EVAL_STACK   // sort by method eval stack size
 	{
-		tMD_MethodDef* topMethods[50];
+		tMD_MethodDef* topMethods[50]; // increase if needed
 		U32 numTop = sizeof(topMethods) / sizeof(topMethods[0]);
 		for (U32 t = 0; t < numTop; t++) { topMethods[t] = NULL; }
 
 		// Report on most-used methods
-		printf("\nTop %d methods by execution time:\n\n", numTop);
+		printf("\nTop %d methods:\n\n", numTop);
 
+		// enumerate and sort all methods in all assemblies
 		tFilesLoaded *pFiles = CLIFile_GetLoadedAssemblies();
 		while (pFiles != NULL) {
 			tMetaData *pMetaData = pFiles->pCLIFile->pMetaData;
@@ -86,12 +100,20 @@ void Diag_Print() {
 
 				for (U32 t = 0; t < numTop; t++) {
 					if (topMethods[t] == NULL) { topMethods[t] = pMethod; }
-#if defined(DIAG_METHOD_CALLS_SORT_BY_COUNT)
-					if (topMethods[t]->callCount < pMethod->callCount) {
-#elif defined(DIAG_METHOD_CALLS_SORT_BY_START)
-					if (topMethods[t]->startTime < pMethod->startTime) {
-#else
+#if defined(SORT_BY_TOTAL_TIME)
 					if (topMethods[t]->totalTime < pMethod->totalTime) {
+#elif defined(SORT_BY_START_TIME)
+					if (topMethods[t]->startTime < pMethod->startTime) {
+#elif defined(SORT_BY_HEAP_ALLOC)
+					if (topMethods[t]->heapAlloc < pMethod->heapAlloc) {
+#elif defined(SORT_BY_PARAMS_STACK)
+					if (topMethods[t]->parameterStackSize < pMethod->parameterStackSize) {
+#elif defined(SORT_BY_LOCALS_STACK)
+					if (pMethod->pJITted != NULL && (topMethods[t]->pJITted == NULL || topMethods[t]->pJITted->localsStackSize < pMethod->pJITted->localsStackSize)) {
+#elif defined(SORT_BY_EVAL_STACK)
+					if (pMethod->pJITted != NULL && (topMethods[t]->pJITted == NULL || topMethods[t]->pJITted->maxStack < pMethod->pJITted->maxStack)) {
+#else // DEFAULT SORT BY CALL COUNTS
+					if (topMethods[t]->callCount < pMethod->callCount) {
 #endif
 						memmove(&topMethods[t + 1], &topMethods[t], (numTop - t - 1) * sizeof(topMethods[0]));
 						topMethods[t] = pMethod;
@@ -105,11 +127,16 @@ void Diag_Print() {
 
 		for (U32 t = 0; t < numTop; t++) {
 			tMD_MethodDef *pMethod = topMethods[t];
-			char* methodName = pMethod->isFilled ? Sys_GetMethodDesc(pMethod) : pMethod->name;
-			printf("%02d: %s\n    calls: %llu", t+1, methodName, pMethod->callCount);
+			char* methodName = pMethod->isFilled ? Sys_GetMethodDesc(pMethod) : (char*)pMethod->name;
+			printf("%02d: %s\n    : calls: %llu", t+1, methodName, pMethod->callCount);
 			printf(", total: %.3f sec", pMethod->totalTime / 1000000.0);
 			printf(", max: %f sec", pMethod->maxTime / 1000000.0);
-			printf(", avg: %f sec\n", pMethod->totalTime / max(pMethod->callCount, 1) / 1000000.0);
+			printf(", avg: %f sec", pMethod->totalTime / max(pMethod->callCount, 1) / 1000000.0);
+			printf(", alloc: %llu", pMethod->heapAlloc);
+			printf(", params: %u bytes", pMethod->parameterStackSize);
+			printf(", locals: %u bytes", pMethod->pJITted == NULL ? 0 : pMethod->pJITted->localsStackSize);
+			printf(", eval stack: %u bytes", pMethod->pJITted == NULL ? 0 : pMethod->pJITted->maxStack);
+			printf("\n");
 		}
 
 		printf("\n");

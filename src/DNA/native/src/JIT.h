@@ -136,6 +136,10 @@ void JIT_Prepare(tMD_MethodDef *pMethodDef, U32 genCombinedOpcodes);
 
 U32 JIT_Execute(tThread *pThread, U32 numInst);
 
+#ifdef DIAG_CALL_STACK
+void PrintCallStackBuffer();
+#endif
+
 #ifdef DIAG_OPCODE_TIMES
 #include "JIT_OpCodes.h"
 extern U64 opcodeTimes[JIT_OPCODE_MAXNUM];

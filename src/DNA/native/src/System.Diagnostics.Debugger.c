@@ -175,7 +175,7 @@ int CheckIfSequencePointIsBreakpoint(tMethodState* pMethodState, I32 sequencePoi
 
     // TODO: Handle overflow
     unsigned char payload[1024];
-    sprintf(payload, "{\"command\":\"breakpoint\", \"ilOffset\":%d, \"sequencePoint\":%d,\"ID\":\"%s\"}", ilOffset, sequencePoint, pDebugEntry->pID);
+    snprintf(payload, sizeof(payload), "{\"command\":\"breakpoint\", \"ilOffset\":%d, \"sequencePoint\":%d,\"ID\":\"%s\"}", ilOffset, sequencePoint, pDebugEntry->pID);
 #ifdef JS_INTEROP
     invokeJsFunc("browser.js", "SendDebuggerMessage", payload);
 #else

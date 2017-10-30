@@ -43,7 +43,7 @@ void Crash(char *pMsg, ...) {
 
 	printf("\n\n");
 
-#ifdef DIAG_METHOD_CALLS
+#if defined(DIAG_METHOD_CALLS) || defined(DIAG_CALL_STACK)
 	abort();
 #endif
 	
@@ -103,7 +103,7 @@ static void* allocForever(void* ptr, U32 size) {
 }
 
 void* mallocForever(U32 size) {
-	return allocForever(malloc(size), size);
+    return allocForever(calloc(size, 1), size);
 }
 void* callocForever(U32 count, U32 size) {
 	return allocForever(calloc(count, size), count * size);
@@ -851,6 +851,7 @@ _JIT_OPDEF("CONV_R64_R64", 0x163)
 
 _JIT_OPDEF("INVOKE_SYSTEM_REFLECTION_METHODBASE", 0x164)
 _JIT_OPDEF("REFLECTION_DYNAMICALLY_BOX_RETURN_VALUE", 0x165)
+_JIT_OPDEF("TAILCALL_PREFIX", 0x166)
 
         default: return "undefined";
     }

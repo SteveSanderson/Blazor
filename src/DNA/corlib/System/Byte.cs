@@ -7,10 +7,10 @@ namespace System {
 		public const byte MaxValue = 255;
 
 #pragma warning disable 0169, 0649
-        internal byte m_value;
+		internal byte m_value;
 #pragma warning restore 0169, 0649
 
-        public override bool Equals(object obj) {
+		public override bool Equals(object obj) {
 			return (obj is byte) && ((byte)obj).m_value == this.m_value;
 		}
 
@@ -21,7 +21,8 @@ namespace System {
 		#region ToString methods
 
 		public override string ToString() {
-			return NumberFormatter.FormatGeneral(new NumberFormatter.NumberStore(this.m_value));
+			//return NumberFormatter.FormatGeneral(new NumberFormatter.NumberStore(this.m_value));
+			return String.InternalFromUInt32(this.m_value);
 		}
 
 		public string ToString(IFormatProvider formatProvider) {

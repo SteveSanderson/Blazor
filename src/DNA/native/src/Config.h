@@ -28,23 +28,23 @@
 // instruction on x86 - so the results are in ticks, not seconds)
 
 // Count how many times each .NET method is called
-#undef DIAG_METHOD_CALLS
-// default method sort is by total time (inclusive), unless changed below:
-//#define DIAG_METHOD_CALLS_SORT_BY_COUNT // sort by method count
-//#define DIAG_METHOD_CALLS_SORT_BY_START // sort by last start time (i.e. like a call stack)
+//#define DIAG_METHOD_CALLS
+
+// Maintain and print a callstack buffer
+//#define DIAG_CALL_STACK
 
 // Measure how much time is spent in each .NET opcode
 // This only works on Windows
 // This is not currently implemented, after the change to threaded code
-#undef DIAG_OPCODE_TIMES
+//#define DIAG_OPCODE_TIMES
 
 // Count how many times each .NET opcode is used
 #ifdef _DEBUG
-#undef DIAG_OPCODE_USES
+//#define DIAG_OPCODE_USES
 #endif
 
 // Measure how much time is spent in the garbage collector
-#undef DIAG_GC
+//#define DIAG_GC
 
 // Measure how long the entire .NET programme execution takes
 #define DIAG_TOTAL_TIME
@@ -77,7 +77,7 @@
 #define SWITCH_ON_JIT_OP
 //#endif
 
-// disable GC completely (only usable for perf testing/tuning)
+// disable GC completely (for perf testing/tuning)
 //#define NO_GC_WHATSOEVER
 
 #endif

@@ -41,7 +41,8 @@ namespace System {
 			}
 			//TODO: use style and provider
 			int error = 0;
-			int result = s.InternalToInt32(out error);
+			int radix = (style & NumberStyles.AllowHexSpecifier) != 0 ? 16 : 10;
+			int result = s.InternalToInt32(out error, radix);
 			if (error != 0) {
 				throw String.GetFormatException(error);
 			}
@@ -59,7 +60,8 @@ namespace System {
 			}
 			//TODO: use style and provider
 			int error = 0;
-			result = s.InternalToInt32(out error);
+			int radix = (style & NumberStyles.AllowHexSpecifier) != 0 ? 16 : 10;
+			result = s.InternalToInt32(out error, radix);
 			return error == 0;
 		}
 
@@ -85,7 +87,8 @@ namespace System {
 		#region ToString methods
 
 		public override string ToString() {
-			return NumberFormatter.FormatGeneral(new NumberFormatter.NumberStore(this.m_value));
+			// return NumberFormatter.FormatGeneral(new NumberFormatter.NumberStore(this.m_value));
+			return String.InternalFromInt32(this.m_value);
 		}
 
 		public string ToString(IFormatProvider formatProvider) {

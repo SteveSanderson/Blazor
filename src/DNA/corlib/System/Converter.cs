@@ -28,24 +28,20 @@ namespace System {
         public static int ToInt32(Single f) => (int)f;
         public static int ToInt32(Double d) => (int)d;
 
-        public static int ToInt32(string str, int fromBase) {
-            int res = 0;
-            if (fromBase == 2) {
-                for(int i = 0; i < str.Length; ++i) {
-                    var s = str[i];
-                    if ((char)s == '0') {
-                        res <<= 1;
-                    } else {
-                        res <<= 1;
-                        res += 1;
-                    }
-                }
-                return res;
-            }
-            return res;
+        public static int ToInt32(string value) {
+            return ToInt32(value, 0); // 0 makes it accept hex prefix
+        }
+
+        public static int ToInt32(string value, int fromBase) {
+            if (value == null) { return 0; }
+            int error = 0;
+            int result = value.InternalToInt32(out error, fromBase);
+            if (error != 0) { throw String.GetFormatException(error); }
+            return result;
         }
 
         public static uint ToUInt32(UInt64 i) => (uint)i;
+
         public static decimal ToDecimal(Int32 i) => throw new NotImplementedException();
         public static decimal ToDecimal(string str) => throw new NotImplementedException();
 

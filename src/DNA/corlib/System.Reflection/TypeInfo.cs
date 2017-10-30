@@ -36,6 +36,7 @@ namespace System.Reflection {
         public virtual bool IsValueType => _type.IsValueType;
         public virtual bool IsGenericType => _type.IsGenericType;
         public virtual bool IsGenericTypeDefinition => _type.IsGenericTypeDefinition;
+        public virtual bool IsAssignableFrom(TypeInfo ti) => _type.IsAssignableFrom(ti._type);
 
         public virtual Type[] GenericTypeParameters => _type.GetGenericArguments();
         public virtual IEnumerable<Type> ImplementedInterfaces => _type.GetInterfaces();

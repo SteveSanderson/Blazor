@@ -135,90 +135,189 @@ Destination:
 	*: 32-bit index into relevant heap;
 		Or coded index - MSB = which table, other 3 bytes = table index
 		Or 32-bit int
-		Or pointer (also RVA)
+    p: pointer (also RVA)
 	s: 16-bit value
 	c: 8-bit value
 */
-static char* tableDefs[] = {
-	// 0x00
-	"sxS*G*GxGx",
-	// 0x01
-	"x*;*S*S*",
-	// 0x02
-	"x*m*i*S*S*0*\x04*\x06*xclcxcxcx*x*x*x*x*x*x*x*x*x*x*I*x*x*x*x*x*x*x*x*x*x*x*x*",
-	// 0x03
-	NULL,
-	// 0x04
-	"x*m*ssxsS*B*x*x*x*x*I*x*",
-	// 0x05
-	NULL,
-	// 0x06
-	"x*m*^*ssssS*B*\x08*x*x*x*x*x*x*I*x*x*x*x*"
+static const unsigned char* tableDefs[] = {
+    // 0x00
+    "sxSpGpGxGx",
+    // 0x01
+    "xp;*SpSp",
+    // 0x02
+    "xpmpi*SpSp0*\x04*\x06*xclcxcxcx*xpxpx*xpxcxcxcxcxpx*x*x*xpI*xpxpxpxpx*xpx*x*xpxpxpxp",
+    // 0x03
+    NULL,
+    // 0x04
+    "xpmpssxsSpBpxpxpx*x*I*xp",
+    // 0x05
+    NULL,
+    // 0x06
+    "xpmp^pssssSpBp\x08*xpxcxcxsxpx*xpxpI*x*x*xpxp"
 #ifdef GEN_COMBINED_OPCODES
 	"x*x*x*x*x*x*"
 #endif
 #ifdef DIAG_METHOD_CALLS
-	"x*x*x*x*x*x*x*x*"
+	"x*x*x*x*x*x*x*x*x*x*"
+#endif
+	,
+	// 0x07
+    NULL,
+    // 0x08
+    "ssssSp",
+    // 0x09
+    "\x02*0*",
+    // 0x0a
+    "xp5*SpBp",
+    // 0x0b
+    "ccccxs1*Bp",
+    // 0x0c
+    "2*:*Bp",
+    // 0x0d
+    NULL,
+    // 0x0e
+    "ssxs4*Bp",
+    // 0x0f
+    "ssxsi*\x02*",
+    // 0x10
+    "i*\x04*",
+    // 0x11
+    "Bp",
+    // 0x12
+    "\x02*\x14*",
+    // 0x13
+    NULL,
+    // 0x14
+    "ssxsSp0*",
+    // 0x15
+    "\x02*\x17*",
+    // 0x16
+    NULL,
+    // 0x17
+    "ssxsSpBp",
+    // 0x18
+    "ssxs\x06*6*",
+    // 0x19
+    "\x02*7*7*",
+    // 0x1a
+    "Sp",
+    // 0x1b
+    "xpmpBp",
+    // 0x1c
+    "ssxs8*Sp\x1a*",
+    // 0x1d
+    "^*\x04*",
+    // 0x1e
+    NULL,
+    // 0x1f
+    NULL,
+    // 0x20
+    "i*ssssssssi*BpSpSp",
+    // 0x21
+    NULL,
+    // 0x22
+    NULL,
+    // 0x23
+    "ssssssssi*BpSpSpBp",
+    // 0x24
+    NULL,
+    // 0x25
+    NULL,
+    // 0x26
+    NULL,
+    // 0x27
+    "i*i*SpSp9*",
+    // 0x28
+    "i*i*Sp9*",
+    // 0x29
+    "\x02*\x02*",
+    // 0x2a
+    "ssss<*Sp",
+    // 0x2b
+    "xpmp7*Bp",
+    // 0x2c
+    "\x2ap0*",
+
+/*
+	// 0x00
+    "sxSpGpGxGx",
+	// 0x01
+    "x*;*SpSp",
+	// 0x02
+    "x*mpi*SpSp0*\x04*\x06*xclcxcxcx*x*x*x*x*x*x*x*x*x*x*I*x*x*x*x*x*x*x*x*x*x*x*x*",
+	// 0x03
+	NULL,
+	// 0x04
+    "x*mpssxsSpBpx*x*x*x*I*x*",
+	// 0x05
+	NULL,
+	// 0x06
+    "x*mp^pssssSpBp\x08*x*x*x*x*x*x*I*x*x*x*x*"
+#ifdef GEN_COMBINED_OPCODES
+	"x*x*x*x*x*x*"
+#endif
+#ifdef DIAG_METHOD_CALLS
+	"x*x*x*x*x*x*x*x*x*x*"
 #endif
 	,
 	// 0x07
 	NULL,
 	// 0x08
-	"ssssS*",
+    "ssssSp",
 	// 0x09
 	"\x02*0*",
 	// 0x0A
-	"x*5*S*B*",
+    "x*5*SpBp",
 	// 0x0B
-	"ccccxs1*B*",
+    "ccccxs1*Bp",
 	// 0x0C
-	"2*:*B*",
+    "2*:*Bp",
 	// 0x0D
 	NULL,
 	// 0x0E
-	"ssxs4*B*",
+    "ssxs4*Bp",
 	// 0x0F
 	"ssxsi*\x02*",
 	// 0x10
 	"i*\x04*",
 	// 0x11
-	"B*",
+    "Bp",
 	// 0x12
 	"\x02*\x14*",
 	// 0x13
 	NULL,
 	// 0x14
-	"ssxsS*0*",
+    "ssxsSp0*",
 	// 0x15
 	"\x02*\x17*",
 	// 0x16
 	NULL,
 	// 0x17
-	"ssxsS*B*",
+    "ssxsSpBp",
 	// 0x18
 	"ssxs\06*6*",
 	// 0x19
 	"\x02*7*7*",
 	// 0x1A
-	"S*",
+    "Sp",
 	// 0x1B
-	"x*m*B*",
+    "x*mpBp",
 	// 0x1C
-	"ssxs8*S*\x1a*",
+    "ssxs8*Sp\x1a*",
 	// 0x1D
-	"^*\x04*",
+    "^p\x04*",
 	// 0x1E
 	NULL,
 	// 0x1F
 	NULL,
 	// 0x20
-	"i*ssssssssi*B*S*S*",
+    "i*ssssssssi*BpSpSp",
 	// 0x21
 	NULL,
 	// 0x22
 	NULL,
 	// 0x23
-	"ssssssssi*B*S*S*B*",
+    "ssssssssi*BpSpSpBp",
 	// 0x24
 	NULL,
 	// 0x25
@@ -226,23 +325,23 @@ static char* tableDefs[] = {
 	// 0x26
 	NULL,
 	// 0x27
-	"i*i*S*S*9*",
+    "i*i*SpSp9*",
 	// 0x28
-	"i*i*S*9*",
+    "i*i*Sp9*",
 	// 0x29
 	"\x02*\x02*",
 	// 0x2A
-	"ssss<*S*",
+    "ssss<*Sp",
 	// 0x2B
-	"x*m*7*B*",
+    "x*mp7*Bp",
 	// 0x2C
-	"\x2a*0*",
+	"\x2a*0*",*/
 };
 
 // Coded indexes use this lookup table.
 // Note that the extra 'z' characters are important!
 // (Because of how the lookup works each string must be a power of 2 in length)
-static unsigned char* codedTags[] = {
+static const char* codedTags[] = {
 	// TypeDefOrRef
 	"\x02\x01\x1Bz",
 	// HasConstant
@@ -307,17 +406,20 @@ static void* LoadSingleTable(tMetaData *pThis, tRVA *pRVA, int tableID, void **p
 	int numRows = pThis->tables.numRows[tableID];
 	int rowLen = 0; // Number of bytes taken by each row in memory.
 	int i, row;
-	char *pDef = tableDefs[tableID];
+    const unsigned char *pDef = tableDefs[tableID];
 	int defLen = (int)strlen(pDef);
 	void *pRet;
 	unsigned char *pSource = *ppTable;
 	unsigned char *pDest;
-	unsigned int v;
+    size_t v;
 
 	// Calculate the destination row size from table definition, if it hasn't already been calculated
 	if (tableRowSize[tableID] == 0) {
 		for (i=0; i<defLen; i += 2) {
 			switch (pDef[i+1]) {
+                case 'p':
+                    rowLen += sizeof(size_t);
+                    break;
 				case '*':
 					rowLen += 4;
 					break;
@@ -345,7 +447,7 @@ static void* LoadSingleTable(tMetaData *pThis, tRVA *pRVA, int tableID, void **p
 	// Load table
 	for (row=0; row<numRows; row++) {
 		for (i=0; i<defLen; i += 2) {
-			unsigned char d = pDef[i];
+            unsigned char d = pDef[i];
 			if (d < MAX_TABLES) {
 				if (pThis->tables.numRows[d] < 0x10000) {
 					// Use 16-bit offset
@@ -356,7 +458,7 @@ static void* LoadSingleTable(tMetaData *pThis, tRVA *pRVA, int tableID, void **p
 					v = GetU32(pSource);
 					pSource += 4;
 				}
-				v |= d << 24;
+                v |= (size_t) (d << 24);
 			} else {
 				switch (d) {
 					case 'c': // 8-bit value
@@ -386,8 +488,8 @@ static void* LoadSingleTable(tMetaData *pThis, tRVA *pRVA, int tableID, void **p
 					case '<':
 						{
 							int ofs = pDef[i] - '0';
-							char* pCoding = codedTags[ofs];
-							int tagBits = codedTagBits[ofs];
+							const char* pCoding = codedTags[ofs];
+							const int tagBits = codedTagBits[ofs];
 							unsigned char tag = *pSource & ((1 << tagBits) - 1);
 							int idxIntoTableID = pCoding[tag]; // The actual table index that we're looking for
 							if (idxIntoTableID < 0 || idxIntoTableID > MAX_TABLES) {
@@ -414,7 +516,7 @@ static void* LoadSingleTable(tMetaData *pThis, tRVA *pRVA, int tableID, void **p
 							v = GetU16(pSource);
 							pSource += 2;
 						}
-						v = (unsigned int)(pThis->strings.pStart + v);
+                        v = (size_t)(pThis->strings.pStart + v);
 						break;
 					case 'G': // index into GUID heap
 						if (pThis->index32BitGUID) {
@@ -424,7 +526,7 @@ static void* LoadSingleTable(tMetaData *pThis, tRVA *pRVA, int tableID, void **p
 							v = GetU16(pSource);
 							pSource += 2;
 						}
-						v = (unsigned int)(pThis->GUIDs.pGUID1 + ((v-1) * 16));
+                        v = (size_t)(pThis->GUIDs.pGUID1 + ((v-1) * 16));
 						break;
 					case 'B': // index into BLOB heap
 						if (pThis->index32BitBlob) {
@@ -434,15 +536,15 @@ static void* LoadSingleTable(tMetaData *pThis, tRVA *pRVA, int tableID, void **p
 							v = GetU16(pSource);
 							pSource += 2;
 						}
-						v = (unsigned int)(pThis->blobs.pStart + v);
+                        v = (size_t)(pThis->blobs.pStart + v);
 						break;
 					case '^': // RVA to convert to pointer
 						v = GetU32(pSource);
 						pSource += 4;
-						v = (unsigned int)RVA_FindData(pRVA, v);
+                        v = (size_t)RVA_FindData(pRVA, v);
 						break;
 					case 'm': // Pointer to this metadata
-						v = (unsigned int)pThis;
+                        v = (size_t)pThis;
 						break;
 					case 'l': // Is this the last table entry?
 						v = (row == numRows - 1);
@@ -458,6 +560,10 @@ static void* LoadSingleTable(tMetaData *pThis, tRVA *pRVA, int tableID, void **p
 				}
 			}
 			switch (pDef[i+1]) {
+                case 'p':
+                    *(size_t*)pDest = v;
+                    pDest += sizeof(size_t);
+                    break;
 				case '*':
 					*(unsigned int*)pDest = v;
 					pDest += 4;
@@ -514,8 +620,8 @@ void MetaData_LoadTables(tMetaData *pThis, tRVA *pRVA, void *pStream, unsigned i
 
 	// Determine if each coded index lookup type needs to use 16 or 32 bit indexes
 	for (i=0; i<13; i++) {
-		char* pCoding = codedTags[i];
-		int tagBits = codedTagBits[i];
+		const char* pCoding = codedTags[i];
+		const int tagBits = codedTagBits[i];
 		// Discover max table size
 		unsigned int maxTableLen = 0;
 		for (k=0; k < (1<<tagBits); k++) {

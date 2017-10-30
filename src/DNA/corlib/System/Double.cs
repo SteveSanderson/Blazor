@@ -115,19 +115,20 @@ namespace System {
 		#region ToString methods
 
 		public override string ToString() {
-			return ToString(null, null);
+			// return ToString(null, null);
+			return String.InternalFromDouble(this.m_value);
 		}
 
-		public string ToString(IFormatProvider fp) {
-			return ToString(null, fp);
+		public string ToString(IFormatProvider formatProvider) {
+			return ToString(null, formatProvider);
 		}
 
 		public string ToString(string format) {
 			return ToString(format, null);
 		}
 
-		public string ToString(string format, IFormatProvider fp) {
-			NumberFormatInfo nfi = NumberFormatInfo.GetInstance(fp);
+		public string ToString(string format, IFormatProvider formatProvider) {
+			NumberFormatInfo nfi = NumberFormatInfo.GetInstance(formatProvider);
 			return NumberFormatter.NumberToString(format, this.m_value, nfi);
 		}
 

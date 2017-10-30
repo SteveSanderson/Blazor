@@ -74,6 +74,7 @@ union uConvFloat_ {
 };
 
 // other types!
+
 typedef uint16_t CHAR2;
 
 typedef struct tAsyncCall_ tAsyncCall;

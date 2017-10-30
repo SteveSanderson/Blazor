@@ -94,33 +94,35 @@ tThread* Thread() {
 	return pThis;
 }
 
-void* Thread_StackAlloc(tThread *pThread, U32 size) {
+PTR Thread_StackAlloc(tThread *pThread, U32 size) {
 	tThreadStack *pStack = pThread->pThreadStack;
-	void *pAddr = pStack->memory + pStack->ofs;
+	PTR pAddr = pStack->memory + pStack->ofs;
 #if _DEBUG
 	*(U32*)pAddr = 0xabababab;
 	((U32*)pAddr)++;
+	pStack->ofs += sizeof(U32);
 #endif
-	pStack->ofs += 4;
 	pStack->ofs += size;
 	if (pStack->ofs > THREADSTACK_CHUNK_SIZE) {
-		Crash("Thread-local stack is too large");
+		Crash("Thread-local stack is too large: size = %u", pStack->ofs);
 	}
 #if _DEBUG
 	memset(pAddr, 0xcd, size);
-	*(U32*)(((char*)pAddr) + size) = 0xfbfbfbfb;
+	*(U32*)(pAddr + size) = 0xfbfbfbfb;
+	pStack->ofs += sizeof(U32);
 #endif
-	pStack->ofs += 4;
 	return pAddr;
 }
 
-void Thread_StackFree(tThread *pThread, void *pAddr) {
+void Thread_StackFree(tThread *pThread, PTR pAddr) {
 	tThreadStack *pStack = pThread->pThreadStack;
 #if _DEBUG
 	((U32*)pAddr)--;
-	memset(pAddr, 0xfe, pStack->ofs - (U32)(((unsigned char*)pAddr) - pStack->memory));
+	Assert(pAddr >= pStack->memory);
+	Assert(pStack->ofs >= (U32)(pAddr - pStack->memory));
+	memset(pAddr, 0xfe, pStack->ofs - (U32)(pAddr - pStack->memory));
 #endif
-	pStack->ofs = (U32)(((unsigned char*)pAddr) - pStack->memory);
+	pStack->ofs = (U32)(pAddr - pStack->memory);
 }
 
 void Thread_SetEntryPoint(tThread *pThis, tMetaData *pMetaData, IDX_TABLE entryPointToken, PTR params, U32 paramBytes) {

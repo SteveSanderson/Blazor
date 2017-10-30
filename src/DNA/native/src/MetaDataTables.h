@@ -50,20 +50,27 @@ struct tMDC_ToTypeDef_ {
 	tMD_TypeDef *pTypeDef;
 };
 
+#ifndef _MSC_VER
+#   define PACKED __attribute__((packed))
+#else
+#   define PACKED
+#   pragma pack(push,1)
+#endif
 
 // Second, the raw metadata tables
 
 // Table 0x00 - Module
-struct tMD_Module_ {
+struct PACKED tMD_Module_ {
 	// Module name - index into string heap
 	STRING name;
 	// GUID for module version - index into GUID heap
 	GUID_ mvID;
 };
 typedef struct tMD_Module_ tMD_Module;
+#define MD_TABLE_MODULE 0x00
 
 // Table 0x01 - TypeRef
-struct tMD_TypeRef_ {
+struct PACKED tMD_TypeRef_ {
 	// Combined
 	tMD_TypeDef *pTypeDef;
 
@@ -78,7 +85,7 @@ typedef struct tMD_TypeRef_ tMD_TypeRef;
 #define MD_TABLE_TYPEREF 0x01
 
 // Table 0x02 - TypeDef
-struct tMD_TypeDef_ {
+struct PACKED tMD_TypeDef_ {
 	// Combined
 	tMD_TypeDef *pTypeDef;
 	// MetaData pointer
@@ -165,7 +172,7 @@ struct tMD_TypeDef_ {
 };
 #define MD_TABLE_TYPEDEF 0x02
 
-struct tMD_FieldDef_ {
+struct PACKED tMD_FieldDef_ {
 	// Combined
 	tMD_FieldDef *pFieldDef;
 	// MetaData pointer
@@ -198,7 +205,7 @@ struct tMD_FieldDef_ {
 #define MD_TABLE_FIELDDEF 0x04
 
 // Table 0x06 - MethodDef
-struct tMD_MethodDef_ {
+struct PACKED tMD_MethodDef_ {
 	// Combined
 	tMD_MethodDef *pMethodDef;
 	// MetaData pointer
@@ -267,6 +274,8 @@ struct tMD_MethodDef_ {
 	U64 maxTime;
 	// Last start time
 	U64 startTime;
+	// Heap allocation count
+	U64 heapAlloc;
 #endif
 };
 #define MD_TABLE_METHODDEF 0x06
@@ -274,7 +283,7 @@ struct tMD_MethodDef_ {
 // Table 0x08 - Param
 #define MD_TABLE_PARAM 0x08
 typedef struct tMD_Param_ tMD_Param;
-struct tMD_Param_ {
+struct PACKED tMD_Param_ {
 	// Flags - ParamAttributes
 	FLAGS16 flags;
 	// The sequence number of the parameter. 0 is the return value, 1+ are the parameters
@@ -286,7 +295,7 @@ struct tMD_Param_ {
 // Table 0x09 - InterfaceImpl
 #define MD_TABLE_INTERFACEIMPL 0x09
 typedef struct tMD_InterfaceImpl_ tMD_InterfaceImpl;
-struct tMD_InterfaceImpl_ {
+struct PACKED tMD_InterfaceImpl_ {
 	// The class that implements...
 	IDX_TABLE class_;
 	// ...this interface
@@ -294,7 +303,7 @@ struct tMD_InterfaceImpl_ {
 };
 
 // Table 0x0A - MemberRef
-struct tMD_MemberRef_ {
+struct PACKED tMD_MemberRef_ {
 	// Combined
 	union {
 		tMD_MethodDef *pMethodDef;
@@ -312,7 +321,7 @@ typedef struct tMD_MemberRef_ tMD_MemberRef;
 #define MD_TABLE_MEMBERREF 0x0a
 
 // Table 0x0B - Constant
-struct tMD_Constant_ {
+struct PACKED tMD_Constant_ {
 	// The ELEMENT_TYPE of the constant - 'void' is ELEMENT_TYPE_CLASS with a 0 blob index
 	U8 type;
 	// Padding
@@ -326,7 +335,7 @@ typedef struct tMD_Constant_ tMD_Constant;
 #define MD_TABLE_CONSTANT 0x0b
 
 // Table 0x0C - CustomAttribute
-struct tMD_CustomAttribute_ {
+struct PACKED tMD_CustomAttribute_ {
 	// Parent
 	IDX_TABLE parent;
 	// Type
@@ -339,7 +348,7 @@ typedef struct tMD_CustomAttribute_ tMD_CustomAttribute;
 
 #define MD_TABLE_DECLSECURITY 0x0e
 typedef struct tMD_DeclSecurity_ tMD_DeclSecurity;
-struct tMD_DeclSecurity_ {
+struct PACKED tMD_DeclSecurity_ {
 	// The security action
 	U16 action;
 	// Padding
@@ -351,7 +360,7 @@ struct tMD_DeclSecurity_ {
 };
 
 // Table 0x0F - ClassLayout
-struct tMD_ClassLayout_ {
+struct PACKED tMD_ClassLayout_ {
 	// The packing size
 	U16 packingSize;
 	// Padding
@@ -362,24 +371,27 @@ struct tMD_ClassLayout_ {
 	IDX_TABLE parent;
 };
 typedef struct tMD_ClassLayout_ tMD_ClassLayout;
+#define MD_TABLE_CLASSLAYOUT 0x0f
 
 // Table 0x11 - StandAloneSig
-struct tMD_StandAloneSig_ {
+struct PACKED tMD_StandAloneSig_ {
 	BLOB_ signature;
 };
 typedef struct tMD_StandAloneSig_ tMD_StandAloneSig;
+#define MD_TABLE_STANDALONESIG 0x11
 
 // Table 0x12 - EventMap
-struct tMD_EventMap_ {
+struct PACKED tMD_EventMap_ {
 	// Index into TypeDef table
 	IDX_TABLE parent;
 	// Index into Event table. Marks the start of a continuous run of events owned by this type.
 	IDX_TABLE eventList;
 };
 typedef struct tMD_EventMap_ tMD_EventMap;
+#define MD_TABLE_EVENTMAP 0x12
 
 // Table 0x14 - Event
-struct tMD_Event_ {
+struct PACKED tMD_Event_ {
 	// Flags of type eventAttributes
 	FLAGS16 eventFlags;
 	// Padding
@@ -390,10 +402,11 @@ struct tMD_Event_ {
 	IDX_TABLE eventType;
 };
 typedef struct tMD_Event_ tMD_Event;
+#define MD_TABLE_EVENT 0x14
 
 // Table 0x15 - PropertyMap
 #define MD_TABLE_PROPERTYMAP 0x15
-struct tMD_PropertyMap_ {
+struct PACKED tMD_PropertyMap_ {
 	// Parent - index into TypeDef table
 	IDX_TABLE parent;
 	// PropertyList - index into Property table
@@ -402,7 +415,7 @@ struct tMD_PropertyMap_ {
 typedef struct tMD_PropertyMap_ tMD_PropertyMap;
 
 // Table 0x17 - Property
-struct tMD_Property_ {
+struct PACKED tMD_Property_ {
 	// Flags - PropertyAttributes
 	FLAGS16 flags;
 	// Padding dummy entry
@@ -416,7 +429,7 @@ typedef struct tMD_Property_ tMD_Property;
 #define MD_TABLE_PROPERTY 0x17
 
 // Table 0x18 - MethodSemantics
-struct tMD_MethodSemantics_ {
+struct PACKED tMD_MethodSemantics_ {
 	// semantics flags - MethodSemanticsAttributes
 	FLAGS16 semantics;
 	// Padding dummy entry
@@ -432,7 +445,7 @@ typedef struct tMD_MethodSemantics_ tMD_MethodSemantics;
 // Table 0x19 - MethodImpl
 #define MD_TABLE_METHODIMPL 0x19
 typedef struct tMD_MethodImpl_ tMD_MethodImpl;
-struct tMD_MethodImpl_ {
+struct PACKED tMD_MethodImpl_ {
 	// Index into TypeDef table
 	IDX_TABLE class_;
 	// The method to use as the interface implementation. Coded index MethodDefOrRef
@@ -443,7 +456,7 @@ struct tMD_MethodImpl_ {
 
 #define MD_TABLE_MODULEREF 0x1a
 typedef struct tMD_ModuleRef_ tMD_ModuleRef;
-struct tMD_ModuleRef_ {
+struct PACKED tMD_ModuleRef_ {
 	// The module name referenced
 	STRING name;
 };
@@ -451,7 +464,7 @@ struct tMD_ModuleRef_ {
 // Table 0x1B - TypeSpec
 #define MD_TABLE_TYPESPEC 0x1b
 typedef struct tMD_TypeSpec_ tMD_TypeSpec;
-struct tMD_TypeSpec_ {
+struct PACKED tMD_TypeSpec_ {
 	// Combined
 	tMD_TypeDef *pTypeDef;
 	// MetaData pointer
@@ -462,7 +475,7 @@ struct tMD_TypeSpec_ {
 };
 
 #define MD_TABLE_IMPLMAP 0x1c
-struct tMD_ImplMap_ {
+struct PACKED tMD_ImplMap_ {
 	// Mapping flags of type PInvokeAttributes
 	U16 mappingFlags;
 	// padding
@@ -476,7 +489,7 @@ struct tMD_ImplMap_ {
 };
 
 // Table 0x1D - FieldRVA
-struct tMD_FieldRVA_ {
+struct PACKED tMD_FieldRVA_ {
 	// The RVA of the initial data for the field
 	U32 rva;
 	// Index into the field table
@@ -486,7 +499,7 @@ typedef struct tMD_FieldRVA_ tMD_FieldRVA;
 #define MD_TABLE_FIELDRVA 0x1d
 
 // Table 0x20 - Assembly
-struct tMD_Assembly_ {
+struct PACKED tMD_Assembly_ {
 	// Hash algorithm ID of type AssemblyHashAlgorithm
 	U32 hashAlgID;
 	// Version info
@@ -503,7 +516,7 @@ struct tMD_Assembly_ {
 typedef struct tMD_Assembly_ tMD_Assembly;
 #define MD_TABLE_ASSEMBLY 0x20
 
-struct tMD_AssemblyRef_ {
+struct PACKED tMD_AssemblyRef_ {
 	// Version info
 	U16 majorVersion, minorVersion, buildNumber, revisionNumber;
 	// Flags - AssemblyFlags
@@ -521,7 +534,7 @@ typedef struct tMD_AssemblyRef_ tMD_AssemblyRef;
 #define MD_TABLE_ASSEMBLYREF 0x23
 
 typedef struct tMD_NestedClass_ tMD_NestedClass;
-struct tMD_NestedClass_ {
+struct PACKED tMD_NestedClass_ {
 	// The TypeDef of the class that is nested
 	IDX_TABLE nestedClass;
 	// The TypeDef of the class in which nestedClass is enclosed
@@ -532,7 +545,7 @@ struct tMD_NestedClass_ {
 // Table 0x2A - Generic param
 #define MD_TABLE_GENERICPARAM 0x2A
 typedef struct tMD_GenericParam_ tMD_GenericParam;
-struct tMD_GenericParam_ {
+struct PACKED tMD_GenericParam_ {
 	// The number of this generic parameter. Numbered left-to-right, starting from 0
 	U16 number;
 	// Flags - GenericParamAttributes
@@ -545,7 +558,7 @@ struct tMD_GenericParam_ {
 
 // Table 0x2B - MethodSpec
 #define MD_TABLE_METHODSPEC 0x2B
-struct tMD_MethodSpec_ {
+struct PACKED tMD_MethodSpec_ {
 	// Combined
 	tMD_MethodDef *pMethodDef;
 	// MetaData pointer
@@ -560,11 +573,14 @@ struct tMD_MethodSpec_ {
 // Table 0x2C - GenericParamConstraint
 #define MD_TABLE_GENERICPARAMCONSTRAINT 0x2C
 typedef struct tMD_GenericParamConstraint_ tMD_GenericParamConstraint;
-struct tMD_GenericParamConstraint_ {
+struct PACKED tMD_GenericParamConstraint_ {
 	// The generic param that this constraint applies to
 	tMD_GenericParam *pGenericParam;
 	// The type of the constraint (coded index TypeDefOrRef)
 	IDX_TABLE constraint;
 };
 
+#ifdef _MSC_VER
+#   pragma pack(pop)
+#endif
 #endif

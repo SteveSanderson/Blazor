@@ -51,13 +51,35 @@ namespace System {
 			}
 		}
 
-		public static Decimal op_UnaryNegation(Decimal d) {
+		public static bool operator ==(Decimal d1, Decimal d2) {
+			return Equals(d1, d2);
+		}
+
+		public static bool operator !=(Decimal d1, Decimal d2) {
+			return !Equals(d1, d2);
+		}
+
+		public static Decimal operator -(Decimal d) {
 			d.flags ^= SIGN_FLAG;
 			return d;
 		}
 
 		public static int[] GetBits(Decimal d) {
 			return new int[] { (int)d.lo, (int)d.mid, (int)d.hi, (int)d.flags };
+		}
+
+		public static bool Equals (Decimal d1, Decimal d2) {
+			return d1.lo == d2.lo && d1.mid == d2.mid && d1.hi == d2.hi && d1.flags == d2.flags;
+		}
+
+		public override bool Equals (object value) {
+			if (!(value is Decimal))
+				return false;
+			return Equals((Decimal) value, this);
+		}
+
+		public override int GetHashCode () {
+			return (int) (flags ^ hi ^ lo ^ mid);
 		}
 
 		public override string ToString() {

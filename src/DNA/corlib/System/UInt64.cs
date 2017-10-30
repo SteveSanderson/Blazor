@@ -28,10 +28,10 @@ namespace System {
 		public const ulong MaxValue = 0xffffffffffffffffL;
 
 #pragma warning disable 0169, 0649
-        internal ulong m_value;
+		internal ulong m_value;
 #pragma warning restore 0169, 0649
 
-        public override bool Equals(object obj) {
+		public override bool Equals(object obj) {
 			return (obj is ulong) && ((ulong)obj).m_value == this.m_value;
 		}
 
@@ -59,7 +59,8 @@ namespace System {
 			}
 			//TODO: use style and provider
 			int error = 0;
-			ulong result = s.InternalToUInt64(out error);
+			int radix = (style & NumberStyles.AllowHexSpecifier) != 0 ? 16 : 10;
+			ulong result = s.InternalToUInt64(out error, radix);
 			if (error != 0) {
 				throw String.GetFormatException(error);
 			}
@@ -77,7 +78,8 @@ namespace System {
 			}
 			//TODO: use style and provider
 			int error = 0;
-			result = s.InternalToUInt64(out error);
+			int radix = (style & NumberStyles.AllowHexSpecifier) != 0 ? 16 : 10;
+			result = s.InternalToUInt64(out error, radix);
 			return error == 0;
 		}
 
@@ -86,7 +88,8 @@ namespace System {
 		#region ToString methods
 
 		public override string ToString() {
-			return NumberFormatter.FormatGeneral(new NumberFormatter.NumberStore(this.m_value));
+			// return NumberFormatter.FormatGeneral(new NumberFormatter.NumberStore(this.m_value));
+			return String.InternalFromUInt64(this.m_value);
 		}
 
 		public string ToString(IFormatProvider formatProvider) {

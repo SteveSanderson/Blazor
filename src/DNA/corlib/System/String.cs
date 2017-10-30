@@ -61,6 +61,9 @@ namespace System {
 		extern private static string InternalConcat(string str0, string str1);
 
 		[MethodImpl(MethodImplOptions.InternalCall)]
+		extern private void InternalCopyTo(int sourceIndex, char[] destination, int destinationIndex, int count);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
 		extern private string InternalReplace(string oldValue, string newValue);
 
 		// trimType: bit 0 = start; bit 1 = end
@@ -68,10 +71,13 @@ namespace System {
 		extern private string InternalTrim(char[] trimChars, int trimType);
 
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		extern private int InternalIndexOf(char value, int startIndex, int count, bool forwards);
+		extern private int InternalIndexOf(char value, int startIndex, int count, bool forward);
 
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		extern private int InternalIndexOfAny(char[] anyOf, int startIndex, int count, bool forward);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		extern private int InternalIndexOfStr(string value, int startIndex, int count, bool forward);
 
 		#endregion
 
@@ -90,11 +96,9 @@ namespace System {
 		#region Misc Methods
 
 		public char[] ToCharArray () {
-			char[] tmp = new char [this.Length];
-			for (int i = 0; i < tmp.Length; i++) {
-				tmp[i] = this[i];
-			}
-			return tmp;
+			char[] chars = new char [this.length];
+			InternalCopyTo(0, chars, 0, this.length);
+			return chars;
 		}
 
 		public static string Join(string separator, string[] values) {
@@ -127,7 +131,19 @@ namespace System {
 			return this.Split(separator, int.MaxValue);
 		}
 
+		public string[] Split(char separator, StringSplitOptions options) {
+			return this.Split(new char[] { separator }, int.MaxValue, options);
+		}
+
+		public string[] Split(char[] separator, StringSplitOptions options) {
+			return this.Split(separator, int.MaxValue, options);
+		}
+
 		public string[] Split(char[] separator, int count) {
+			return this.Split(separator, count, StringSplitOptions.None);
+		}
+
+		public string[] Split(char[] separator, int count, StringSplitOptions options) {
 			if (count < 0) {
 				throw new ArgumentException("count");
 			}
@@ -144,10 +160,12 @@ namespace System {
 			for (; count > 0; count--) {
 				int sepPos = this.IndexOfAny(separator, pos);
 				if (sepPos < 0) {
-					ret.Add(new string(this, pos, this.Length - pos));
+					ret.Add(new string(this, pos, this.length - pos));
 					break;
 				}
-				ret.Add(new string(this, pos, sepPos - pos));
+				if (options != StringSplitOptions.RemoveEmptyEntries || sepPos > pos) {
+					ret.Add(new string(this, pos, sepPos - pos));
+				}
 				pos = sepPos + 1;
 			}
 
@@ -155,11 +173,11 @@ namespace System {
 		}
 
 		public bool StartsWith(string str) {
-			return this.Substring(0, str.Length) == str;
+			return this.length < str.Length ? false : this.Substring(0, str.Length) == str;
 		}
 
 		public bool EndsWith(string str) {
-			return this.Substring(this.Length - str.Length, str.Length) == str;
+			return this.length < str.Length ? false : this.Substring(this.length - str.Length, str.Length) == str;
 		}
 
 		public bool StartsWith(string str, StringComparison comparisonType) {
@@ -169,9 +187,10 @@ namespace System {
 				case StringComparison.Ordinal:
 					return StartsWith(str);
 				case StringComparison.CurrentCultureIgnoreCase:
+					throw new Exception("String.StartsWith(s,StringComparison.CurrentCultureIgnoreCase) is not implemented.");
 				case StringComparison.InvariantCultureIgnoreCase:
 				case StringComparison.OrdinalIgnoreCase:
-					return this.ToUpperInvariant().StartsWith(str.ToUpperInvariant()); //TODO: without alloc
+					return this.ToUpperInvariant().StartsWith(str.ToUpperInvariant());
 				default:
 					throw new ArgumentException ("comparisonType");
 			}
@@ -184,9 +203,10 @@ namespace System {
 				case StringComparison.Ordinal:
 					return EndsWith(str);
 				case StringComparison.CurrentCultureIgnoreCase:
+					throw new Exception("String.EndsWith(s,StringComparison.CurrentCultureIgnoreCase) is not implemented.");
 				case StringComparison.InvariantCultureIgnoreCase:
 				case StringComparison.OrdinalIgnoreCase:
-					return this.ToUpperInvariant().EndsWith(str.ToUpperInvariant()); //TODO: without alloc
+					return this.ToUpperInvariant().EndsWith(str.ToUpperInvariant());
 				default:
 					throw new ArgumentException ("comparisonType");
 			}
@@ -220,29 +240,23 @@ namespace System {
 		
 		public static string Concat(IEnumerable<string> values) {
 			if (values == null) {
-				throw new ArgumentNullException("args");
+				throw new ArgumentNullException("values");
 			}
-			StringBuilder sb = new StringBuilder();
-			foreach (var s in values) {
-				sb.Append(s);
-			}
+			int capacity = 0;
+			foreach (var s in values) { if (s != null) { capacity += s.Length; } }
+			StringBuilder sb = new StringBuilder(capacity);
+			foreach (var s in values) { if (s != null) { sb.Append(s); } }
 			return sb.ToString();
 		}
 
 		public static string Concat(object obj0) {
-			return obj0.ToString();
+			return (obj0 == null) ? null : obj0.ToString();
 		}
 
 		public static string Concat(object obj0, object obj1) {
 			string str0 = (obj0 == null) ? null : obj0.ToString();
 			string str1 = (obj1 == null) ? null : obj1.ToString();
-			if (str0 == null) {
-				return str1 ?? string.Empty;
-			}
-			if (str1 == null) {
-				return str0;
-			}
-			return InternalConcat(str0, str1);
+			return Concat(str0, str1);
 		}
 
 		public static string Concat(object obj0, object obj1, object obj2) {
@@ -253,13 +267,13 @@ namespace System {
 			return Concat(new object[] { obj0, obj1, obj2, obj3 });
 		}
 
-		public static string Concat(params object[] objs) {
-			if (objs == null) {
-				throw new ArgumentNullException("args");
+		public static string Concat(params object[] values) {
+			if (values == null) {
+				throw new ArgumentNullException("values");
 			}
 			StringBuilder sb = new StringBuilder();
-			for (int i = 0; i < objs.Length; i++) {
-				sb.Append(objs[i]);
+			for (int i = 0; i < values.Length; i++) {
+				sb.Append(values[i]);
 			}
 			return sb.ToString();
 		}
@@ -298,15 +312,15 @@ namespace System {
 		#region Substring Methods
 
 		public string Substring(int startIndex) {
-			if (startIndex < 0 || startIndex > this.Length) {
+			if (startIndex < 0 || startIndex > this.length) {
 				throw new ArgumentOutOfRangeException();
 			}
 
-			return new string(this, startIndex, this.Length - startIndex);
+			return new string(this, startIndex, this.length - startIndex);
 		}
 
 		public string Substring(int startIndex, int length) {
-			if (startIndex < 0 || length < 0 || startIndex + length > this.Length) {
+			if (startIndex < 0 || length < 0 || startIndex + length > this.length) {
 				throw new ArgumentOutOfRangeException();
 			}
 
@@ -355,7 +369,7 @@ namespace System {
 			if (oldValue.Length == 0) {
 				throw new ArgumentException("oldValue is an empty string.");
 			}
-			if (this.Length == 0) {
+			if (this.length == 0) {
 				return this;
 			}
 			if (newValue == null) {
@@ -365,31 +379,34 @@ namespace System {
 		}
 
 		public string Remove(int startIndex) {
-			if (startIndex < 0 || startIndex >= this.Length) {
+			if (startIndex < 0 || startIndex >= this.length) {
 				throw new ArgumentOutOfRangeException("startIndex");
 			}
 			return new string(this, 0, startIndex);
 		}
 
 		public string Remove(int startIndex, int count) {
-			if (startIndex < 0 || count < 0 || startIndex + count >= this.Length) {
+			if (startIndex < 0 || count < 0 || startIndex + count >= this.length) {
 				throw new ArgumentOutOfRangeException();
 			}
 			int pos2 = startIndex+count;
-			return (new string(this, 0, startIndex)) + (new string(this, pos2, this.Length - pos2));
+			return (new string(this, 0, startIndex)) + (new string(this, pos2, this.length - pos2));
 		}
 
-		public void CopyTo(
-			int sourceIndex,
-			char[] destination,
-			int destinationIndex,
-			int count
-		)
-		{
-			for (var i = 0; i < count; i++)
-			{
-				destination[destinationIndex + i] = this[sourceIndex + i];
+		public void CopyTo(int sourceIndex, char[] destination, int destinationIndex, int count) {
+			if (destination == null) {
+				throw new ArgumentNullException("destination");
 			}
+			if (sourceIndex < 0 || sourceIndex > this.length) {
+				throw new ArgumentOutOfRangeException ("sourceIndex");
+			}
+			if (destinationIndex < 0 || destinationIndex > destination.Length) {
+				throw new ArgumentOutOfRangeException ("destinationIndex");
+			}
+			if (count < 0 || count > this.length - sourceIndex || count > destination.Length - destinationIndex) {
+				throw new ArgumentOutOfRangeException ("count");
+			}
+			InternalCopyTo(sourceIndex, destination, destinationIndex, count);
 		}
 
 		#endregion
@@ -412,125 +429,75 @@ namespace System {
 			switch (comparisonType) {
 				case StringComparison.CurrentCulture:
 				case StringComparison.CurrentCultureIgnoreCase:
+					throw new Exception("String.Compare(a,b,StringComparison.CurrentCulture) is not implemented.");
 				case StringComparison.InvariantCulture:
-				case StringComparison.InvariantCultureIgnoreCase:
-					throw new Exception("The method or operation is not implemented.");
 				case StringComparison.Ordinal:
 					return CompareOrdinal(strA, strB);
+				case StringComparison.InvariantCultureIgnoreCase:
 				case StringComparison.OrdinalIgnoreCase:
-					return CompareOrdinal(strA.ToUpperInvariant(), strB.ToUpperInvariant()); //TODO: without alloc
+					return CompareOrdinal(strA.ToUpperInvariant(), strB.ToUpperInvariant());
 				default:
 					throw new ArgumentException ("comparisonType");
 			}
 		}
 
-		public static int CompareOrdinal(string strA, string strB) {
-			if (strA == null) {
-				if (strB == null) {
-					return 0;
-				}
-				return -1;
-			}
-			if (strB == null) {
-				return 1;
-			}
-			int top = Math.Min(strA.Length, strB.Length);
-			for (int i = 0; i < top; i++) {
-				if (strA[i] != strB[i]) {
-					return (strA[i] - strB[i]);
-				}
-			}
-			return strA.Length - strB.Length;
-		}
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		extern public static int CompareOrdinal(string strA, string strB);
 
 		#endregion
 
 		#region IndexOf... Methods
 
 		public int IndexOf(string value) {
-			return IndexOfOrdinal(value, 0, this.Length);
+			return IndexOfOrdinal(value, 0, this.length, forward: true);
 		}
 
 		public int IndexOf(string value, int startIndex) {
-			return IndexOfOrdinal(value, startIndex, this.Length - startIndex);
+			return IndexOfOrdinal(value, startIndex, this.length - startIndex, forward: true);
 		}
 
 		public int IndexOf(string value, int startIndex, int count) {
-			return IndexOfOrdinal(value, startIndex, count);
+			return IndexOfOrdinal(value, startIndex, count, forward: true);
 		}
 
 		public int IndexOf(string value, StringComparison comparisonType) {
-			return IndexOf(value, 0, this.Length, comparisonType);
+			return IndexOf(value, 0, this.length, comparisonType);
 		}
 
 		public int IndexOf(string value, int startIndex, StringComparison comparisonType) {
-			return IndexOf(value, startIndex, this.Length - startIndex, comparisonType);
+			return IndexOf(value, startIndex, this.length - startIndex, comparisonType);
 		}
 
 		public int IndexOf(string value, int startIndex, int count, StringComparison comparisonType) {
 			switch (comparisonType) {
 				case StringComparison.CurrentCulture:
-				case StringComparison.CurrentCultureIgnoreCase:
 				case StringComparison.InvariantCulture:
-				case StringComparison.InvariantCultureIgnoreCase:
-					throw new Exception("The method or operation is not implemented.");
 				case StringComparison.Ordinal:
-					return IndexOfOrdinal(value, startIndex, count);
+					return IndexOfOrdinal(value, startIndex, count, forward: true);
+				case StringComparison.CurrentCultureIgnoreCase:
+					throw new Exception("String.IndexOf(s,i,c,StringComparison.CurrentCultureIgnoreCase) is not implemented.");
+				case StringComparison.InvariantCultureIgnoreCase:
 				case StringComparison.OrdinalIgnoreCase:
-					return this.ToUpperInvariant().IndexOfOrdinal(value.ToUpperInvariant(), startIndex, count); //TODO: without alloc
+					return ToUpperInvariant().IndexOfOrdinal(value.ToUpperInvariant(), startIndex, count, forward: true);
 				default:
 					throw new ArgumentException ("comparisonType");
 			}
 		}
 
-		internal int IndexOfOrdinal(string value, int startIndex, int count) {
-			if (value == null) {
-				throw new ArgumentNullException("value");
-			}
-			if (value.Length == 0) {
-				return startIndex;
-			}
-			if (startIndex < 0 || startIndex > this.Length) {
-				throw new ArgumentOutOfRangeException ("startIndex");
-			}
-			if (count < 0 || count > this.Length - startIndex) {
-				throw new ArgumentOutOfRangeException ("count");
-			}
-
-			int valueLen = value.Length;
-			int finalIndex = startIndex + count - valueLen + 1;
-			char char0 = value[0];
-			for (int i = startIndex; i < finalIndex; i++) {
-				if (this[i] == char0) {
-					bool ok = true;
-					for (int j = 1; j < valueLen; j++) {
-						if (this[i + j] != value[j]) {
-							ok = false;
-							break;
-						}
-					}
-					if (ok) {
-						return i;
-					}
-				}
-			}
-			return -1;
-		}
-
 		public int LastIndexOf(string value) {
-			return LastIndexOfOrdinal(value, this.Length - 1, this.Length);
+			return IndexOfOrdinal(value, this.length - 1, this.length, forward: false);
 		}
 
 		public int LastIndexOf(string value, int startIndex) {
-			return LastIndexOfOrdinal(value, startIndex, startIndex + 1);
+			return IndexOfOrdinal(value, startIndex, startIndex + 1, forward: false);
 		}
 
 		public int LastIndexOf(string value, int startIndex, int count) {
-			return LastIndexOfOrdinal(value, startIndex, count);
+			return IndexOfOrdinal(value, startIndex, count, forward: false);
 		}
 
 		public int LastIndexOf(string value, StringComparison comparisonType) {
-			return LastIndexOf(value, this.Length - 1, this.Length, comparisonType);
+			return LastIndexOf(value, this.length - 1, this.length, comparisonType);
 		}
 
 		public int LastIndexOf(string value, int startIndex, StringComparison comparisonType) {
@@ -540,121 +507,107 @@ namespace System {
 		public int LastIndexOf(string value, int startIndex, int count, StringComparison comparisonType) {
 			switch (comparisonType) {
 				case StringComparison.CurrentCulture:
-				case StringComparison.CurrentCultureIgnoreCase:
 				case StringComparison.InvariantCulture:
-				case StringComparison.InvariantCultureIgnoreCase:
-					throw new Exception("The method or operation is not implemented.");
 				case StringComparison.Ordinal:
-					return LastIndexOfOrdinal(value, startIndex, count);
+					return IndexOfOrdinal(value, startIndex, count, forward: false);
+				case StringComparison.CurrentCultureIgnoreCase:
+					throw new Exception("String.LastIndexOf(s,i,c,StringComparison.CurrentCultureIgnoreCase) is not implemented.");
+				case StringComparison.InvariantCultureIgnoreCase:
 				case StringComparison.OrdinalIgnoreCase:
-					return this.ToUpperInvariant().LastIndexOfOrdinal(value.ToUpperInvariant(), startIndex, count); //TODO: without alloc
+					return ToUpperInvariant().IndexOfOrdinal(value.ToUpperInvariant(), startIndex, count, forward: false);
 				default:
 					throw new ArgumentException ("comparisonType");
 			}
 		}
 
-		internal int LastIndexOfOrdinal(string value, int startIndex, int count) {
+		private int IndexOfOrdinal(string value, int startIndex, int count, bool forward) {
 			if (value == null) {
 				throw new ArgumentNullException("value");
 			}
-			if (this.Length == 0) {
+			if (this.length == 0) {
 				return value.Length == 0 ? 0 : -1;
 			}
-			if (value.Length == 0) {
-				return Math.Min (this.Length - 1, startIndex);
-			}
-			if (startIndex < 0 || startIndex > this.Length) {
+			if (startIndex < 0 || startIndex > this.length) {
 				throw new ArgumentOutOfRangeException ("startIndex");
 			}
-			if (count < 0 || count > startIndex + 1) {
+			if (count < 0 || count > (forward ? this.length - startIndex : startIndex + 1)) {
 				throw new ArgumentOutOfRangeException ("count");
 			}
-
-			if (startIndex == this.Length) {
-				startIndex--;
-				if (count > 0) { count--; }
-			}
-			
-			int valueLen = value.Length;
-			int finalIndex = startIndex - count;
-			char char0 = value[0];
-			for (int i = startIndex - valueLen + 1; i > finalIndex; i--) {
-				if (this[i] == char0) {
-					bool ok = true;
-					for (int j = 1; j < valueLen; j++) {
-						if (this[i + j] != value[j]) {
-							ok = false;
-							break;
-						}
-					}
-					if (ok) {
-						return i;
-					}
-				}
-			}
-			return -1;
+			return InternalIndexOfStr(value, startIndex, count, forward);
 		}
 
 		public int IndexOf(char value) {
-			return this.IndexOf(value, 0, this.Length, true);
+			return IndexOfOrdinal(value, 0, this.length, forward: true);
 		}
 
 		public int IndexOf(char value, int startIndex) {
-			return this.IndexOf(value, startIndex, this.Length - startIndex, true);
+			return IndexOfOrdinal(value, startIndex, this.length - startIndex, forward: true);
 		}
 
 		public int IndexOf(char value, int startIndex, int count) {
-			return this.IndexOf(value, startIndex, count, true);
+			return IndexOfOrdinal(value, startIndex, count, forward: true);
 		}
 
 		public int LastIndexOf(char value) {
-			return this.IndexOf(value, 0, this.Length, false);
+			return IndexOfOrdinal(value, this.length - 1, this.length, forward: false);
 		}
 
 		public int LastIndexOf(char value, int startIndex) {
-			return this.IndexOf(value, startIndex, this.Length - startIndex, false);
+			return IndexOfOrdinal(value, startIndex, startIndex + 1, forward: false);
 		}
 
 		public int LastIndexOf(char value, int startIndex, int count) {
-			return this.IndexOf(value, startIndex, count, false);
+			return IndexOfOrdinal(value, startIndex, count, forward: false);
 		}
 
-		private int IndexOf(char value, int startIndex, int count, bool forwards) {
-			if (startIndex < 0 || count < 0 || startIndex + count > this.Length) {
-				throw new ArgumentOutOfRangeException();
+		private int IndexOfOrdinal(char value, int startIndex, int count, bool forward) {
+			if (this.length == 0) {
+				return -1;
 			}
-			return this.InternalIndexOf(value, startIndex, count, forwards);
+			if (startIndex < 0 || startIndex > this.length) {
+				throw new ArgumentOutOfRangeException ("startIndex");
+			}
+			if (count < 0 || count > (forward ? this.length - startIndex: startIndex + 1)) {
+				throw new ArgumentOutOfRangeException ("count");
+			}
+			return InternalIndexOf(value, startIndex, count, forward);
 		}
 
 		public int IndexOfAny(char[] anyOf) {
-			return this.IndexOfAny(anyOf, 0, this.Length, true);
+			return IndexOfOrdinal(anyOf, 0, this.length, forward: true);
 		}
 
 		public int IndexOfAny(char[] anyOf, int startIndex) {
-			return this.IndexOfAny(anyOf, startIndex, this.Length - startIndex, true);
+			return IndexOfOrdinal(anyOf, startIndex, this.length - startIndex, forward: true);
 		}
 
 		public int IndexOfAny(char[] anyOf, int startIndex, int count) {
-			return this.IndexOfAny(anyOf, startIndex, count, true);
+			return IndexOfOrdinal(anyOf, startIndex, count, forward: true);
 		}
 
 		public int LastIndexOfAny(char[] anyOf) {
-			return this.IndexOfAny(anyOf, 0, this.Length, false);
+			return IndexOfOrdinal(anyOf, this.length - 1, this.length, forward: false);
 		}
 
 		public int LastIndexOfAny(char[] anyOf, int startIndex) {
-			return this.IndexOfAny(anyOf, startIndex, this.Length - startIndex, false);
+			return IndexOfOrdinal(anyOf, startIndex, startIndex + 1, forward: false);
 		}
 
 		public int LastIndexOfAny(char[] anyOf, int startIndex, int count) {
-			return this.IndexOfAny(anyOf, startIndex, count, false);
+			return IndexOfOrdinal(anyOf, startIndex, count, forward: false);
 		}
 
-		private int IndexOfAny(char[] anyOf, int startIndex, int count, bool forward) {
-			if (startIndex < 0 || count < 0 || startIndex + count > this.Length) {
-				throw new ArgumentOutOfRangeException();
+		private int IndexOfOrdinal(char[] anyOf, int startIndex, int count, bool forward) {
+			if (this.length == 0) {
+				return -1;
 			}
-			return this.InternalIndexOfAny(anyOf, startIndex, count, forward);
+			if (startIndex < 0 || startIndex > this.length) {
+				throw new ArgumentOutOfRangeException ("startIndex");
+			}
+			if (count < 0 || count > (forward ? this.length - startIndex: startIndex + 1)) {
+				throw new ArgumentOutOfRangeException ("count");
+			}
+			return InternalIndexOfAny(anyOf, startIndex, count, forward);
 		}
 
 		#endregion
@@ -675,14 +628,8 @@ namespace System {
 			return culture.TextInfo.ToLower(this);
 		}
 
-		public string ToLowerInvariant() {
-			int len = this.Length;
-			StringBuilder sb = new StringBuilder(len);
-			for (int i = 0; i < len; i++) {
-				sb.Append(char.ToLowerInvariant(this[i]));
-			}
-			return sb.ToString();
-		}
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		extern public string ToLowerInvariant();
 
 		public string ToUpper() {
 			return ToUpper(CultureInfo.CurrentCulture);
@@ -698,14 +645,8 @@ namespace System {
 			return culture.TextInfo.ToUpper(this);
 		}
 
-		public string ToUpperInvariant() {
-			int len = this.Length;
-			StringBuilder sb = new StringBuilder(len);
-			for (int i = 0; i < len; i++) {
-				sb.Append(char.ToUpperInvariant(this[i]));
-			}
-			return sb.ToString();
-		}
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		extern public string ToUpperInvariant();
 
 		#endregion
 
@@ -719,12 +660,36 @@ namespace System {
 			return Equals(this, obj as string);
 		}
 
+		public bool Equals(string value) {
+			return Equals(this, value);
+		}
+
+		public bool Equals(string value, StringComparison comparisonType) {
+			return Equals(this, value, comparisonType);
+		}
+
 		public static bool operator ==(string a, string b) {
 			return Equals(a, b);
 		}
 
 		public static bool operator !=(string a, string b) {
 			return !Equals(a, b);
+		}
+
+		public static bool Equals(string a, string b, StringComparison comparisonType) {
+			switch (comparisonType) {
+				case StringComparison.CurrentCulture:
+				case StringComparison.InvariantCulture:
+				case StringComparison.Ordinal:
+					return Equals(a, b);
+				case StringComparison.CurrentCultureIgnoreCase:
+					throw new Exception("String.Equals(a,b,StringComparison.CurrentCultureIgnoreCase) is not implemented.");
+				case StringComparison.InvariantCultureIgnoreCase:
+				case StringComparison.OrdinalIgnoreCase:
+					return Equals(a.ToUpperInvariant(), b.ToUpperInvariant());
+				default:
+					throw new ArgumentException ("comparisonType");
+			}
 		}
 
 		[MethodImpl(MethodImplOptions.InternalCall)]
@@ -764,14 +729,6 @@ namespace System {
 
 		#endregion
 
-		#region IEquatable<string> Members
-
-		public bool Equals(string other) {
-			return Equals(this, other);
-		}
-
-		#endregion
-
 		#region IEnumerable Members
 
 		public IEnumerator GetEnumerator() {
@@ -787,13 +744,26 @@ namespace System {
 		#region Parsing
 
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		extern internal int InternalToInt32(out int error);
+		extern internal static string InternalFromInt32(int value);
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		extern internal long InternalToInt64(out int error);
+		extern internal static string InternalFromInt64(long value);
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		extern internal uint InternalToUInt32(out int error);
+		extern internal static string InternalFromUInt32(uint value);
 		[MethodImpl(MethodImplOptions.InternalCall)]
-		extern internal ulong InternalToUInt64(out int error);
+		extern internal static string InternalFromUInt64(ulong value);
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		extern internal static string InternalFromSingle(float value);
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		extern internal static string InternalFromDouble(double value);
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		extern internal int InternalToInt32(out int error, int radix);
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		extern internal long InternalToInt64(out int error, int radix);
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		extern internal uint InternalToUInt32(out int error, int radix);
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		extern internal ulong InternalToUInt64(out int error, int radix);
 		[MethodImpl(MethodImplOptions.InternalCall)]
 		extern internal float InternalToSingle(out int error);
 		[MethodImpl(MethodImplOptions.InternalCall)]
