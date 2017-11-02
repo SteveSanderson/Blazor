@@ -6,13 +6,14 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Blazor.Runtime;
 using Blazor.Runtime.Components;
+using Blazor.Runtime.Interop;
 
 namespace Blazor.Components
 {
     public abstract class Component : IDisposable
     {
         private static int NextId = 0; // Ideally, switch to long
-        private static WeakIdentityMap<int, Component> LookupById = new WeakIdentityMap<int, Component>(c => c._id);
+        private static WeakValueDictionary<int, Component> LookupById = new WeakValueDictionary<int, Component>(c => c._id);
 
         internal int Id => _id;
 

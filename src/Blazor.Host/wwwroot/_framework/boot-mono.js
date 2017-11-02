@@ -135,11 +135,7 @@
         // having to specify what method it is, but I haven't found it
         var entryPointMethod = FindMethod('ClientServerApp.Client', 'ClientServerApp.Client', 'Program', 'Main');
         call_method(entryPointMethod, null, []);
-
-        InvokeStatic('Blazor.Runtime', 'Blazor.Routing', 'Router', 'OnNavigation', JSON.stringify({
-            url: location.pathname,
-            absoluteUrl: location.href
-        }));
+        OnLocationChanged(window.location.pathname);
     },
 	
 	receiveInvocationFromDotNet: function (callInfo) {
