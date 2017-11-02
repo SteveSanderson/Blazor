@@ -57,12 +57,15 @@ namespace Blazor.Runtime.Interop
         {
             if (_store.Count > _cullThreshold)
             {
-                _cullThreshold *= 2;
-
                 var itemsToRemove = _store.Where(x => x.Value == null || !x.Value.TryGetTarget(out _)).ToList();
                 foreach (var itemToRemove in itemsToRemove)
                 {
                     _store.Remove(itemToRemove.Key);
+                }
+
+                if (_store.Count > (_cullThreshold / 2))
+                {
+                    _cullThreshold *= 2;
                 }
             }
         }
