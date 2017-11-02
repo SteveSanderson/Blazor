@@ -35,10 +35,7 @@ namespace Blazor.Components
                 viewType = Router.ViewAssemblies.Select(a => a.GetType(viewTypeName)).Where(t => t != null).FirstOrDefault();
             }
 
-            // To ensure that the constructor actually runs, use Instantiate from the IComponentRazorViewFactory interface.
-            // For more info on why this is needed, see the comments about it in AddIComponentRazorViewFactoryImplementation
-            // in the RazorRenderer project.
-            var instance = ((IRazorComponentFactory)Activator.CreateInstance(viewType)).Instantiate();
+            var instance = (RazorComponent)Activator.CreateInstance(viewType);
             instance.Context = context;
             return instance;
         }
