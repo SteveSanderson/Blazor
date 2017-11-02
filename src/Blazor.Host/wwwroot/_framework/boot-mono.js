@@ -1,6 +1,6 @@
 ﻿window.Module = {
     print: function (x) { console.log("WASM: " + x) },
-    printErr: function (x) { console.log("WASM-ERR: " + x) },
+    printErr: function (x) { console.error("WASM: " + x) },
     wasmBinaryFile: '/_framework/mono/mono.wasm',
 
     totalDependencies: 0,
@@ -32,27 +32,22 @@
             "_framework/mono/managed/Facades/System.Runtime.Extensions.dll",
             "_framework/mono/managed/Facades/System.Runtime.InteropServices.dll",
             "_framework/mono/managed/Facades/System.Threading.dll",
-            "_framework/mono/managed/Facades/System.Threading.Tasks.dll",
+            "_framework/mono/managed/Facades/System.Threading.Tasks.dll"
         );
 
+        console.log('Loading .NET assemblies...');
         var pending = 0;
         assemblies.forEach(function (assemblyUrl) {
             var asm_name = assemblyUrl.substring(assemblyUrl.lastIndexOf('/') + 1);
             asm_name = asm_name.split('?')[0];
-
-            console.log("loading " + asm_name);
             ++pending;
             fetch(assemblyUrl, { credentials: 'same-origin' }).then(function (response) {
                 if (!response.ok)
                     throw "failed to load Assembly '" + asm_name + "'";
                 return response['arrayBuffer']();
             }).then(function (blob) {
-                console.log(blob);
-                console.log(typeof blob);
                 var asm = new Uint8Array(blob);
                 Module.FS_createDataFile("managed/" + asm_name, null, asm, true, true, true);
-
-                console.log("LOADED: " + asm_name);
                 --pending;
                 if (pending == 0)
                     Module.bclLoadingDone();
@@ -60,7 +55,7 @@
         });
     },
     bclLoadingDone: function () {
-        console.log("Done loading the BCL");
+        console.log("Finished loading all .NET assemblies");
 
         var load_runtime = Module.cwrap('mono_wasm_load_runtime', null, ['string'])
         var assembly_load = Module.cwrap('mono_wasm_assembly_load', 'number', ['string'])
