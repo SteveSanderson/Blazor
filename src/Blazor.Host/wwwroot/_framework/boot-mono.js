@@ -18,9 +18,8 @@
             "_bin/Blazor.Runtime.dll",
             "_bin/JSLibs.dll",
             "_bin/ClientServerApp.Shared.dll",
-            "_bin/ClientServerApp.Client.Views.dll?type=razorviews&reference=ClientServerApp.Shared.dll&reference=JSLibs.dll",
-            "_bin/ClientServerApp.Client.dll",
-            "_framework/mono/managed/dotnetapp.dll"];
+            "_bin/ClientServerApp.Client.Views.dll?type=razorviews",
+            "_bin/ClientServerApp.Client.dll"];
 
         assemblies.push(
             "_framework/mono/managed/Facades/netstandard.dll",

@@ -2,7 +2,7 @@
   "profiles": {
     "RazorRenderer": {
       "commandName": "Project",
-      "commandLineArgs": "..\\..\\samples\\ClientServerApp\\ClientServerApp.Client\\ ClientServerApp.Client ..\\..\\samples\\ClientServerApp\\ClientServerApp.Client\\bin\\Debug\\netcoreapp1.0\\ClientServerApp.Client.dll ..\\..\\samples\\ClientServerApp\\ClientServerApp.Client\\bin\\Debug\\netcoreapp1.0\\ClientServerApp.Shared.dll ..\\..\\samples\\JSLibs\\bin\\Debug\\netstandard1.6\\JSLibs.dll"
+      "commandLineArgs": "..\\..\\samples\\ClientServerApp\\ClientServerApp.Client\\ ClientServerApp.Client ..\\..\\samples\\ClientServerApp\\ClientServerApp.Client\\bin\\Debug\\netcoreapp1.0\\ClientServerApp.Client.dll"
     }
   }
 }

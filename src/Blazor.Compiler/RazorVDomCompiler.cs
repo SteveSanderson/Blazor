@@ -8,8 +8,8 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Razor.Language;
-using System.Reflection;
 using Microsoft.CodeAnalysis.Emit;
+using Blazor.Compiler;
 
 namespace RazorRenderer
 {
@@ -76,6 +76,7 @@ namespace RazorRenderer
 
             Log("Compiling C#...");
             var modelAssemblyRefs = referenceAssemblies
+                .Concat(ProjectReferenceUtil.FindReferencedAssemblies(rootDir, OptimizationLevel.Debug))
                 .Select(a => MetadataReference.CreateFromFile(Path.GetFullPath(a)))
                 .Cast<MetadataReference>()
                 .ToList();
@@ -270,50 +271,15 @@ namespace RazorRenderer
             return foundItems;
         }
 
-        static string AssemblyLocation(string assemblyName)
-        {
-            return AssemblyLocation(Assembly.Load(new AssemblyName(assemblyName)));
-        }
-
-        static string AssemblyLocation(Type containedType)
-        {
-            return AssemblyLocation(containedType.GetTypeInfo().Assembly);
-        }
-
-        static string AssemblyLocation(Assembly assembly)
-        {
-            var locationProperty = typeof(Assembly).GetRuntimeProperty("Location");
-            return (string)locationProperty.GetValue(assembly);
-        }
-
         static void CompileToFile(IList<SyntaxTree> syntaxTrees, IList<MetadataReference> assemblyReferences, string outputAssemblyName, Stream outputStream, Stream pdbStream)
         {
-            // It's important that we reference TFM-agnostic netstandard DLLs rather than the DLLs that
-            // are loaded into the running process, because the loaded DLLs will be specific to a particular
-            // TFM (e.g., on .NET Core, the server-side mscorlib will contain typeforwarders to
-            // System.Private.* assemblies, and these don't exist at all in the Mono runtime).
-            // TODO: figure out how to get this path using the machine's dotnet SDK
-            var netstandardRefRoot = @"C:\Program Files\dotnet\sdk\NuGetFallbackFolder\netstandard.library\2.0.0\build\netstandard2.0\ref\";
-            var standardReferencePaths = new[]
-            {
-                netstandardRefRoot + "netstandard.dll",
-                netstandardRefRoot + "System.Collections.dll",
-                netstandardRefRoot + "System.Linq.dll",
-                netstandardRefRoot + "System.Runtime.dll",
-                netstandardRefRoot + "System.Threading.Tasks.dll",
-                AssemblyLocation(typeof(RazorComponent)), // Blazor
-            };
-            var allReferences = assemblyReferences
-                .Concat(standardReferencePaths.Select(assemblyLocation => MetadataReference.CreateFromFile(assemblyLocation)))
-                .ToList();
-
             var compilationOptions = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
                 .WithOptimizationLevel(OptimizationLevel.Debug)
                 .WithAssemblyIdentityComparer(DesktopAssemblyIdentityComparer.Default);
 
             var compilation = CSharpCompilation.Create(outputAssemblyName,
                 syntaxTrees: syntaxTrees,
-                references: allReferences,
+                references: assemblyReferences,
                 options: compilationOptions);
 
             var errors = compilation.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error);
