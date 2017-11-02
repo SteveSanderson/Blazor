@@ -26,10 +26,6 @@
     <PackageReference Include="Microsoft.AspNetCore.ResponseCompression" Version="2.0.0-preview2-final" />
     <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="2.0.0-preview2-final" />
     <PackageReference Include="System.IO.FileSystem.Watcher" Version="4.3.0" />
-
-    <ProjectReference Include="../DNA/corlib/corlib.csproj">
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
     <ProjectReference Include="../Blazor.Compiler/Blazor.Compiler.csproj" />
     <ProjectReference Include="../Blazor.Runtime/Blazor.Runtime.csproj" />
   </ItemGroup>

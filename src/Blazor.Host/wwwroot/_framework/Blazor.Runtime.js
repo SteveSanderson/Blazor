@@ -947,5 +947,7 @@ window['jsobject.js'] = (function () {
     var entrypoint = thisScriptElem.getAttribute('main');
     var referenceAssembliesCombined = thisScriptElem.getAttribute('references');
     var referenceAssemblies = referenceAssembliesCombined ? referenceAssembliesCombined.split(',').map(function (s) { return s.trim() }) : [];
-    StartApplication(entrypoint, referenceAssemblies);
+
+    // TODO: Re-enable this
+    // StartApplication(entrypoint, referenceAssemblies);
 })();
