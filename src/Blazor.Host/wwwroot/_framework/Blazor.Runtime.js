@@ -72,10 +72,8 @@
                 throw new Error('Cannot find element by ID: ' + parsed.elementRef);
             }
 
-            var oldVDomArrayAddress = Module.getValue(parsed.oldVDom + 4, 'i32'); // Read the pointer at offset 4 from the ManagedGCHandle
-            var newVDomArrayAddress = Module.getValue(parsed.newVDom + 4, 'i32'); // Read the pointer at offset 4 from the ManagedGCHandle
-            var oldVDomReader = new VDomItemArrayReader(componentRef, oldVDomArrayAddress);
-            var newVDomReader = new VDomItemArrayReader(componentRef, newVDomArrayAddress);
+            var oldVDomReader = new VDomItemArrayReader(componentRef, parsed.oldVDom);
+            var newVDomReader = new VDomItemArrayReader(componentRef, parsed.newVDom);
 
             vdomUtil.populateOrUpdateElement(componentRef, elem, oldVDomReader, newVDomReader, replaceContainer);
         },
@@ -502,19 +500,12 @@ function setBreakpointInDna(dnaMethodId, ilOffset) {
 
 var dotNetStringDecoder;
 function readDotNetString(ptrString) {
-    dotNetStringDecoder = dotNetStringDecoder || new TextDecoder("utf-16le"); // Lazy-initialised because we have to wait for loading the polyfill on some browsers
-
-    if (ptrString === 0)
-        return null;
-    var numBytes = Module.HEAP32[ptrString >> 2] * 2;
-    var ptrChar0 = ptrString + 4;
-    var subarray = Module.HEAP8.subarray(ptrChar0, ptrChar0 + numBytes);
-    return dotNetStringDecoder.decode(subarray);
+    return window.conv_string(ptrString);
 }
 
 function VDomItemArrayReader(componentRef, ptrArray) {
     this._componentRef = componentRef;
-    this._ptrItem0 = ptrArray + 4; // First U32 is array length, which we don't need
+    this._ptrItem0 = ptrArray + 16; // First 3 U32s are internal Mono stuff, then 4th is array length, which we don't need
     this._structSizeBytes = 48;
 }
 
@@ -644,13 +635,6 @@ function HandleInternalLinkClick(evt, url) {
     evt.stopPropagation();
     history.pushState(/* state */ null, /* title */ null, url);
     OnLocationChanged(url);
-}
-
-function InvokeStatic(assemblyName, namespace, className, methodName, stringArg) {
-    return Module.ccall('JSInterop_CallDotNet', // name of C function
-        'number', // return type
-        ['string', 'string', 'string', 'string', 'string'], // argument types
-        [assemblyName, namespace, className, methodName, stringArg]); // arguments
 }
 
 function DispatchEvent(evt, componentRef, vdomItemIndex) {

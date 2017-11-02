@@ -120,6 +120,35 @@ mono_wasm_invoke_js (MonoString *str, int *is_exception)
 	return res;
 }
 
+static MonoString*
+mono_wasm_set_elem_from_vnode (
+	MonoString *elementRef,
+	int componentRef,
+	MonoObject *oldVDom,
+	MonoObject *newVDom,
+	int replaceContainer)
+{
+	char *utf16ExceptionDescription = (char*)EM_ASM_INT ({
+		// This is JS code
+		try {
+			Module.setElemFromVNode($0, $1, $2, $3, $4);
+			return null;
+		} catch (ex) {
+			var exDescription = ex.toString();
+			var buff = Module._malloc((exDescription.length + 1) * 2);
+			stringToUTF16 (exDescription, buff, (exDescription.length + 1) * 2);
+			return buff;
+		}
+	}, elementRef, componentRef, oldVDom, newVDom, replaceContainer);
+
+	if (utf16ExceptionDescription == NULL)
+		return NULL;
+
+	MonoString *exceptionDescription = mono_string_from_utf16 (utf16ExceptionDescription);
+	free (utf16ExceptionDescription);
+	return exceptionDescription;
+}
+
 EMSCRIPTEN_KEEPALIVE void
 mono_wasm_load_runtime (const char *managed_path)
 {
@@ -130,6 +159,7 @@ mono_wasm_load_runtime (const char *managed_path)
 	root_domain = mono_jit_init_version ("mono", "v4.0.30319");
 
 	mono_add_internal_call ("WebAssembly.Runtime::InvokeJS", mono_wasm_invoke_js);
+	mono_add_internal_call ("WebAssembly.Runtime::SetElemFromVNodeImpl", mono_wasm_set_elem_from_vnode);
 }
 
 EMSCRIPTEN_KEEPALIVE MonoAssembly*

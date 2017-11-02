@@ -100,6 +100,7 @@
 
             return res;
         }
+        window.conv_string = conv_string;
 
         load_runtime("managed");
 
@@ -121,9 +122,15 @@
             var res = call_method(method, null, [mono_string(stringArg)]);
             return res ? conv_string(res) : null;
         }
+        window.InvokeStatic = InvokeStatic;
+
+        // Invoke the program entry point
+        // TODO: There should be a proper way of running whatever counts as the entrypoint without
+        // having to specify what method it is, but I haven't found it
+        InvokeStatic('ClientServerApp.Client', 'ClientServerApp.Client', 'Program', 'Main', null);
 
         console.log(InvokeStatic('Blazor.Runtime', 'Blazor.Routing', 'Router', 'OnNavigation', JSON.stringify({
-            url: '/', //pathAndQuery,
+            url: location.pathname,
             absoluteUrl: location.href
         })));
     },
@@ -136,5 +143,17 @@
                 debugger;
                 return '0';
         }
+    },
+
+    setElemFromVNode: function (elementRef, componentRef, oldVDom, newVDom, replaceContainer) {
+        // Obviously it's crazy to be serializing here and deserializing in the receiver
+        // but just getting it off the ground
+        window['browser.js'].SetElemFromVNode(JSON.stringify({
+            elementRef: conv_string(elementRef),
+            componentRef: componentRef,
+            oldVDom: oldVDom,
+            newVDom: newVDom,
+            replaceContainer: replaceContainer
+        }));
     }
 };

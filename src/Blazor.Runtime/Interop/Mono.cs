@@ -1,6 +1,7 @@
 ﻿using Blazor.Util;
 using System;
 using System.Runtime.CompilerServices;
+using Blazor.VirtualDom;
 
 namespace WebAssembly
 {
@@ -8,6 +9,9 @@ namespace WebAssembly
     {
         [MethodImplAttribute(/* InternalCall */ (MethodImplOptions)4096)]
         static extern string InvokeJS(string str, out int exceptional_result);
+
+        [MethodImplAttribute(/* InternalCall */ (MethodImplOptions)4096)]
+        static extern string SetElemFromVNodeImpl(string elementRef, int componentRef, VDomItem[] oldVDom, VDomItem[] newVDom, int replaceContainer);
 
         public static string InvokeJS(string str)
         {
@@ -22,6 +26,15 @@ namespace WebAssembly
         {
             var resultJson = InvokeJS($"Module.receiveInvocationFromDotNet({ JsonUtil.Serialize(new { method, args }) })");
             return JsonUtil.Deserialize<TResult>(resultJson);
+        }
+
+        public static void SetElemFromVNode(string elementRef, int componentRef, VDomItem[] oldVDom, VDomItem[] newVDom, bool replaceContainer)
+        {
+            var res = SetElemFromVNodeImpl(elementRef, componentRef, oldVDom, newVDom, replaceContainer ? 1 : 0);
+            if (res != null)
+            {
+                throw new JSException(res);
+            }
         }
     }
 
