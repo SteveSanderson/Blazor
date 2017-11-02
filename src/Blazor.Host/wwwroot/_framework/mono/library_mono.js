@@ -13,9 +13,9 @@ var MonoSupportLib = {
 
 	request_gc_cycle: function () {
 		++MONO.pump_count;
-		if (Module.ENVIRONMENT_IS_WEB) {
+		//if (Module.ENVIRONMENT_IS_WEB) {
 			window.setTimeout (MONO.pump_message, 0);
-		}
+		//}
 	},
 };
 

@@ -5783,9 +5783,9 @@ function copyTempDouble(ptr) {
   			}
   		}};function _request_gc_cycle() {
   		++MONO.pump_count;
-  		if (Module.ENVIRONMENT_IS_WEB) {
+  		//if (Module.ENVIRONMENT_IS_WEB) {
   			window.setTimeout (MONO.pump_message, 0);
-  		}
+  		//}
   	}
 
   function ___syscall77(which, varargs) {SYSCALLS.varargs = varargs;
