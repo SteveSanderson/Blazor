@@ -1,0 +1,13 @@
+<html>
+    <body>
+        <script>
+            (function() {
+                var worker = new Worker('worker.js');
+                worker.onmessage = function (evt) {
+                    console.log('Main page received: ' + evt.data);
+                };
+                window.__fake = worker; // Temporary: Pin it just so it doesn't vanish from dev tools
+            })();
+        </script>
+    </body>
+</html>
