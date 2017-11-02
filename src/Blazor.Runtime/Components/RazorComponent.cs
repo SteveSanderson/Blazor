@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Linq;
 using Blazor.Routing;
 using Blazor.Runtime.Components;
+using Blazor.Runtime.Interop;
 
 namespace Blazor.Components
 {
@@ -19,8 +20,14 @@ namespace Blazor.Components
 
             if (Router.ViewAssemblies == null)
             {
-                // In DNA, we can search across all loaded assemblies
-                viewType = Type.GetType(viewTypeName);
+                // TODO: Stop hard-coding the views assembly name. Need to know what it
+                // is already somehow. Mono can only load the type by its qualified name.
+                viewTypeName = System.Reflection.Assembly.CreateQualifiedName(
+                    "ClientServerApp.Client.Views", viewTypeName);
+
+                // In DNA/Mono, we can search across all loaded assemblies
+                //viewType = Type.GetType(viewTypeName, throwOnError: true);
+                viewType = Type.GetType(viewTypeName, throwOnError: true);
             }
             else
             {
@@ -38,11 +45,16 @@ namespace Blazor.Components
 
         public static string GetViewClassName(string rootDir, string cshtmlFilename)
         {
-            cshtmlFilename = cshtmlFilename.Replace('/', Path.DirectorySeparatorChar);
+            rootDir = rootDir
+                .Replace('\\', BlazorPath.DirectorySeparatorChar)
+                .Replace('/', BlazorPath.DirectorySeparatorChar);
+            cshtmlFilename = cshtmlFilename
+                .Replace('\\', BlazorPath.DirectorySeparatorChar)
+                .Replace('/', BlazorPath.DirectorySeparatorChar);
 
-            if (!rootDir.EndsWith(Path.DirectorySeparatorChar.ToString()))
+            if (!rootDir.EndsWith(BlazorPath.DirectorySeparatorChar.ToString()))
             {
-                rootDir += Path.DirectorySeparatorChar;
+                rootDir += BlazorPath.DirectorySeparatorChar;
             }
 
             if (!cshtmlFilename.StartsWith(rootDir))
@@ -55,7 +67,7 @@ namespace Blazor.Components
             // times they are based on type names. It's all very delicate right now.
 
             var relativePath = cshtmlFilename.Substring(rootDir.Length);
-            return relativePath.Replace(Path.DirectorySeparatorChar, '_').Replace('.', '_').ToLowerInvariant();
+            return relativePath.Replace(BlazorPath.DirectorySeparatorChar, '_').Replace('.', '_').ToLowerInvariant();
         }
 
         protected override void RenderVirtualDom()

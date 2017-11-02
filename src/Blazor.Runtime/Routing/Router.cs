@@ -1,5 +1,6 @@
 ﻿using Blazor.Components;
 using Blazor.Runtime.Components;
+using Blazor.Runtime.Interop;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
@@ -46,8 +47,7 @@ namespace Blazor.Routing
             {
                 url = url + "Index";
             }
-            
-            return $".{url.Replace('/', Path.DirectorySeparatorChar)}.cshtml";
+            return $".{url.Replace('/', BlazorPath.DirectorySeparatorChar)}.cshtml";
         }
     }
 }
