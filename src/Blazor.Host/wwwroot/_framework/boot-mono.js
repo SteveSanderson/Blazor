@@ -104,7 +104,7 @@
 
         load_runtime("managed");
 
-        function InvokeStatic(assemblyName, namespace, className, methodName, stringArg) {
+        function FindMethod(assemblyName, namespace, className, methodName) {
             // TODO: Cache the assembly_load outputs?
             var main_module = assembly_load(assemblyName)
             if (!main_module)
@@ -119,6 +119,11 @@
             if (!method)
                 throw new Error('Could not find method "' + methodName + '" on type "' + namespace + '.' + className + '"');
 
+            return method;
+        }
+
+        function InvokeStatic(assemblyName, namespace, className, methodName, stringArg) {
+            var method = FindMethod(assemblyName, namespace, className, methodName);
             var res = call_method(method, null, [mono_string(stringArg)]);
             return res ? conv_string(res) : null;
         }
@@ -127,12 +132,13 @@
         // Invoke the program entry point
         // TODO: There should be a proper way of running whatever counts as the entrypoint without
         // having to specify what method it is, but I haven't found it
-        InvokeStatic('ClientServerApp.Client', 'ClientServerApp.Client', 'Program', 'Main', null);
+        var entryPointMethod = FindMethod('ClientServerApp.Client', 'ClientServerApp.Client', 'Program', 'Main');
+        call_method(entryPointMethod, null, []);
 
-        console.log(InvokeStatic('Blazor.Runtime', 'Blazor.Routing', 'Router', 'OnNavigation', JSON.stringify({
+        InvokeStatic('Blazor.Runtime', 'Blazor.Routing', 'Router', 'OnNavigation', JSON.stringify({
             url: location.pathname,
             absoluteUrl: location.href
-        })));
+        }));
     },
 	
 	receiveInvocationFromDotNet: function (callInfo) {
