@@ -33,13 +33,4 @@ else
 
 @functions {
     WeatherForecast[] forecasts;
-
-    override protected async Task InitAsync()
-    {
-        using (var client = new HttpClient())
-        {
-            var json = await client.GetStringAsync(AbsoluteUrl("/api/SampleData/WeatherForecasts"));
-            forecasts = JsonUtil.Deserialize<WeatherForecast[]>(json);
-        }
-    }
 }

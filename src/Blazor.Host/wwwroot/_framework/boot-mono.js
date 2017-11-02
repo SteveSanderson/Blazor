@@ -23,6 +23,7 @@
             "_framework/mono/managed/dotnetapp.dll"];
 
         assemblies.push(
+            "_framework/mono/managed/Facades/netstandard.dll",
             "_framework/mono/managed/Facades/System.Console.dll",
             "_framework/mono/managed/Facades/System.Collections.dll",
             "_framework/mono/managed/Facades/System.IO.dll",

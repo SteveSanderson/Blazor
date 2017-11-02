@@ -159,7 +159,7 @@ namespace RazorRenderer
                     "System",
                     "System.Collections.Generic",
                     "System.Linq",
-                    "System.Net.Http",
+                    //"System.Net.Http",
                     "System.Threading.Tasks",
                     "Blazor.Util",
                 };
@@ -321,17 +321,19 @@ namespace RazorRenderer
 
         static void CompileToFile(IList<SyntaxTree> syntaxTrees, IList<MetadataReference> assemblyReferences, string outputAssemblyName, Stream outputStream, Stream pdbStream)
         {
+            // It's important that we reference TFM-agnostic netstandard DLLs rather than the DLLs that
+            // are loaded into the running process, because the loaded DLLs will be specific to a particular
+            // TFM (e.g., on .NET Core, the server-side mscorlib will contain typeforwarders to
+            // System.Private.* assemblies, and these don't exist at all in the Mono runtime).
+            // TODO: figure out how to get this path using the machine's dotnet SDK
+            var netstandardRefRoot = @"C:\Program Files\dotnet\sdk\NuGetFallbackFolder\netstandard.library\2.0.0\build\netstandard2.0\ref\";
             var standardReferencePaths = new[]
             {
-                AssemblyLocation("mscorlib"),
-                AssemblyLocation(typeof(object)), // CoreLib
-                AssemblyLocation("System.Console"),
-                AssemblyLocation("System.Collections"),
-                AssemblyLocation("System.Linq"),
-                AssemblyLocation("System.Runtime"),
-                AssemblyLocation("System.Threading.Tasks"),
-                AssemblyLocation("System.Net.Http"),
-                AssemblyLocation("System.Private.Uri"),
+                netstandardRefRoot + "netstandard.dll",
+                netstandardRefRoot + "System.Collections.dll",
+                netstandardRefRoot + "System.Linq.dll",
+                netstandardRefRoot + "System.Runtime.dll",
+                netstandardRefRoot + "System.Threading.Tasks.dll",
                 AssemblyLocation(typeof(RazorComponent)), // Blazor
             };
             var allReferences = assemblyReferences
@@ -339,7 +341,8 @@ namespace RazorRenderer
                 .ToList();
 
             var compilationOptions = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
-                .WithOptimizationLevel(OptimizationLevel.Debug);
+                .WithOptimizationLevel(OptimizationLevel.Debug)
+                .WithAssemblyIdentityComparer(DesktopAssemblyIdentityComparer.Default);
 
             var compilation = CSharpCompilation.Create(outputAssemblyName,
                 syntaxTrees: syntaxTrees,
