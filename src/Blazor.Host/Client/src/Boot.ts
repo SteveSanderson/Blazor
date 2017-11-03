@@ -1,4 +1,7 @@
-﻿window.Module = {
+﻿declare var Module: any;
+declare var Runtime: any;
+
+window['Module'] = {
     print: function (x) { console.log("WASM: " + x) },
     printErr: function (x) { console.error("WASM: " + x) },
     wasmBinaryFile: '/_framework/mono/mono.wasm',
@@ -103,7 +106,7 @@
 
             return res;
         }
-        window.conv_string = conv_string;
+        window['conv_string'] = conv_string;
 
         load_runtime("managed");
 
@@ -130,7 +133,7 @@
             var res = call_method(method, null, [mono_string(stringArg)]);
             return res ? conv_string(res) : null;
         }
-        window.InvokeStatic = InvokeStatic;
+        window['InvokeStatic'] = InvokeStatic;
 
         // Register views assemblies so we know where to look for the compiled razor components
         InvokeStatic('Blazor.Runtime', 'Blazor.Routing', 'Router', 'SetViewAssemblies',
@@ -143,7 +146,7 @@
         call_method(entryPointMethod, null, []);
 
         // Trigger first page load
-        OnLocationChanged(window.location.pathname);
+        window['OnLocationChanged'](window.location.pathname);
     },
 	
 	receiveInvocationFromDotNet: function (callInfo) {
@@ -160,7 +163,7 @@
         // Obviously it's crazy to be serializing here and deserializing in the receiver
         // but just getting it off the ground
         window['browser.js'].SetElemFromVNode(JSON.stringify({
-            elementRef: conv_string(elementRef),
+            elementRef: window['conv_string'](elementRef),
             componentRef: componentRef,
             oldVDom: oldVDom,
             newVDom: newVDom,
