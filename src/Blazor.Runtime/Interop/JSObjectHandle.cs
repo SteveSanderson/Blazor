@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 
 namespace Blazor.Runtime.Interop
 {
@@ -16,17 +15,25 @@ namespace Blazor.Runtime.Interop
     /// </summary>
     public class JSObjectHandle
     {
-        [DllImport(@"jsobject.js", CharSet = CharSet.Ansi)]
-        private static extern string _GetProperty(string descriptor);
-        [DllImport(@"jsobject.js", CharSet = CharSet.Ansi)]
-        private static extern string _SetProperty(string descriptor);
+        private static string _GetProperty(string descriptor)
+        {
+            return WebAssembly.Runtime.InvokeJS($"window['jsobject.js']._GetProperty('{descriptor}')");
+        }
 
-        [DllImport(@"jsobject.js", CharSet = CharSet.Ansi)]
-        private static extern string _ReleaseJSObject(string descriptor);
+        private static string _SetProperty(string descriptor)
+        {
+            return WebAssembly.Runtime.InvokeJS($"window['jsobject.js']._SetProperty({descriptor})");
+        }
 
-        [DllImport(@"jsobject.js", CharSet = CharSet.Ansi)]
-        private static extern string _InvokeFunction(string descriptor);
+        private static string _ReleaseJSObject(string descriptor)
+        {
+            return WebAssembly.Runtime.InvokeJS($"window['jsobject.js']._ReleaseJSObject('{descriptor}')");
+        }
 
+        private static string _InvokeFunction(string descriptor)
+        {
+            return WebAssembly.Runtime.InvokeJS($"window['jsobject.js']._InvokeFunction({descriptor})");
+        }
 
         internal readonly int _jsObjectId;
         internal JSObjectHandle(int objectId)

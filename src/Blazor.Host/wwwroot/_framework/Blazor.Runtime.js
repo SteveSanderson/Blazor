@@ -748,13 +748,13 @@ window['jsobject.js'] = (function () {
         },
 
         _SetProperty: function (descriptor) {
-            var parsed = JSON.parse(descriptor);
+            var parsed = descriptor;
             var target = getObjectFromId(parsed.jsObjectId);
             target[parsed.name] = readIncomingArg(parsed.value);
         },
 
         _InvokeFunction: function (descriptor) {
-            var parsed = JSON.parse(descriptor);
+            var parsed = descriptor;
             var thisValue = getObjectFromId(parsed.thisValueId);
             var functionInstance = parsed.functionId
                 ? getObjectFromId(parsed.functionId)
