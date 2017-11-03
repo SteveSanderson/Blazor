@@ -3,7 +3,7 @@
 window['Module'] = {
     print: function (x) { console.log("WASM: " + x) },
     printErr: function (x) { console.error("WASM: " + x) },
-    wasmBinaryFile: '/_framework/Mono/mono.wasm',
+    wasmBinaryFile: '/_framework/Mono/dist/wasm/mono.wasm',
 
     totalDependencies: 0,
     monitorRunDependencies: function (left) {
