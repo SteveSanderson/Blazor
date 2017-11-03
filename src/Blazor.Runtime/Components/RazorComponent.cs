@@ -1,6 +1,5 @@
 ﻿using Blazor.VirtualDom;
 using System;
-using System.IO;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Linq;
@@ -12,29 +11,12 @@ namespace Blazor.Components
 {
     public abstract class RazorComponent : Component
     {
+        private static IDictionary<string, Type> cshtmlFilenameToTypeCache
+            = new Dictionary<string, Type>();
+
         public static Component Instantiate(string cshtmlFileName, BlazorContext context)
         {
-            var razorViewClassName = GetViewClassName(".", cshtmlFileName);
-            var viewTypeName = $"Views.{razorViewClassName}";
-            Type viewType;
-
-            if (Router.ViewAssemblies == null)
-            {
-                // TODO: Stop hard-coding the views assembly name. Need to know what it
-                // is already somehow. Mono can only load the type by its qualified name.
-                viewTypeName = System.Reflection.Assembly.CreateQualifiedName(
-                    "ClientServerApp.Client.Views", viewTypeName);
-
-                // In DNA/Mono, we can search across all loaded assemblies
-                //viewType = Type.GetType(viewTypeName, throwOnError: true);
-                viewType = Type.GetType(viewTypeName, throwOnError: true);
-            }
-            else
-            {
-                // On the server, need to explicitly walk through the supplied list of assemblies
-                viewType = Router.ViewAssemblies.Select(a => a.GetType(viewTypeName)).Where(t => t != null).FirstOrDefault();
-            }
-
+            var viewType = GetTypeForCompiledRazorFile(cshtmlFileName);
             var instance = (RazorComponent)Activator.CreateInstance(viewType);
             instance.Context = context;
             return instance;
@@ -77,6 +59,36 @@ namespace Blazor.Components
         protected override void ReceiveParameters(IDictionary<string, object> parameters)
         {
             // Subclasses may optionally override this
+        }
+
+        private static Type GetTypeForCompiledRazorFile(string cshtmlFilename)
+        {
+            lock (cshtmlFilenameToTypeCache)
+            {
+                if (!cshtmlFilenameToTypeCache.ContainsKey(cshtmlFilename))
+                {
+                    cshtmlFilenameToTypeCache[cshtmlFilename] = FindTypeForCompiledRazorFile(cshtmlFilename);
+                }
+
+                return cshtmlFilenameToTypeCache[cshtmlFilename];
+            }
+        }
+
+        private static Type FindTypeForCompiledRazorFile(string cshtmlFileName)
+        {
+            if (Router.ViewAssemblies == null)
+            {
+                throw new InvalidOperationException($"Could not instantiate component {cshtmlFileName} because {nameof(Router)}.{nameof(Router.ViewAssemblies)} is not yet populated.");
+            }
+
+            var viewTypeName = $"Views.{GetViewClassName(".", cshtmlFileName)}";
+            var viewType = Router.ViewAssemblies
+                .Select(asm => Type.GetType(
+                    System.Reflection.Assembly.CreateQualifiedName(asm.FullName, viewTypeName)))
+                .FirstOrDefault(type => type != null);
+
+            return viewType
+                ?? throw new ArgumentException($"Could not locate type for component {cshtmlFileName} in any registered views assembly.");
         }
 
         #region "Callback and binding helpers"

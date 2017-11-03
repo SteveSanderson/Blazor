@@ -35,11 +35,19 @@
             "_framework/mono/managed/Facades/System.Threading.Tasks.dll"
         );
 
+        Module.viewAssemblies = assemblies
+            .filter(function (url) { return url.indexOf("type=razorviews") > 0; })
+            .map(getAssemblyNameFromUrl);
+
+        function getAssemblyNameFromUrl(url) {
+            var filename = url.substring(url.lastIndexOf('/') + 1).split('?')[0];
+            return filename.substring(0, filename.lastIndexOf('.'));
+        }
+
         console.log('Loading .NET assemblies...');
         var pending = 0;
         assemblies.forEach(function (assemblyUrl) {
-            var asm_name = assemblyUrl.substring(assemblyUrl.lastIndexOf('/') + 1);
-            asm_name = asm_name.split('?')[0];
+            var asm_name = getAssemblyNameFromUrl(assemblyUrl) + '.dll';
             ++pending;
             fetch(assemblyUrl, { credentials: 'same-origin' }).then(function (response) {
                 if (!response.ok)
@@ -124,11 +132,17 @@
         }
         window.InvokeStatic = InvokeStatic;
 
+        // Register views assemblies so we know where to look for the compiled razor components
+        InvokeStatic('Blazor.Runtime', 'Blazor.Routing', 'Router', 'SetViewAssemblies',
+            Module.viewAssemblies.join(','));
+
         // Invoke the program entry point
         // TODO: There should be a proper way of running whatever counts as the entrypoint without
         // having to specify what method it is, but I haven't found it
         var entryPointMethod = FindMethod('ClientServerApp.Client', 'ClientServerApp.Client', 'Program', 'Main');
         call_method(entryPointMethod, null, []);
+
+        // Trigger first page load
         OnLocationChanged(window.location.pathname);
     },
 	
