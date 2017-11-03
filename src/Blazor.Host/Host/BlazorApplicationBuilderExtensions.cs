@@ -55,7 +55,7 @@ namespace Blazor.Host
                 {
                     var pathValue = context.Request.Path.Value; // e.g., "/browser.js"
                     var resourceName = pathValue.Replace('/', '.');
-                    var resourceStream = _hostAssembly.GetManifestResourceStream($"{_embeddedResourceProjectName}.wwwroot._framework{resourceName}");
+                    var resourceStream = _hostAssembly.GetManifestResourceStream($"{_embeddedResourceProjectName}{resourceName}");
                     if (resourceStream != null)
                     {
                         if (contentTypeProvider.TryGetContentType(pathValue, out var contentType))

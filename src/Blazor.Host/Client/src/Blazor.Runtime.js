@@ -669,6 +669,8 @@ function OnLocationChanged(pathAndQuery) {
     });
 }
 
+window['OnLocationChanged'] = OnLocationChanged;
+
 window.addEventListener('popstate', function (evt) {
     OnLocationChanged(window.location.pathname);
 });
