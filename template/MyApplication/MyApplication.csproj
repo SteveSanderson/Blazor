@@ -3,11 +3,12 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp1.0</TargetFramework>
     <OutputType>exe</OutputType>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
   
   <ItemGroup>
-    <PackageReference Include="Blazor.Compiler" Version="0.2.2-*" />
-    <PackageReference Include="Blazor.Runtime" Version="0.2.2-*" />
-    <DotNetCliToolReference Include="Blazor.Host" Version="0.2.2-*" />
+    <PackageReference Include="Blazor.Compiler" Version="0.2.5-*" />
+    <PackageReference Include="Blazor.Runtime" Version="0.2.5-*" />
+    <DotNetCliToolReference Include="Blazor.Host" Version="0.2.5-*" />
   </ItemGroup>
 </Project>

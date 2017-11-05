@@ -31,10 +31,14 @@ else
     </table>
 }
 
+<strong style='color: red'>This component temporarily disabled</strong>
+
 @functions {
     WeatherForecast[] forecasts;
 
-    override public async Task InitAsync()
+    /*
+    TODO: Re-enable this
+    override protected Task InitAsync()
     {
         using (var client = new HttpClient())
         {
@@ -42,6 +46,7 @@ else
             forecasts = JsonUtil.Deserialize<WeatherForecast[]>(json);
         }
     }
+    */
 
     class WeatherForecast
     {
