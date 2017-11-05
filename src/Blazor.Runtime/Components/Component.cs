@@ -3,10 +3,10 @@ using System.Threading;
 using System;
 using Blazor.VirtualDom;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using Blazor.Runtime;
 using Blazor.Runtime.Components;
 using Blazor.Runtime.Interop;
+using Blazor.Runtime.FakeBcl;
 
 namespace Blazor.Components
 {

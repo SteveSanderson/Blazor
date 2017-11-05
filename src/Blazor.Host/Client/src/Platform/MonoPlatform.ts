@@ -173,6 +173,7 @@ function createEmscriptenModuleInstance(loadAssemblyUrls: string[], onReady: () 
             'Facades/netstandard',
             'Facades/System.Console',
             'Facades/System.Collections',
+            'Facades/System.Diagnostics.Debug',
             'Facades/System.IO',
             'Facades/System.Linq',
             'Facades/System.Reflection',
