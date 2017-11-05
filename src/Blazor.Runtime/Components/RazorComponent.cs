@@ -229,5 +229,11 @@ namespace Blazor.Components
         // This is not really used, but simply has to exist so that the Razor tooling is willing to regard
         // Blazor.Components.RazorComponent as a valid base class. This would probably go away if updating
         // to work using newer Razor tooling.
+
+        public virtual Task ExecuteAsync()
+        {
+            // This method exists only because Razor tooling shows a warning otherwise
+            throw new NotImplementedException();
+        }
     }
 }
