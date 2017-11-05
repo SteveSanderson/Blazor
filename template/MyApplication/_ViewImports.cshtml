@@ -1,4 +1,5 @@
 ﻿@inherits Blazor.Components.RazorComponent<TModel>
 @layout ./Shared/_Layout.cshtml
 @using Blazor.Util
-@using System.Net.Http
+@using Task = Blazor.Runtime.FakeBcl.Task; // Temporary until Mono supports Task
+@using HttpClient = Blazor.Runtime.FakeBcl.HttpClient; // Temporary until Mono supports HttpClient
