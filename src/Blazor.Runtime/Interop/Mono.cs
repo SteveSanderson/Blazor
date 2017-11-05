@@ -22,12 +22,6 @@ namespace WebAssembly
             return res;
         }
 
-        public static TResult CallJS<TResult>(string method, params object[] args)
-        {
-            var resultJson = InvokeJS($"Module.receiveInvocationFromDotNet({ JsonUtil.Serialize(new { method, args }) })");
-            return JsonUtil.Deserialize<TResult>(resultJson);
-        }
-
         public static void SetElemFromVNode(string elementRef, int componentRef, VDomItem[] oldVDom, VDomItem[] newVDom, bool replaceContainer)
         {
             var res = SetElemFromVNodeImpl(elementRef, componentRef, oldVDom, newVDom, replaceContainer ? 1 : 0);

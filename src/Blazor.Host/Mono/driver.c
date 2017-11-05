@@ -131,7 +131,7 @@ mono_wasm_set_elem_from_vnode (
 	char *utf16ExceptionDescription = (char*)EM_ASM_INT ({
 		// This is JS code
 		try {
-			Module.setElemFromVNode($0, $1, $2, $3, $4);
+			window['__MonoPlatform__invokeJS']('setElemFromVNode', [$0, $1, $2, $3, $4]);
 			return null;
 		} catch (ex) {
 			var exDescription = ex.toString();

@@ -1933,7 +1933,7 @@ integrateWasmJS(Module);
 // === Body ===
 
 var ASM_CONSTS = [function($0, $1) { { var str = UTF8ToString ($0); try { var res = eval (str); if (res === null) return 0; res = res.toString (); setValue ($1, 0, "i32"); } catch (e) { res = e.toString (); setValue ($1, 1, "i32"); if (res === null) res = "unknown exception"; } var buff = Module._malloc((res.length + 1) * 2); stringToUTF16 (res, buff, (res.length + 1) * 2); return buff; } },
- function($0, $1, $2, $3, $4) { { try { Module.setElemFromVNode($0, $1, $2, $3, $4); return null; } catch (ex) { var exDescription = ex.toString(); var buff = Module._malloc((exDescription.length + 1) * 2); stringToUTF16 (exDescription, buff, (exDescription.length + 1) * 2); return buff; } } }];
+ function($0, $1, $2, $3, $4) { { try { window['__MonoPlatform__invokeJS']('setElemFromVNode', [$0, $1, $2, $3, $4]); return null; } catch (ex) { var exDescription = ex.toString(); var buff = Module._malloc((exDescription.length + 1) * 2); stringToUTF16 (exDescription, buff, (exDescription.length + 1) * 2); return buff; } } }];
 
 function _emscripten_asm_const_iiiiii(code, a0, a1, a2, a3, a4) {
  return ASM_CONSTS[code](a0, a1, a2, a3, a4);

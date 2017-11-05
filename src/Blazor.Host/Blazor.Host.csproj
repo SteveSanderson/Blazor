@@ -19,7 +19,11 @@
     <EmbeddedResource Include="Client\dist\Blazor.Host.js" LogicalName="$(ProjectName).Blazor.Host.js" />
     <EmbeddedResource Include="..\Blazor.Runtime\bin\Debug\netstandard1.6\Blazor.Runtime.dll" LogicalName="$(ProjectName).Blazor.Runtime.dll" />
     <EmbeddedResource Include="Mono\bcl\**\*.dll" />
+    <EmbeddedResource Include="Mono\dist\wasm\mono.js" />
     <EmbeddedResource Include="Mono\dist\wasm\mono.wasm" />
+    <EmbeddedResource Include="Mono\dist\asmjs\mono.js" />
+    <EmbeddedResource Include="Mono\dist\asmjs\mono.js.mem" />
+    <EmbeddedResource Include="Mono\dist\asmjs\mono.asm.js" />
   </ItemGroup>
 
   <ItemGroup>
