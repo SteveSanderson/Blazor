@@ -22,6 +22,22 @@ namespace WebAssembly
             return res;
         }
 
+        public static void InvokeRegisteredMethod(string methodName, params object[] jsonSerializableArgs)
+        {
+            InvokeRegisteredMethodCore(methodName, jsonSerializableArgs);
+        }
+
+        public static TResult InvokeRegisteredMethod<TResult>(string methodName, params object[] jsonSerializableArgs)
+        {
+            var jsonResult = InvokeRegisteredMethodCore(methodName, jsonSerializableArgs);
+            return JsonUtil.Deserialize<TResult>(jsonResult);
+        }
+
+        private static string InvokeRegisteredMethodCore(string methodName, object[] jsonSerializableArgs)
+        {
+            return InvokeJS($"__MonoPlatform__invokeJS('{methodName}', {MiniJSON.Json.Serialize(jsonSerializableArgs)})");
+        }
+
         public static void SetElemFromVNode(string elementRef, int componentRef, VDomItem[] oldVDom, VDomItem[] newVDom, bool replaceContainer)
         {
             var res = SetElemFromVNodeImpl(elementRef, componentRef, oldVDom, newVDom, replaceContainer ? 1 : 0);

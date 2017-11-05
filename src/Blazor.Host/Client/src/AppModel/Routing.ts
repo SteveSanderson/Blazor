@@ -1,5 +1,11 @@
 ﻿import { platform } from '../Environment';
 
+platform.registerCallableMethod('Routing_ResolveRelativeUrl', (relativeUrl: string) => {
+    const a = document.createElement('a');
+    a.href = relativeUrl;
+    return (a.cloneNode(false) as HTMLAnchorElement).href;
+});
+
 export function initRouter() {
     window.addEventListener('popstate', evt => {
         onLocationChanged(window.location.pathname);

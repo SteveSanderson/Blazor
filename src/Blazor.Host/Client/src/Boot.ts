@@ -4,6 +4,7 @@ import { initRouter } from './AppModel/Routing';
 import { enableLiveReloading } from './LiveReload';
 import { displayErrorPage } from './ErrorPage';
 import './AppModel/VirtualDom/VDom';
+import './AppModel/HttpClient';
 import './AppModel/JSObject';
 
 async function boot() {

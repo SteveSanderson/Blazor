@@ -36,6 +36,12 @@ else
 
     protected override Task InitAsync()
     {
-        return null;
+        using (var client = new HttpClient())
+        {
+            return client.GetStringAsync(AbsoluteUrl("/api/SampleData/WeatherForecasts")).ContinueWith(task =>
+            {
+                forecasts = JsonUtil.Deserialize<WeatherForecast[]>(task.Result);
+            });
+        }
     }
 }

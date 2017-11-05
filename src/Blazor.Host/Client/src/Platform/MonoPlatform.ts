@@ -126,7 +126,8 @@ window['__MonoPlatform__invokeJS'] = function __MonoPlatform__invokeJS(methodNam
         throw new Error(`Cannot invoke JS method '${methodName}' from .NET because no such method was registered with the platform.`);
     }
 
-    return implementation.apply(null, argsArray);
+    const result = implementation.apply(null, argsArray);
+    return JSON.stringify(result);
 };
 
 function addScriptTagsToDocument() {
@@ -177,6 +178,7 @@ function createEmscriptenModuleInstance(loadAssemblyUrls: string[], onReady: () 
             'Facades/System.IO',
             'Facades/System.Linq',
             'Facades/System.Reflection',
+            'Facades/System.Reflection.Extensions',
             'Facades/System.Runtime',
             'Facades/System.Runtime.Extensions',
             'Facades/System.Runtime.InteropServices',
