@@ -7,11 +7,11 @@ export class VDomItem {
     }
 
     private _readInt32Property(offsetBytes: number) {
-        return platform.heapReadI32(this.ptr + offsetBytes);
+        return platform.readHeapInt32(this.ptr + offsetBytes);
     }
 
     private _readStringProperty(offsetBytes: number) {
-        var managedString = platform.heapReadObject(this.ptr + offsetBytes) as System_String;
+        var managedString = platform.readHeapObject(this.ptr + offsetBytes) as System_String;
         return platform.toJavaScriptString(managedString);
     }
 

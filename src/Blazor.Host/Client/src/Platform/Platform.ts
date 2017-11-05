@@ -7,15 +7,16 @@
 
     // This is just a convenience to match historical usage patterns, but should probably be removed
     // since it's too specific about the method signature (assumes (arg1: string) => string)
-    invokeSimpleStatic(assemblyName: string, namespace: string, className: string, methodName: string, stringArg: string);
+    invokeSimpleStatic(assemblyName: string, namespace: string, className: string, methodName: string, stringArg: string): string;
 
     toJavaScriptString(dotNetString: System_String): string;
     toDotNetString(javaScriptString: string): System_String;
 
     registerCallableMethod(methodName: string, implementation: Function);
 
-    heapReadI32(address: number): number;
-    heapReadObject(address: number): System_Object;
+    getHeapAddress(heapObject: System_Object): number;
+    readHeapInt32(address: number): number;
+    readHeapObject(address: number): System_Object;
 }
 
 // We don't actually instantiate any of these at runtime. For perf it's preferable to

@@ -32,13 +32,13 @@ export const monoPlatform: Platform = {
             throw new Error(`Could not find assembly "${assemblyName}"`);
         }
 
-        const typeHandle = find_class(assemblyHandle, namespace, className)
+        const typeHandle = find_class(assemblyHandle, namespace, className);
         if (!typeHandle) {
             throw new Error(`Could not find type "${className}'" in namespace "${namespace}" in assembly "${assemblyName}"`);
         }
 
         // TODO: What is the '-1' param? Does this identify the overload somehow?
-        const methodHandle = find_method(typeHandle, methodName, -1)
+        const methodHandle = find_method(typeHandle, methodName, -1);
         if (!methodHandle) {
             throw new Error(`Could not find method "${methodName}" on type "${namespace}.${className}"`);
         }
@@ -58,14 +58,14 @@ export const monoPlatform: Platform = {
         const stack = Module.Runtime.stackSave();
 
         try {
-            const argsManagedArray = Module.Runtime.stackAlloc(args.length);
+            const argsBuffer = Module.Runtime.stackAlloc(args.length);
             const exceptionFlagManagedInt = Module.Runtime.stackAlloc(4);
             for (var i = 0; i < args.length; ++i) {
-                Module.setValue(argsManagedArray + i * 4, args[i], 'i32');
+                Module.setValue(argsBuffer + i * 4, args[i], 'i32');
             }
             Module.setValue(exceptionFlagManagedInt, 0, 'i32');
 
-            const res: System_Object = invoke_method(method, target, argsManagedArray, exceptionFlagManagedInt);
+            const res: System_Object = invoke_method(method, target, argsBuffer, exceptionFlagManagedInt);
 
             if (Module.getValue(exceptionFlagManagedInt, 'i32') !== 0) {
                 // If the exception flag is set, the returned value is exception.ToString()
@@ -107,11 +107,15 @@ export const monoPlatform: Platform = {
         callableFunctions[methodName] = implementation;
     },
 
-    heapReadI32: function heapReadI32(address: number) {
+    getHeapAddress: function addressOfFirstField(heapObject: System_Object) {
+        return (heapObject as any as number) + 12; // First 3 Int32s (= 12 bytes) are internal Mono stuff
+    },
+
+    readHeapInt32: function heapReadI32(address: number) {
         return Module.getValue(address, 'i32');
     },
 
-    heapReadObject: function heapReadObject(address: number) {
+    readHeapObject: function heapReadObject(address: number) {
         return Module.getValue(address, '*') as any as System_Object;
     }
 };
