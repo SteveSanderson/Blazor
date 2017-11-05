@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace Blazor.Runtime.FakeBcl
 {
@@ -15,6 +16,7 @@ namespace Blazor.Runtime.FakeBcl
     /// In principle, Mono-on-WASM should be able to support Task either by providing a non-Thread-backed
     /// implementation, or by supporting threading like DNA does.
     /// </summary>
+    [AsyncMethodBuilder(typeof(AsyncTaskMethodBuilder))]
     public class Task
     {
         private List<object> _continuations = new List<object>();
@@ -115,6 +117,7 @@ namespace Blazor.Runtime.FakeBcl
         }
     }
 
+    [AsyncMethodBuilder(typeof(AsyncTaskMethodBuilder<>))]
     public class Task<T> : Task
     {
         public new T Result => (T)base.Result;
