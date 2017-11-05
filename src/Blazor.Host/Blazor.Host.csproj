@@ -37,6 +37,7 @@
   </ItemGroup>
 
   <Target Name="RunWebpack" BeforeTargets="PreBuildEvent">
+    <Exec Command="npm install" WorkingDirectory="Client" Condition="!Exists('Client\node_modules')" />
     <Exec Command="node node_modules\webpack\bin\webpack.js" WorkingDirectory="Client" />
   </Target>
 </Project>
