@@ -10,7 +10,9 @@
     },
     "MyApplication": {
       "commandName": "Executable",
-      "executablePath": "dotnet",
+      // If your dotnet executable is at a different location, or you're using Mac/Linux,
+      // you'll need to update the path to 'dotnet' here
+      "executablePath": "%ProgramW6432%\\dotnet\\dotnet.exe",
       "commandLineArgs": "blazor serve"
     }
   }
