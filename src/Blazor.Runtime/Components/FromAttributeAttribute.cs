@@ -4,8 +4,7 @@ using System.Text;
 
 namespace Blazor.Runtime.Components
 {
-    //TODO add field support -> needs corlib FieldInfo implementation
-    [AttributeUsage(/*AttributeTargets.Field | */ AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
+    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
     public class FromAttributeAttribute : Attribute
     {
         public string AttributeName {get; set;}

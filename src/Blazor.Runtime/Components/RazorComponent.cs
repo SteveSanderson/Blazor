@@ -66,22 +66,10 @@ namespace Blazor.Components
             }
 
             var decoratedMembers = new List<MemberInfo>();
+            
 
-            //TODO: Add field support -> needs corlib FieldInfo implementation
-            //     Also, the following Linq will not work for some reason (missing GetEnumerator)
-
-            //decoratedMembers.AddRange(this.GetType().GetTypeInfo().DeclaredFields.Where(x => x.GetCustomAttribute(typeof(FromAttributeAttribute)) != null));
-            //decoratedMembers.AddRange(this.GetType().GetTypeInfo().DeclaredProperties.Where(x => x.GetCustomAttributes(typeof(FromAttributeAttribute),false).Count() > 0));
-
-
-            //foreach works normally
-            foreach (var property in this.GetType().GetTypeInfo().DeclaredProperties)
-            {
-                if (property.GetCustomAttributes(typeof(FromAttributeAttribute), true).Count() > 0)
-                {
-                    decoratedMembers.Add(property);
-                }
-            }
+            decoratedMembers.AddRange(this.GetType().GetTypeInfo().DeclaredFields.Where(x => x.GetCustomAttribute(typeof(FromAttributeAttribute), true) != null));
+            decoratedMembers.AddRange(this.GetType().GetTypeInfo().DeclaredProperties.Where(x => x.GetCustomAttribute(typeof(FromAttributeAttribute),true) != null));
 
             ParameterMembersCache.Add(this.GetType(), decoratedMembers);
             return decoratedMembers;
@@ -101,13 +89,12 @@ namespace Blazor.Components
                 }
 
                 var parameterValue = parameters[attribute.AttributeName];
+                
 
-                //TODO add field support -> needs corlib FieldInfo implementation
-
-                //if(member is FieldInfo)
-                //    ((FieldInfo)member).SetValue(this, parameterValue);
-                //else
-                ((PropertyInfo)member).SetValue(this, parameterValue);
+                if(member is FieldInfo)
+                    ((FieldInfo)member).SetValue(this, parameterValue);
+                else
+                    ((PropertyInfo)member).SetValue(this, parameterValue);
             }
         }
 

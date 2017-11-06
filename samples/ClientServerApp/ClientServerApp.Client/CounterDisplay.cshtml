@@ -8,8 +8,8 @@
 @functions {
 
     [FromAttribute("current-count")]
-    private int currentCount { get; set; }
+    private int currentCount { get; set; }  //works with properties
 
     [FromAttribute("on-reset")]
-    private Action resetCounterCallback { get; set; }
+    private Action resetCounterCallback;    //and fields
 }
