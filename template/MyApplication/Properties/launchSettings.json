@@ -8,25 +8,20 @@
     }
   },
   "profiles": {
-    /*
-    If you're on VS 15.4 or earlier, you can enable the following.
-    For some reason, it doesn't work on VS 15.5 (not even if you replace LAUNCHER_PATH with an absolute path)
     "IIS Express": {
       "commandName": "IISExpress",
       "launchBrowser": true,
       "environmentVariables": {
-        "LAUNCHER_PATH": "dotnet",
-        "LAUNCHER_ARGS": "blazor serve"
+        "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
-    */
-
     "MyApplication": {
-      "commandName": "Executable",
-      // If your dotnet executable is at a different location, or you're using Mac/Linux,
-      // you'll need to update the path to 'dotnet' here
-      "executablePath": "%ProgramW6432%\\dotnet\\dotnet.exe",
-      "commandLineArgs": "blazor serve"
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "http://localhost:56786/"
     }
   }
 }
