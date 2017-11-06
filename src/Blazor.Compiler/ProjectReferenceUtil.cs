@@ -4,6 +4,7 @@ using System.IO;
 using MiniJSON;
 using System.Linq;
 using JsonDict = System.Collections.Generic.IDictionary<string, object>;
+using System;
 
 namespace Blazor.Compiler
 {
@@ -80,7 +81,20 @@ namespace Blazor.Compiler
                 return Enumerable.Empty<string>();
             });
 
-            return referenceAssemblies.Select(path => path.Replace('/', Path.DirectorySeparatorChar)).ToArray();
+            return referenceAssemblies
+                .Select(path => path.Replace('/', Path.DirectorySeparatorChar))
+                .Distinct(new FilenameComparer()) // TODO: Make sure you pick the most recent version of each assembly, not just an arbitrary one
+                .ToArray();
+        }
+
+        private class FilenameComparer : IEqualityComparer<string>
+        {
+            public bool Equals(string x, string y) => string.Equals(
+                Path.GetFileName(x),
+                Path.GetFileName(y),
+                StringComparison.OrdinalIgnoreCase);
+
+            public int GetHashCode(string obj) => Path.GetFileName(obj).ToLowerInvariant().GetHashCode();
         }
     }
 }
