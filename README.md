@@ -48,7 +48,7 @@ You can either [build an app with Blazor](#building-an-app-with-blazor), or you 
 
 ### Building an app with Blazor
 
-Install [the VS extension](https://github.com/SteveSanderson/Blazor/releases/download/v0.2.1/Blazor.VSExtension.vsix), then use *File->New project*, and choose *Blazor Application* from the *Web* category.
+Install [the VS extension](https://github.com/SteveSanderson/Blazor/releases/download/v0.3.0/Blazor.VSExtension.vsix), then use *File->New project*, and choose *Blazor Application* from the *Web* category.
 
 To start the application in VS, just press F5 or Ctrl+F5 as usual.
 
