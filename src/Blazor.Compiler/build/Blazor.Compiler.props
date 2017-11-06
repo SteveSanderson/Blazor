@@ -1,6 +1,6 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <_RazorCompilationBinaryPath>$(MSBuildThisFileDirectory)..\lib\netcoreapp1.0\$(MSBuildThisFileName).dll</_RazorCompilationBinaryPath>
+    <_RazorCompilationBinaryPath>$(MSBuildThisFileDirectory)..\lib\netcoreapp2.0\$(MSBuildThisFileName).dll</_RazorCompilationBinaryPath>
   </PropertyGroup>
 
   <!-- TODO: Run this automatically in production builds -->

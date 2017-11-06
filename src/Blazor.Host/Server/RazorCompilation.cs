@@ -128,7 +128,7 @@ namespace Blazor.Sdk.Host
                     rootDir: rootDir,
                     referenceAssemblies: referenceAssemblyFilenames.Select(filename =>
                     {
-                        var path = Path.Combine(rootDir, "bin", "Debug", "netcoreapp1.0", filename);
+                        var path = Path.Combine(rootDir, "bin", "Debug", "netcoreapp2.0", filename);
 
                         if (!File.Exists(path))
                         {
