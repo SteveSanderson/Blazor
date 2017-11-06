@@ -23,12 +23,11 @@ namespace Blazor.Compiler
             }
 
             var assetsInfo = (JsonDict)Json.Deserialize(File.ReadAllText(assetsJsonPath));
-            var packageFolders = ((JsonDict)assetsInfo["packageFolders"]);
-            if (packageFolders.Count != 1)
+            var packageFolders = ((JsonDict)assetsInfo["packageFolders"]).Keys.ToList();
+            if (!packageFolders.Any())
             {
-                throw new InvalidDataException($"Expected to find exactly 1 package folder, but found {packageFolders.Count}.");
+                throw new InvalidDataException($"Expected to find package folders, but found none.");
             }
-            var packageFolder = packageFolders.Keys.Single();
 
             var targets = ((JsonDict)assetsInfo["targets"]);
             if (targets.Count != 1)
@@ -56,7 +55,21 @@ namespace Blazor.Compiler
                     if (referenceType == "package")
                     {
                         var packageNameAndVersion = referenceKvp.Key;
-                        return compileItems.Select(item => Path.Combine(packageFolder, packageNameAndVersion, item));
+
+                        return compileItems.Select(item =>
+                        {
+                            var partialPath = Path.Combine(packageNameAndVersion, item);
+                            foreach (var packageFolder in packageFolders)
+                            {
+                                var candidateFilename = Path.Combine(packageFolder, partialPath);
+                                if (File.Exists(candidateFilename))
+                                {
+                                    return candidateFilename;
+                                }
+                            }
+
+                            throw new InvalidDataException($"Could not find {partialPath} in any of the package folders:\n{string.Join('\n', packageFolders)}");
+                        });
                     }
                     else if (referenceType == "project")
                     {
