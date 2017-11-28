@@ -274,10 +274,19 @@ static U32* JITit(tMD_MethodDef *pMethodDef, U8 *pCIL, U32 codeSize, tParameter 
         tDebugMetaDataEntry* pEntry = pDebugMetadata->entries;
 
         while (pEntry != NULL) {
-            // TODO: Compare namespace, type and module name
+            // Compare namespace, type and module name
             if (strcmp(pEntry->pMethodName, pMethodDef->name) == 0) {
                 if (pMethodDef->pParentType != NULL) {
-                    if (strcmp(pEntry->pClassName, pMethodDef->pParentType->name) == 0 && strcmp(pEntry->pNamespaceName, pMethodDef->pParentType->nameSpace) == 0) {
+					// If the type has a special compiler-generated name, assume the name alone is
+					// unique and don't bother with comparing namespaces. This is because compiler-generated
+					// types are nested, and namespace comparisons go wrong for these. DNA believes that
+					// nested types take their namespace from the enclosing type's namespace, but AFAICT
+					// standard .NET reflection code returns an empty string for the namespace of an
+					// enclosed type, so if we compared namespaces we'd never get a match.
+					int ignoreNamespace = pMethodDef->pParentType->name[0] == '<' ? 1 : 0;
+
+					if (strcmp(pEntry->pClassName, pMethodDef->pParentType->name) == 0
+					 && (ignoreNamespace || (strcmp(pEntry->pNamespaceName, pMethodDef->pParentType->nameSpace) == 0))) {
                         pDebugMetadataEntry = pEntry;
                         break;
                     }
