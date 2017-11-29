@@ -187,7 +187,7 @@ function createEmscriptenModuleInstance(loadAssemblyUrls: string[], onReady: () 
         ];
 
         var allAssemblyUrls = loadAssemblyUrls
-            .concat(loadBclAssemblies.map(name => `_framework/Mono/bcl/${name}.dll`));
+            .concat(loadBclAssemblies.map(name => `_framework/Mono/bclTrimmed/dist/${name}.dll`));
 
         Module.FS_createPath('/', 'appBinDir', true, true);
         allAssemblyUrls.forEach(url =>
