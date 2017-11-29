@@ -32,6 +32,11 @@ namespace Microsoft.Blazor.BuildUtils.IlStrip.Core
 
         internal void StripFromAssembly(MethodDefinition createMethodStrippedException)
         {
+            if (!Method.HasBody)
+            {
+                return; // Nothing to do
+            }
+
             // We don't want to actually remove the method definition from the assembly, because
             // then you'd have an assembly that was invalid (it could contain calls to the method
             // that no longer exists). Instead, remove all the instructions from its body, and

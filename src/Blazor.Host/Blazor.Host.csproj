@@ -40,4 +40,8 @@
     <Exec Command="npm install" WorkingDirectory="Client" Condition="!Exists('Client\node_modules')" />
     <Exec Command="node node_modules\webpack\bin\webpack.js" WorkingDirectory="Client" />
   </Target>
+
+  <Target Name="GenerateTrimmedMscorlib" BeforeTargets="PreBuildEvent">
+    <Exec Command="build.cmd" WorkingDirectory="Mono\bclTrimmed" />
+  </Target>
 </Project>

@@ -9,9 +9,10 @@ namespace Microsoft.Blazor.BuildUtils.IlStrip.Core
 
         public SpecList(string[] fromSpecLines)
         {
-            var nonCommentLines = fromSpecLines.Where(line => !line.StartsWith('#'));
+            var linesToUse = fromSpecLines.Where(
+                line => !string.IsNullOrWhiteSpace(line) && !line.StartsWith('#'));
             _itemSpecs = new List<SpecListEntry>(
-                nonCommentLines.Select(line => new SpecListEntry(line)));
+                linesToUse.Select(line => new SpecListEntry(line)));
         }
 
         public bool Match(AssemblyItem item)
