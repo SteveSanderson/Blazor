@@ -2,14 +2,17 @@
 
 This is an experiment in making a Blazor app as small as possible using code stripping and compression.
 
-The resulting application is 780KB (for the wasm version, fractionally more for the asm.js version), though you'll only see the total size being this small if you serve it with good enough gzip compression enabled on the server.
+The resulting application is 781KB (for the wasm version, fractionally more for the asm.js version).
 
 To run it,
 
 * Run `build.cmd`
   * Ignore all the *Could not resolve type/assembly...* warnings
-* TODO: Add gzip-enabled server and instructions for running it here. In the meantime you can run any HTTP server in the `dist` dir, though you won't necessarily get gzip compression which makes a big difference.
-* TODO: Fix `ilstrip` so that it doesn't try to use `System.Private.CoreLib` references (although this doesn't cause errors unless you try to invoke a stripped method, in which case you'll get an unrelated-seeming error about this)
+* Run `serve.cmd`
+  * This is a simple file server with gzip compression enabled. It doesn't have any runtime functionality beside just serving files from disk. It's *not* the Blazor host server.
+  * This will produce an app whose tranferred size is 828KB. If you want to reduce it to 781KB, see the instructions under *Compression* below.
+
+TODO: Fix `ilstrip` so that it doesn't try to use `System.Private.CoreLib` references (although this doesn't cause errors unless you try to invoke a stripped method, in which case you'll get an unrelated-seeming error about this)
 
 ## .NET assembly trimming
 
@@ -47,17 +50,27 @@ To see how this was done, look at comments in `tools\WasmStrip\wasm-strip.js`. T
 
 The edits were performed on a temporary WAST representation of the WASM file. This is much easier to work with than either the asm.js intermediate representation produced during the emscripten build process and of course the binary WASM file.
 
+NOTE: The `build.cmd` in this directory does not automate the process of WASM stripping. It was done manually on a one-time basis.
+
 ## ASM.JS stripping
 
 The original `mono.asm.js` is 6.4MB uncompressed, and was reduced to 926KB after code stripping and minification uncompressed == 198KB under gzip 'ultra' compression. Note that the asm.js version also needs to load `mono.js.mem` which makes up the size difference vs the wasm build.
 
 To see how this was done, look at  `tools\AsmJsStrip\asmjs-strip.js`. It's the same approach used for the WASM stripping, but applied to the asmjs source file. This is a little easier than doing it for WASM because fewer file type conversions are involved, plus you can directly call a JS function from asm.js to log function usage without having to go through emscripten APIs.
 
+NOTE: The `build.cmd` in this directory does not automate the process of ASM.JS stripping. It was done manually on a one-time basis.
+
 ### JS minification
 
 The `mono.js` and `Blazor.Host.js` files were minified using a regular JS minifier.
 
+NOTE: The `build.cmd` in this directory does not automate the process of JS minification. It was done manually on a one-time basis.
+
 ## Compression
+
+The demo server enables gzip compression, which greatly reduces the transferred app size.
+
+However, .NET Core's gzip compression doesn't produce results as small as 7zip's 'ultra' compression level, so if you want to see the smallest possible transferred app size, pick any of the bigger uncompressed files and put a .gz file with the same name alongside it on disk. The demo server will use that as the compressed response. Doing this for `mscorlib.dll` and `mono.wasm` reduces the transferred app size from 828KB to 781KB.
 
 ## Realistic plan
 

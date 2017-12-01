@@ -383,7 +383,6 @@ function createEmscriptenModuleInstance(loadAssemblyUrls, onReady, onError) {
             'mscorlib',
             'System',
             'System.Core',
-            'Facades/netstandard',
             'Facades/System.Console',
             'Facades/System.Collections',
             'Facades/System.Diagnostics.Debug',
