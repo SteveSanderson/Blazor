@@ -10,7 +10,7 @@ To run it,
   * Ignore all the *Could not resolve type/assembly...* warnings
 * Run `serve.cmd`
   * This is a simple file server with gzip compression enabled. It doesn't have any runtime functionality beside just serving files from disk. It's *not* the Blazor host server.
-  * This will produce an app whose tranferred size is 828KB. If you want to reduce it to 781KB, see the instructions under *Compression* below.
+  * This will produce an app whose tranferred size is ~800KB. If you want to reduce it to 781KB, see the instructions under *Compression* below.
 
 TODO: Fix `ilstrip` so that it doesn't try to use `System.Private.CoreLib` references (although this doesn't cause errors unless you try to invoke a stripped method, in which case you'll get an unrelated-seeming error about this)
 
