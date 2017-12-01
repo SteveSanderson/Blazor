@@ -22,7 +22,9 @@ namespace Microsoft.Blazor.BuildUtils.IlStrip.Core
             var contents = AssemblyItem.ListContents(moduleDefinition).ToList();
             foreach (var contentItem in contents)
             {
-                var shouldStrip = stripSpecList.Match(contentItem);
+                var shouldStrip = stripSpecList.Match(contentItem)
+                    && contentItem.Method != createMethodStrippedException;
+
                 if (logVerbose)
                 {
                     Console.WriteLine($"{(shouldStrip ? "Stripping" : "Retaining")}: {contentItem}");
