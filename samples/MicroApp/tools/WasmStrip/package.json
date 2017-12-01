@@ -1,0 +1,16 @@
+{
+  "name": "WasmStrip",
+  "version": "1.0.0",
+  "description": "",
+  "main": "wasm-strip.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "wast-codegen": "^0.9.0",
+    "wast-parser": "^0.31.0"
+  }
+}

@@ -2,11 +2,13 @@
 
 This is an experiment in making a Blazor app as small as possible using code stripping and compression.
 
+The resulting application is 780KB (for the wasm version, fractionally more for the asm.js version), though you'll only see the total size being this small if you serve it with good enough gzip compression enabled on the server.
+
 To run it,
 
 * Run `build.cmd`
   * Ignore all the *Could not resolve type/assembly...* warnings
-* TODO: Add gzip-enabled server and instructions for running it here
+* TODO: Add gzip-enabled server and instructions for running it here. In the meantime you can run any HTTP server in the `dist` dir, though you won't necessarily get gzip compression which makes a big difference.
 * TODO: Fix `ilstrip` so that it doesn't try to use `System.Private.CoreLib` references (although this doesn't cause errors unless you try to invoke a stripped method, in which case you'll get an unrelated-seeming error about this)
 
 ## .NET assembly trimming
@@ -27,8 +29,6 @@ get a clear error message saying which method they are calling that has been str
 
 In this prototype there's nothing to stop too many methods being removed (leading to runtime errors), or too few (leading to size inefficency). Currently there's just a large hardcoded list of types and methods to preserve in `ilstrip-spec.txt`, with everything else being removed.
 
-Ideally, in the future we'd figure out a relatively minimal set of methods to be stripped that would unlink large parts of `mscorlib.dll` from the call graph. Then if a developer chooses to invoke those otherwise-unreachable methods themselves, `illinker` would leave them in, but if they don't, then `illinker` would remove them. This keeps APIs usable without the size penalty for those not using them. Deciding which clusters of methods to forcibly detach (by killing certain entrypoint methods) is subjective and needs more analysis.
-
 ### 2. IL linker
 
 Next, `build.cmd` uses the Mono `illink` tool to statically analyze the app's DLLs and remove unreachable methods. The commands we pass whitelist everything in the app itself, including its views assembly (which in a real implementation would have to get generated at publish time, if not on every build) and the Blazor runtime DLL since much of it is reached from JS calls that aren't visible to the static analyzer.
@@ -38,3 +38,28 @@ The resulting `mscorlib.dll` is about 598KB, which can gzip down to 210KB (under
 ### 3. Copying facades
 
 For uninvestigated reasons, the runtime still needs to be able to find the facade assemblies. This shouldn't be necessary. With more investigation, it should be possible to eliminate all these since `illink` is meant to have removed all references to them.
+
+## WASM stripping
+
+The original `mono.wasm` is 2.17MB uncompressed, and was reduced to 987KB uncompressed == 328KB under gzip 'ultra' compression, by removing uncalled functions.
+
+To see how this was done, look at comments in `tools\WasmStrip\wasm-strip.js`. The basic approach was to log which WASM functions were actually invoked during a particular usage of the app (logged by instrumenting the WASM to call a 'log' function on each such invocation), then to remove all the other WASM functions from the source.
+
+The edits were performed on a temporary WAST representation of the WASM file. This is much easier to work with than either the asm.js intermediate representation produced during the emscripten build process and of course the binary WASM file.
+
+## ASM.JS stripping
+
+The original `mono.asm.js` is 6.4MB uncompressed, and was reduced to 926KB after code stripping and minification uncompressed == 198KB under gzip 'ultra' compression. Note that the asm.js version also needs to load `mono.js.mem` which makes up the size difference vs the wasm build.
+
+To see how this was done, look at  `tools\AsmJsStrip\asmjs-strip.js`. It's the same approach used for the WASM stripping, but applied to the asmjs source file. This is a little easier than doing it for WASM because fewer file type conversions are involved, plus you can directly call a JS function from asm.js to log function usage without having to go through emscripten APIs.
+
+### JS minification
+
+The `mono.js` and `Blazor.Host.js` files were minified using a regular JS minifier.
+
+## Compression
+
+## Realistic plan
+
+* For the .NET assembly stripping, instead of having a massive list of methods to preserve, it would be better to figure out a relatively minimal set of methods to be stripped that would unlink large parts of `mscorlib.dll` from the call graph. Then if a developer chooses to invoke those otherwise-unreachable methods themselves, `illinker` would leave them in, but if they don't, then `illinker` would remove them. This keeps APIs usable without the size penalty for those not using them. Deciding which clusters of methods to forcibly detach (by killing certain entrypoint methods) is subjective and needs more analysis. This would all be much safer and easier to understand.
+* For the WASM/ASM.JS stripping, it should be possible to use the same approach of logging function usage. This should be an automated part of the Blazor framework build process, in that it can automate a browser running through a fairly comprehensive set of test pages, determining with high confidence the full extent of WASM functions reachable using Blazor APIs. The `mono.wasm`/`mono.asm.js` files can then be distributed pre-stripped without needing any further stripping during application builds.
