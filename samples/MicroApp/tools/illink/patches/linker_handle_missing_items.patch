@@ -1,0 +1,50 @@
+diff --git a/linker/Mono.Linker/TypeReferenceExtensions.cs b/linker/Mono.Linker/TypeReferenceExtensions.cs
+index e5d9430..876dae3 100644
+--- a/linker/Mono.Linker/TypeReferenceExtensions.cs
++++ b/linker/Mono.Linker/TypeReferenceExtensions.cs
+@@ -28,7 +28,13 @@ namespace Mono.Linker
+ 
+ 			var genericInstance = type as GenericInstanceType;
+ 			if (genericInstance != null) {
+-				var baseType = type.Resolve ().BaseType;
++				var resolvedType = type.Resolve();
++				if (resolvedType == null)
++				{
++					return null;
++				}
++
++				var baseType = resolvedType.BaseType;
+ 				var baseTypeGenericInstance = baseType as GenericInstanceType;
+ 
+ 				if (baseTypeGenericInstance != null)
+@@ -37,14 +43,14 @@ namespace Mono.Linker
+ 				return baseType;
+ 			}
+ 
+-			return type.Resolve ().BaseType;
++			return type.Resolve ()?.BaseType;
+ 		}
+ 
+ 		public static IEnumerable<TypeReference> GetInflatedInterfaces (this TypeReference typeRef)
+ 		{
+ 			var typeDef = typeRef.Resolve ();
+ 
+-			if (!typeDef.HasInterfaces)
++			if (typeDef == null || !typeDef.HasInterfaces)
+ 				yield break;
+ 
+ 			var genericInstance = typeRef as GenericInstanceType;
+@@ -164,9 +170,12 @@ namespace Mono.Linker
+ 
+ 		public static IEnumerable<MethodReference> GetMethods (this TypeReference type)
+ 		{
++			if (type == null)
++				yield break;
++
+ 			var typeDef = type.Resolve ();
+ 
+-			if (!typeDef.HasMethods)
++			if (typeDef == null || !typeDef.HasMethods || typeDef.Methods == null)
+ 				yield break;
+ 
+ 			var genericInstanceType = type as GenericInstanceType;

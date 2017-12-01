@@ -1,0 +1,112 @@
+diff --git a/Mono.Cecil.Cil/CodeWriter.cs b/Mono.Cecil.Cil/CodeWriter.cs
+index 2003f10..8ba0b4a 100644
+--- a/Mono.Cecil.Cil/CodeWriter.cs
++++ b/Mono.Cecil.Cil/CodeWriter.cs
+@@ -269,7 +269,21 @@ namespace Mono.Cecil.Cil {
+ 			case OperandType.InlineField:
+ 			case OperandType.InlineMethod:
+ 			case OperandType.InlineTok:
+-				WriteMetadataToken (metadata.LookupToken ((IMetadataTokenProvider) operand));
++                    try
++                    {
++                        WriteMetadataToken(metadata.LookupToken((IMetadataTokenProvider)operand));
++                    }
++					catch (ArgumentException ex)
++                    {
++						if (ex.Message.Contains("declared in another module"))
++                        {
++                            WriteInt32(0);
++                        }
++						else
++                        {
++                            throw;
++                        }
++                    }
+ 				break;
+ 			default:
+ 				throw new ArgumentException ();
+diff --git a/Mono.Cecil/AssemblyWriter.cs b/Mono.Cecil/AssemblyWriter.cs
+index 5496cac..542dc8e 100644
+--- a/Mono.Cecil/AssemblyWriter.cs
++++ b/Mono.Cecil/AssemblyWriter.cs
+@@ -1948,10 +1948,15 @@ namespace Mono.Cecil {
+ 
+ 				var projection = WindowsRuntimeProjections.RemoveProjection (attribute);
+ 
+-				custom_attribute_table.AddRow (new CustomAttributeRow (
+-					MakeCodedRID (owner, CodedIndex.HasCustomAttribute),
+-					MakeCodedRID (LookupToken (attribute.Constructor), CodedIndex.CustomAttributeType),
+-					GetBlobIndex (GetCustomAttributeSignature (attribute))));
++                try
++                {
++                    custom_attribute_table.AddRow(new CustomAttributeRow(
++                        MakeCodedRID(owner, CodedIndex.HasCustomAttribute),
++                        MakeCodedRID(LookupToken(attribute.Constructor), CodedIndex.CustomAttributeType),
++                        GetBlobIndex(GetCustomAttributeSignature(attribute))));
++                } catch (ArgumentException)
++                {
++                }
+ 
+ 				WindowsRuntimeProjections.ApplyProjection (attribute, projection);
+ 			}
+@@ -2229,8 +2234,11 @@ namespace Mono.Cecil {
+ 				return metadata_builder.LookupToken (provider);
+ 
+ 			var member = provider as MemberReference;
+-			if (member == null || member.Module != module)
+-				throw CreateForeignMemberException (member);
++            if (member == null || member.Module != module)
++            {
++                //throw CreateForeignMemberException(member);
++                return provider.MetadataToken;
++            }
+ 
+ 			var token = provider.MetadataToken;
+ 
+@@ -2770,7 +2778,16 @@ namespace Mono.Cecil {
+ 
+ 			case ElementType.None: {
+ 				WriteElementType (type.IsValueType ? ElementType.ValueType : ElementType.Class);
+-				WriteCompressedUInt32 (MakeTypeDefOrRefCodedRID (type));
++                        RVA rid;
++                        try
++                        {
++                            rid = MakeTypeDefOrRefCodedRID(type);
++                        }
++						catch (ArgumentException)
++                        {
++                            rid = 0;
++                        }
++                WriteCompressedUInt32 (rid);
+ 				break;
+ 			}
+ 
+diff --git a/Mono.Cecil/MetadataResolver.cs b/Mono.Cecil/MetadataResolver.cs
+index 26c4e16..bbe43c0 100644
+--- a/Mono.Cecil/MetadataResolver.cs
++++ b/Mono.Cecil/MetadataResolver.cs
+@@ -98,11 +98,19 @@ namespace Mono.Cecil {
+ 
+ 			switch (scope.MetadataScopeType) {
+ 			case MetadataScopeType.AssemblyNameReference:
+-				var assembly = assembly_resolver.Resolve ((AssemblyNameReference) scope);
+-				if (assembly == null)
+-					return null;
+-
+-				return GetType (assembly.MainModule, type);
++                    try
++                    {
++                        var assembly = assembly_resolver.Resolve((AssemblyNameReference)scope);
++                        if (assembly == null)
++                            return null;
++
++                        return GetType(assembly.MainModule, type);
++                    }
++                    catch (AssemblyResolutionException)
++                    {
++                        Console.WriteLine("Could not resolve assembly: " + scope.Name);
++                        return null;
++                    }
+ 			case MetadataScopeType.ModuleDefinition:
+ 				return GetType ((ModuleDefinition) scope, type);
+ 			case MetadataScopeType.ModuleReference:
