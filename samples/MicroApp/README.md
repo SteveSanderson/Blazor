@@ -29,3 +29,12 @@ In this prototype there's nothing to stop too many methods being removed (leadin
 
 Ideally, in the future we'd figure out a relatively minimal set of methods to be stripped that would unlink large parts of `mscorlib.dll` from the call graph. Then if a developer chooses to invoke those otherwise-unreachable methods themselves, `illinker` would leave them in, but if they don't, then `illinker` would remove them. This keeps APIs usable without the size penalty for those not using them. Deciding which clusters of methods to forcibly detach (by killing certain entrypoint methods) is subjective and needs more analysis.
 
+### 2. IL linker
+
+Next, `build.cmd` uses the Mono `illink` tool to statically analyze the app's DLLs and remove unreachable methods. The commands we pass whitelist everything in the app itself, including its views assembly (which in a real implementation would have to get generated at publish time, if not on every build) and the Blazor runtime DLL since much of it is reached from JS calls that aren't visible to the static analyzer.
+
+The resulting `mscorlib.dll` is about 598KB, which can gzip down to 210KB (under 7zip's "Ultra" compression level).
+
+### 3. Copying facades
+
+For uninvestigated reasons, the runtime still needs to be able to find the facade assemblies. This shouldn't be necessary. With more investigation, it should be possible to eliminate all these since `illink` is meant to have removed all references to them.
