@@ -76,7 +76,7 @@ If you want to extend Blazor itself, the setup is a bit more involved.
 #### Instructions
 
 * Clone this repo
-* In a command prompt at the root of the repo, run `dotnet restore Blazor.Core.sln`
+* In a command prompt at the root of the repo, run `dotnet build src\BuildUtils\ILStrip\ILStrip.sln & dotnet restore Blazor.Core.sln`
 * Now open `Blazor.Core.sln` in VS2017.3 or later
 * Expand `samples`, then `ClientServerApp`, then right click on `ClientServerApp.Server` and choose "*Set as StartUp Project*".
 * Launch the application using Ctrl+F5
