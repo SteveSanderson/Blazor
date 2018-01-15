@@ -65,6 +65,13 @@ namespace Blazor.Host.Debugging.Discovery
                 var endpoints = await GetDebuggableBlazorPagesOrShowErrorPage(context);
                 if (endpoints != null)
                 {
+                    if (endpoints.Count == 1)
+                    {
+                        // No point asking which endpoint you want to debug if there's only one choice
+                        context.Response.Redirect(endpoints.Single().DevToolsFrontendUrl);
+                        return;
+                    }
+
                     context.Response.ContentType = "text/html";
                     await context.Response.WriteAsync(
                         $"<style type='text/css'>" +

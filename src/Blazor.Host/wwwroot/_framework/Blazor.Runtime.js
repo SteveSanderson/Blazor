@@ -692,15 +692,11 @@ window.addEventListener('popstate', function (evt) {
 // If the user presses Ctrl+Shift+D, launch the debugger in a new tab
 document.addEventListener('keydown', function (evt) {
     if (evt.ctrlKey && evt.shiftKey && evt.code === 'KeyD') {
-        // I haven't yet found a viable way to open the debugger window programmatically. If it's
-        // opened using window.open or target=_blank, then Chrome tracks the association with the
+        // The noopener flag is essential, because otherwise Chrome tracks the association with the
         // parent tab, and then when the parent tab pauses in the debugger, the child tab does so
         // too (even if it's since navigated to a different page). This means that the debugger
         // itself freezes, and not just the page being debugged.
-        // One possible solution, albeit elaborate, would be to have the link click send a message
-        // back to the Host .NET code, which could then use some external native-code browser
-        // automation to open the new tab.
-        prompt('Open the following URL in a new tab to start the debugger:', 'http://localhost:9223/');
+        window.open('http://localhost:9223/', '_blank', 'noopener');
     }
 });
 
