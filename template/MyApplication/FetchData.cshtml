@@ -34,7 +34,7 @@ else
 @functions {
     WeatherForecast[] forecasts;
 
-    override public async Task InitAsync()
+    override protected async Task InitAsync()
     {
         using (var client = new HttpClient())
         {

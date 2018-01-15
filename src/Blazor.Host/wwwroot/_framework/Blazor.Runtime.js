@@ -865,7 +865,7 @@ window['jsobject.js'] = (function () {
         }
     }
 
-    function StartApplication(entryPoint, referenceAssemblies) {
+    function StartApplication(entryPoint, referenceAssemblies, enableDebugging) {
         var preloadAssemblies = [entryPoint].concat(referenceAssemblies).map(function (assemblyName) {
             return { assemblyName: assemblyName, url: '/_bin/' + assemblyName };
         });
@@ -892,10 +892,12 @@ window['jsobject.js'] = (function () {
                 preloadAssemblies.forEach(function (assemblyInfo) {
                     Module.FS_createPreloadedFile('/', assemblyInfo.assemblyName, assemblyInfo.url, true, false);
 
-                    // Also preload .wdb files for each .dll
-                    // TODO: Stop having .wdb files altogether. The DNA runtime should be able to debug in terms of
-                    // IL offsets only, and hence doesn't need to know about sequence points.
-                    Module.FS_createPreloadedFile('/', assemblyInfo.assemblyName.replace(/\.dll\b/, '.wdb'), assemblyInfo.url.replace(/\.dll\b/, '.wdb'), true, false);
+                    if (enableDebugging) {
+                        // Also preload .wdb files for each .dll
+                        // TODO: Stop having .wdb files altogether. The DNA runtime should be able to debug in terms of
+                        // IL offsets only, and hence doesn't need to know about sequence points.
+                        Module.FS_createPreloadedFile('/', assemblyInfo.assemblyName.replace(/\.dll\b/, '.wdb'), assemblyInfo.url.replace(/\.dll\b/, '.wdb'), true, false);
+                    }
                 });
             },
             postRun: function () {
@@ -943,5 +945,6 @@ window['jsobject.js'] = (function () {
     var entrypoint = thisScriptElem.getAttribute('main');
     var referenceAssembliesCombined = thisScriptElem.getAttribute('references');
     var referenceAssemblies = referenceAssembliesCombined ? referenceAssembliesCombined.split(',').map(function (s) { return s.trim() }) : [];
-    StartApplication(entrypoint, referenceAssemblies);
+    var enableDebugging = thisScriptElem.getAttribute('enableDebugging') !== 'false';
+    StartApplication(entrypoint, referenceAssemblies, enableDebugging);
 })();
