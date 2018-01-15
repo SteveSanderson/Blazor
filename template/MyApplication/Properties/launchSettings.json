@@ -12,14 +12,16 @@
       "commandName": "IISExpress",
       "launchBrowser": true,
       "environmentVariables": {
-        "LAUNCHER_ARGS": "blazor serve",
-        "LAUNCHER_PATH": "dotnet"
+        "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
     "MyApplication": {
-      "commandName": "Executable",
-      "executablePath": "dotnet",
-      "commandLineArgs": "blazor serve"
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "http://localhost:56786/"
     }
   }
 }

@@ -73,7 +73,7 @@ namespace Blazor.Host
             });
 
             // For requests under /_bin, serve assemblies from the client app's bin dir
-            var clientBinDir = Path.GetFullPath(Path.Combine(rootPath, "bin", "Debug", "netcoreapp1.0"));
+            var clientBinDir = Path.GetFullPath(Path.Combine(rootPath, "bin", "Debug", "netcoreapp2.0"));
 
             app.UseStaticFiles(new StaticFileOptions
             {
