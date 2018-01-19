@@ -23,7 +23,6 @@ namespace Blazor.VirtualDom
             openElementIndices.Clear();
         }
 
-
         internal void SwapBuffers()
         {
             var otherBuffer = prevItems;
